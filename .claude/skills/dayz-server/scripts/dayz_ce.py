@@ -302,7 +302,8 @@ def check_spawns(mission, report, map_size, radius, shared_warn=3):
                 report.error(where, f"событие \"{name}\" уже есть в {spawns[name]['file']}")
             ev["file"] = path
             spawns[name] = ev
-            if not ev["pos"]:
+            # Animal*/Ambient*/Infected*/Trajectory*/Loot take places from env/ or players, not from <pos>
+            if not ev["pos"] and name.lower().startswith(("vehicle", "static", "item")):
                 report.info(where, f"\"{name}\": нет ни одной <pos> (событие с position=fixed не заспавнится)")
             for p in ev["pos"]:
                 pw = f"{path}:{p['line']}"

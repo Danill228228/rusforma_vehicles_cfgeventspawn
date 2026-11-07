@@ -69,7 +69,9 @@
 | Chernarus | VehicleBoat, VehicleCivilianSedan, VehicleHatchback02, VehicleMotorbike, VehicleOffroad02, VehicleOffroadHatchback, VehicleSedan02, VehicleTruck01 (+ пустой VehicleTransitBus в cfgeventspawns) |
 | Livonia (enoch) | то же |
 | Sakhal | VehicleBoat, VehicleCivilianSedan, VehicleHatchback02, VehicleMilitaryBoat, VehicleMotorbike, VehicleOffroadHatchback, VehicleSedan02, VehicleTruck01 |
-| Nasdara | как Chernarus (VehicleMotorbike nominal 30) |
+| Nasdara | как Chernarus, но `VehicleBoat` active=0 и без точек (лодок нет); VehicleMotorbike nominal 30, 7 цветов мотоциклов, `Offroad_02_Beige` |
+
+Nominal, число точек и classname по картам — `maps.md`, раздел «Различия ванильных миссий».
 
 Ванильные классы: `CivilianSedan(_Black/_Wine)`, `Sedan_02*`, `Hatchback_02*`, `OffroadHatchback*`,
 `Offroad_02`, `Truck_01_Covered*`, `Boat_01_*`, мотоцикл — смотри `children` в ванильном events.xml.

@@ -36,10 +36,11 @@ python3 -I ${CLAUDE_SKILL_DIR}/scripts/dayz_ce.py check <файл|папка м�
 | Файл | Когда |
 |---|---|
 | `references/central-economy.md` | формат и поля любого файла миссии, `<ce folder>`, globals, economy |
+| `references/mission-files.md` | cfggameplay.json (все ключи, v123/v130), cfgEffectArea, подземные триггеры, cfgplayerspawnpoints, env/territories, mapgroup*, cfgeventgroups/`<secondary>`, cfgweather, messages, init.c, файлы Nasdara/Sakhal, сезонные миссии, CETool/areaflags.map, итоги `check` по ванилле |
 | `references/vehicles.md` | добавить машину, точки спавна, вайп машин, «не спавнятся/пропадают» |
 | `references/rusforma.md` | мод RUSForma_vehicles, имена деталей, разбор файла этого репо и таблица исправлений classname |
 | `references/rusforma_classnames.txt` / `rusforma_attachments.tsv` | 255 classname мода и их стандартные детали (данные 2024 г.) |
-| `references/maps.md` | система координат, размеры карт, ориентиры Chernarus |
+| `references/maps.md` | система координат, размеры карт, ориентиры Chernarus, различия 4 карт (транспорт, события, животные) |
 | `references/server-setup.md` | serverDZ.cfg, параметры запуска, моды и ключи, логи, init.c, рестарты |
 
 Нужен ванильный файл целиком — официальный репо: `git clone --depth 1 https://github.com/BohemiaInteractive/DayZ-Central-Economy`

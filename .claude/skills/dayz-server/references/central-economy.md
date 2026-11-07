@@ -62,6 +62,8 @@ cfgeconomycore.xml  <ce folder> — откуда ещё брать types/events/
   <classes>
     <rootclass name="CarScript" act="car" reportMemoryLOD="no" />   <!-- машины -->
     <rootclass name="BoatScript" act="car" reportMemoryLOD="no" />  <!-- лодки -->
+    <rootclass name="MotorbikeScript" act="car" reportMemoryLOD="no" /> <!-- мотоциклы (1.30) -->
+    <rootclass name="HouseDestructible" reportMemoryLOD="no" />     <!-- разрушаемые дома (1.30) -->
     ...
   </classes>
   <defaults>
@@ -140,6 +142,8 @@ cfgeconomycore.xml  <ce folder> — откуда ещё брать types/events/
   `Trajectory*`, `Loot`. Все ванильные события его соблюдают — для машин держи `Vehicle…`.
 * `Animal*`/`Ambient*` берут места из `env/*_territories.xml`, `Infected*` — `position=player`
   + `zombie_territories.xml`; им точки в `cfgeventspawns.xml` не нужны.
+* `<secondary>InfectedArmy</secondary>` (заражённые вокруг события), `position=uniform`, значения `limit` —
+  в `mission-files.md` (раздел cfgeventgroups).
 * Ванильные пропорции для машин: nominal 8 / min 5 / max 11 при 55–111 точках на событие.
   **Точек должно быть заметно больше nominal**, иначе машины «залипают» на одних местах.
 

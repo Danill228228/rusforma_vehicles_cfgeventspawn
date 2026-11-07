@@ -1,9 +1,12 @@
-// Passengers shoot from their seat, leaning towards the window.
+// Passengers shoot from their seat, leaning out of the window.
 // A real seat (HumanCommandVehicle) cannot raise a weapon and firing from it crashes the engine, so the
 // player leaves the seat but stays in the normal on-foot command, linked to the car: aiming, firing,
 // reloading and recoil all stay the game's own. The body stays in the seat through an animation set
 // built from the game's poses (tools/build_poses.py): the capsule is outside the door, because the engine
 // pushes it out of the car, and the animation moves the body back in.
+// The way out and back is animated by the same set: out, the fall that leaves the seat plays the
+// seat-to-window clip; back, the car's own get-in plays the window-to-seat clip. SMOOTH = 0 brings
+// back the instant switch and the game's full get-in.
 class CrewFire
 {
 	static const int JUNCTURE = 233; // kept in one byte: larger ids never arrive
@@ -11,6 +14,11 @@ class CrewFire
 	static const int CMD_OUT = 1;
 	static const int CMD_IN = 2;
 	static const int TOGGLE_PAUSE_MS = 700;
+	static const int SMOOTH = 1;               // 0: the old instant switch and the game's own get-in
+	static const float LEAN_OUT_TIME = 0.75;   // seconds of the seat-to-window clip, LEAN_OUT_END in tools/build_poses.py
+	static const int PREPARE_MS = 250;         // the other players' clients get the set before the clip starts
+	static const float LOWER_TIME = 0.35;      // a raised weapon is lowered before going back in
+	static const float SET_KEEP = 0.5;         // the set stays a little after the get-in, for the other clients too
 	static const float MAX_STRAY = 0.8;        // metres from the link point: an obstacle pushed the player
 	static const float CRASH_SPEED_DROP = 5;   // metres per second lost between checks: the car hit something
 	static const float CHECK_PERIOD = 0.25;
@@ -79,6 +87,15 @@ modded class PlayerBase
 	protected int m_CrewSyncSide;    // tells the other players' clients which set to use
 	protected int m_CrewSetSide;
 	protected string m_CrewSet;
+	protected float m_CrewFallTime;  // how long the seat-to-window clip has played
+	protected bool m_CrewLowering;   // back in: waiting for the weapon to go down
+	protected float m_CrewLowerTime;
+	protected bool m_CrewEntering;   // back in: the get-in with the window-to-seat clip is playing
+	protected float m_CrewEnterTime;
+	protected float m_CrewSeatedTime;
+	protected CarScript m_CrewPrepCar; // server: the set is on, the juncture follows at m_CrewPrepAt
+	protected int m_CrewPrepSeat;
+	protected int m_CrewPrepAt;
 
 	override void Init()
 	{
@@ -174,7 +191,7 @@ modded class PlayerBase
 	//! Server: decides what the key press means and tells both sides to do it on the same simulation step.
 	void CrewServerToggle()
 	{
-		if (!CrewHasAuthority() || m_CrewCommand || !IsAlive() || g_Game.GetTime() < m_CrewNextToggle)
+		if (!CrewHasAuthority() || m_CrewCommand || m_CrewPrepCar != null || m_CrewLowering || m_CrewEntering || !IsAlive() || g_Game.GetTime() < m_CrewNextToggle)
 			return;
 
 		if (m_CrewOut)
@@ -192,8 +209,52 @@ modded class PlayerBase
 			return;
 
 		int seat = car.CrewMemberIndex(this);
-		if (seat >= 0 && CrewFire.HasOwnDoor(car, seat))
+		if (seat < 0 || !CrewFire.HasOwnDoor(car, seat))
+			return;
+
+		if (CrewFire.SMOOTH == 0 || !g_Game.IsMultiplayer())
+		{
 			CrewSend(CrewFire.CMD_OUT, car, seat);
+			return;
+		}
+
+		// Every client that sees the player puts the set with the seat-to-window clip on first, otherwise
+		// they would see the game's own fall for a moment. Sitting, the set changes nothing visible.
+		int side = CrewFire.Side(car, seat);
+		CrewUseSet(side);
+		m_CrewSyncSide = side;
+		SetSynchDirty();
+		m_CrewPrepCar = car;
+		m_CrewPrepSeat = seat;
+		m_CrewPrepAt = g_Game.GetTime() + CrewFire.PREPARE_MS;
+	}
+
+	//! Server: the pause after the set went on is over.
+	protected void CrewPrepared()
+	{
+		CarScript car = m_CrewPrepCar;
+		m_CrewPrepCar = null;
+
+		HumanCommandVehicle hcv = GetCommand_Vehicle();
+		if (car && hcv && IsAlive() && CarScript.Cast(hcv.GetTransport()) == car && car.CrewMemberIndex(this) == m_CrewPrepSeat)
+		{
+			CrewSend(CrewFire.CMD_OUT, car, m_CrewPrepSeat);
+			return;
+		}
+
+		// The player left the seat some other way meanwhile.
+		CrewSetOff();
+	}
+
+	//! Takes the set off on every machine.
+	protected void CrewSetOff()
+	{
+		CrewUseSet(0);
+		if (CrewHasAuthority())
+		{
+			m_CrewSyncSide = 0;
+			SetSynchDirty();
+		}
 	}
 
 	//! Server: the seat to return to, -1 when the car is full.
@@ -267,8 +328,18 @@ modded class PlayerBase
 			return true;
 		}
 
+		if (m_CrewPrepCar && g_Game.GetTime() >= m_CrewPrepAt)
+			CrewPrepared();
+
+		if (m_CrewEntering)
+			CrewEnterUpdate(pDt, pCurrentCommandID);
+
 		if (m_CrewOut)
+		{
 			CrewUpdate(pDt, pCurrentCommandID);
+			if (m_CrewLowering && CrewLowerUpdate(pDt))
+				return true;
+		}
 
 		return super.ModCommandHandlerBefore(pDt, pCurrentCommandID, pCurrentCommandFinished);
 	}
@@ -284,6 +355,9 @@ modded class PlayerBase
 		if (m_CrewCar.CrewMember(m_CrewSeat) == this)
 			m_CrewCar.CrewGetOut(m_CrewSeat);
 
+		m_CrewEntering = false;
+		m_CrewLowering = false;
+		m_CrewFallTime = 0;
 		int side = CrewFire.Side(m_CrewCar, m_CrewSeat);
 		CrewUseSet(side);
 		if (CrewHasAuthority())
@@ -293,9 +367,12 @@ modded class PlayerBase
 			CrewBreakWindow();
 		}
 
-		// The animation graph leaves its vehicle branch only through an exit clip or a fall,
-		// so a one-frame fall (landed in CrewUpdate) gets it back to on-foot poses at once.
+		// The animation graph leaves its vehicle branch only through an exit clip or a fall, so a fall it is.
+		// In the set the fall is the seat-to-window clip; CrewUpdate lands the player when it is over.
+		// The height is noted as the game does, so a landing it detects itself counts no fall.
 		StartCommand_Fall(0);
+		vector feet = GetPosition();
+		SetFallYDiff(feet[1]);
 
 		m_CrewLink = CrewFire.LinkPoint(m_CrewCar, m_CrewSeat);
 		PhysicsEnableGravity(false);
@@ -349,27 +426,105 @@ modded class PlayerBase
 
 	protected void CrewStepIn()
 	{
-		CrewDetach();
-		if (!m_CrewCar || m_CrewSeat < 0)
+		if (CrewFire.SMOOTH == 0 || !m_CrewCar || m_CrewSeat < 0)
+		{
+			CrewDetach();
+			CrewGetIn();
 			return;
+		}
 
-		HumanCommandVehicle cmd = StartCommand_Vehicle(m_CrewCar, m_CrewSeat, m_CrewCar.GetSeatAnimationType(m_CrewSeat));
-		if (cmd)
-			cmd.SetVehicleType(m_CrewCar.GetAnimInstance());
+		// The window-to-seat clip starts from the lowered weapon, so a raised one goes down first.
+		m_CrewLowering = IsRaised();
+		m_CrewLowerTime = 0;
+		if (!m_CrewLowering)
+			CrewEnterSeat();
 	}
 
-	protected void CrewDetach()
+	//! Back in, still outside the seat: keeps the weapon down until it is down. True when the seat was entered.
+	protected bool CrewLowerUpdate(float dt)
+	{
+		GetInputController().OverrideRaise(HumanInputControllerOverrideType.ONE_FRAME, false);
+		m_CrewLowerTime += dt;
+		if (m_CrewLowerTime < CrewFire.LOWER_TIME)
+			return false;
+
+		m_CrewLowering = false;
+		CrewEnterSeat();
+		return true;
+	}
+
+	//! Starts the game's get-in, which plays the window-to-seat clip while the set is still on.
+	protected void CrewEnterSeat()
 	{
 		m_CrewOut = false;
 		UnlinkFromLocalSpace();
 		PhysicsSetSolid(true);
 		PhysicsEnableGravity(true);
-		CrewUseSet(0);
-		if (CrewHasAuthority())
+		m_CrewEntering = CrewGetIn();
+		m_CrewEnterTime = 0;
+		m_CrewSeatedTime = -1;
+		if (!m_CrewEntering)
+			CrewSetOff();
+	}
+
+	protected bool CrewGetIn()
+	{
+		if (!m_CrewCar || m_CrewSeat < 0)
+			return false;
+
+		HumanCommandVehicle cmd = StartCommand_Vehicle(m_CrewCar, m_CrewSeat, m_CrewCar.GetSeatAnimationType(m_CrewSeat));
+		if (!cmd)
+			return false;
+		cmd.SetVehicleType(m_CrewCar.GetAnimInstance());
+		return true;
+	}
+
+	//! During the get-in: the weapon goes in with the player and the seat hides it at the end, as a seat does.
+	//! The set comes off a little after, when every client has finished the clip too.
+	protected void CrewEnterUpdate(float dt, int commandID)
+	{
+		m_CrewEnterTime += dt;
+		HumanCommandVehicle hcv = GetCommand_Vehicle();
+		if (commandID != DayZPlayerConstants.COMMANDID_VEHICLE || !hcv)
 		{
-			m_CrewSyncSide = 0;
-			SetSynchDirty();
+			// A new command may show up a step late; later than that, something cut the get-in short.
+			if (m_CrewEnterTime > 0.2)
+			{
+				m_CrewEntering = false;
+				CrewSetOff();
+			}
+			return;
 		}
+
+		if (hcv.IsGettingIn())
+		{
+			GetItemAccessor().HideItemInHands(false);
+			m_CrewSeatedTime = -1;
+			return;
+		}
+
+		if (m_CrewSeatedTime < 0)
+		{
+			m_CrewSeatedTime = 0;
+			TryHideItemInHands(true);
+		}
+		m_CrewSeatedTime += dt;
+		if (m_CrewSeatedTime >= CrewFire.SET_KEEP)
+		{
+			m_CrewEntering = false;
+			CrewSetOff();
+		}
+	}
+
+	protected void CrewDetach()
+	{
+		m_CrewOut = false;
+		m_CrewLowering = false;
+		m_CrewEntering = false;
+		UnlinkFromLocalSpace();
+		PhysicsSetSolid(true);
+		PhysicsEnableGravity(true);
+		CrewSetOff();
 	}
 
 	protected void CrewUpdate(float dt, int commandID)
@@ -377,8 +532,10 @@ modded class PlayerBase
 		switch (commandID)
 		{
 			case DayZPlayerConstants.COMMANDID_FALL:
+				// The fall is the seat-to-window clip: it lands when the clip is over.
+				m_CrewFallTime += dt;
 				HumanCommandFall fall = GetCommand_Fall();
-				if (fall && !fall.IsLanding())
+				if (fall && !fall.IsLanding() && (CrewFire.SMOOTH == 0 || m_CrewFallTime >= CrewFire.LEAN_OUT_TIME))
 					fall.Land(HumanCommandFall.LANDTYPE_NONE);
 				break;
 			case DayZPlayerConstants.COMMANDID_MOVE:

@@ -1,22 +1,22 @@
 // =====================================================================================
-// Offroad_02 (M1025): in-game diagnostic for the roof hatch.
+// Offroad_02 (M1025): внутриигровая диагностика верхнего люка.
 //
-// Where to run it: DayZDiag_x64.exe, offline mission or a local diag server,
-// Script Console -> "Enforce Script" tab -> paste everything -> Run.
-// The output goes to the script log (Documents\DayZ\Logs\script_*.log or the
-// server profile folder); filter on the [HATCHDIAG] marker.
+// Где запускать: DayZDiag_x64.exe, офлайн-миссия или локальный диаг-сервер,
+// Script Console -> вкладка «Enforce Script» -> вставить весь текст -> Run.
+// Вывод пишется в скрипт-лог (Documents\DayZ\Logs\script_*.log или папка профиля
+// сервера); фильтруйте по метке [HATCHDIAG].
 //
-// What it does (read-only, changes nothing on the car):
-//   1. Finds an Offroad_02 within 20 m of the player, or spawns one 6 m in front.
-//   2. Prints the model path and ALL named selections of the model.
-//   3. For each animation source in the list, prints how many bones it drives
-//      (GetBonePivotsForAnimationSource). The door sources are a control group:
-//      they must return > 0. If a hatch candidate returns 0 in every LOD, the model
-//      has no animation under that name.
-//   4. Checks the memory points of the seats and the roof, and prints the seat
-//      transforms (needed to place the player in the hatch).
+// Что делает (только чтение, машину не изменяет):
+//   1. Находит Offroad_02 в радиусе 20 м от игрока или создаёт её в 6 м перед ним.
+//   2. Выводит путь к модели и ВСЕ named selection модели.
+//   3. Для каждого источника анимации из списка выводит, сколько костей он двигает
+//      (GetBonePivotsForAnimationSource). Источники дверей — контрольная группа:
+//      у них должно быть > 0. Если кандидат на люк даёт 0 во всех LOD, анимации
+//      с таким именем в модели нет.
+//   4. Проверяет memory points мест и крыши и выводит трансформы мест
+//      (нужны, чтобы разместить игрока в люке).
 //
-// Add the names found by tools/hmmwv_hatch/p3d_names.py to hd_sources.
+// Имена, найденные tools/hmmwv_hatch/p3d_names.py, добавьте в hd_sources.
 // =====================================================================================
 
 PlayerBase hd_player = PlayerBase.Cast(GetGame().GetPlayer());
@@ -40,26 +40,26 @@ if (!hd_car)
 
 if (!hd_car)
 {
-	Print("[HATCHDIAG] ERROR: failed to find or create Offroad_02");
+	Print("[HATCHDIAG] ОШИБКА: не удалось найти или создать Offroad_02");
 }
 else
 {
-	Print("[HATCHDIAG] type=" + hd_car.GetType() + " model=" + hd_car.ConfigGetString("model"));
+	Print("[HATCHDIAG] тип=" + hd_car.GetType() + " модель=" + hd_car.ConfigGetString("model"));
 
 	// --- 1. Named selections ---
 	TStringArray hd_selections = new TStringArray;
 	hd_car.GetSelectionList(hd_selections);
-	Print("[HATCHDIAG] selections count=" + hd_selections.Count());
+	Print("[HATCHDIAG] всего selection=" + hd_selections.Count());
 	foreach (string hd_sel : hd_selections)
 	{
 		Print("[HATCHDIAG] selection: " + hd_sel);
 	}
 
-	// --- 2. Animation sources -> bones ---
+	// --- 2. Источники анимаций -> кости ---
 	TStringArray hd_sources = {
-		// control group (known from config.cpp, must be > 0)
+		// контрольная группа (известны из config.cpp, должно быть > 0)
 		"DoorsDriver", "DoorsCoDriver", "DoorsCargo1", "DoorsCargo2", "DoorsHood", "DoorsTrunk",
-		// hatch candidates (add names from p3d_names.py)
+		// кандидаты на люк (добавьте имена из p3d_names.py)
 		"Hatch", "DoorsHatch", "Hatch_1", "HatchGunner", "Turret", "Poklop", "Roof", "DoorsRoof"
 	};
 
@@ -71,14 +71,14 @@ else
 
 	foreach (string hd_src : hd_sources)
 	{
-		string hd_line = hd_src + " phase=" + hd_car.GetAnimationPhase(hd_src).ToString();
+		string hd_line = hd_src + " фаза=" + hd_car.GetAnimationPhase(hd_src).ToString();
 		foreach (int hd_lvl : hd_levels)
 		{
 			TIntArray hd_pivots = new TIntArray;
 			hd_car.GetBonePivotsForAnimationSource(hd_lvl, hd_src, hd_pivots);
 			hd_line = hd_line + " | lod" + hd_lvl.ToString() + "=" + hd_pivots.Count().ToString();
 		}
-		Print("[HATCHDIAG] animsource " + hd_line);
+		Print("[HATCHDIAG] источник " + hd_line);
 	}
 
 	// --- 3. Memory points ---
@@ -89,21 +89,21 @@ else
 	foreach (string hd_mp : hd_memPoints)
 	{
 		bool hd_exists = hd_car.MemoryPointExists(hd_mp);
-		string hd_mpLine = hd_mp + " exists=" + hd_exists.ToString();
+		string hd_mpLine = hd_mp + " есть=" + hd_exists.ToString();
 		if (hd_exists)
-			hd_mpLine = hd_mpLine + " pos(MS)=" + hd_car.GetMemoryPointPos(hd_mp).ToString();
+			hd_mpLine = hd_mpLine + " поз(MS)=" + hd_car.GetMemoryPointPos(hd_mp).ToString();
 		Print("[HATCHDIAG] memorypoint " + hd_mpLine);
 	}
 
-	// --- 4. Seat transforms and roof height ---
+	// --- 4. Трансформы мест и высота крыши ---
 	vector hd_tm[4];
 	for (int hd_i = 0; hd_i < hd_car.CrewSize(); hd_i++)
 	{
 		hd_car.CrewTransform(hd_i, hd_tm);
-		Print("[HATCHDIAG] crew " + hd_i.ToString() + " seatAnim=" + hd_car.GetSeatAnimationType(hd_i).ToString() + " pos(MS)=" + hd_tm[3].ToString());
+		Print("[HATCHDIAG] место " + hd_i.ToString() + " анимСиденья=" + hd_car.GetSeatAnimationType(hd_i).ToString() + " поз(MS)=" + hd_tm[3].ToString());
 	}
 
 	vector hd_box[2];
 	if (hd_car.GetCollisionBox(hd_box))
-		Print("[HATCHDIAG] collisionBox min=" + hd_box[0].ToString() + " max=" + hd_box[1].ToString());
+		Print("[HATCHDIAG] коллизия мин=" + hd_box[0].ToString() + " макс=" + hd_box[1].ToString());
 }

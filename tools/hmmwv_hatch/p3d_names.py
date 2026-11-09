@@ -1,31 +1,30 @@
 #!/usr/bin/env python3
 """
-p3d_names.py: offline name scanner for DayZ P3D models (binarized ODOL or MLOD).
+p3d_names.py — офлайн-сканер имён в моделях DayZ P3D (бинаризованный ODOL или MLOD).
 
-Purpose: find out whether the vanilla M1025 model (Offroad_02.p3d) has a separate
-bone, named selection or model.cfg animation for the roof hatch, without editing
-or de-binarizing the model.
+Назначение: выяснить, есть ли у ванильной модели M1025 (Offroad_02.p3d) отдельная
+кость, named selection или анимация model.cfg для верхнего люка. Модель при этом
+не редактируется и не дебинаризуется.
 
-A binarized ODOL stores the names of bones, selections, proxies and model.cfg
-animation sources as null-terminated ASCII strings. The script pulls them out and:
-  * checks which of the KNOWN AnimationSources from config.cpp (DoorsDriver, ...)
-    are present in the model (this validates the method: if the doors are found,
-    the extraction works);
-  * flags names that look like a hatch / turret / roof;
-  * prints model.cfg-like names that config.cpp does NOT define as AnimationSources
-    (an unused animation, if the model has one, will be among them).
+Бинаризованный ODOL хранит имена костей, selection, прокси и источников анимаций
+model.cfg как ASCII-строки, завершённые нулём. Скрипт извлекает их и:
+  * проверяет, какие ИЗВЕСТНЫЕ AnimationSources из config.cpp (DoorsDriver, ...)
+    присутствуют в модели. Это проверка метода: если двери найдены, извлечение работает;
+  * отмечает имена, похожие на люк, башню или крышу;
+  * выводит похожие на анимации имена, которых НЕТ в AnimationSources конфига
+    (неиспользуемая анимация, если она есть в модели, окажется среди них).
 
-Usage:
+Запуск:
     python p3d_names.py P:\\DZ\\vehicles\\wheeled\\Offroad_02\\Offroad_02.p3d
-    python p3d_names.py Offroad_02.p3d --all            # all strings
-    python p3d_names.py Offroad_02.p3d --json out.json  # save the result
+    python p3d_names.py Offroad_02.p3d --all            # все строки
+    python p3d_names.py Offroad_02.p3d --json out.json  # сохранить результат
 
-Where to get the file (the original PBO is never modified):
-  * DayZ Tools -> Workdrive / "Extract Game Data" -> P:\\DZ\\vehicles\\wheeled\\Offroad_02\\
-  * or unpack <DayZ>\\Addons\\vehicles_wheeled.pbo (DayZ Tools BankRev / any PBO tool)
-    into a separate folder.
+Где взять файл (оригинальный PBO не изменяется):
+  * DayZ Tools -> Workdrive / «Extract Game Data» -> P:\\DZ\\vehicles\\wheeled\\Offroad_02\\
+  * или распаковать <DayZ>\\Addons\\vehicles_wheeled.pbo (DayZ Tools BankRev или любой
+    PBO-инструмент) в отдельную папку.
 
-The script only reads the file. It modifies nothing and does not de-binarize the model.
+Скрипт только читает файл. Он ничего не изменяет и не дебинаризует модель.
 """
 
 import argparse
@@ -34,8 +33,8 @@ import re
 import struct
 import sys
 
-# AnimationSources that the vanilla config.cpp defines for Offroad_02
-# (own ones plus those inherited from CarScript).
+# AnimationSources, которые ванильный config.cpp задаёт для Offroad_02
+# (собственные и унаследованные от CarScript).
 KNOWN_CONFIG_SOURCES = [
     "DoorsDriver", "DoorsCoDriver", "DoorsCargo1", "DoorsCargo2",
     "DoorsHood", "DoorsTrunk",
@@ -45,7 +44,7 @@ KNOWN_CONFIG_SOURCES = [
     "damper_1_1", "damper_2_1", "damper_1_2", "damper_2_2",
 ]
 
-# Keywords for a hatch / turret / roof (EN + CZ, since BI often uses Czech names).
+# Ключевые слова для люка, башни, крыши (англ. и чешск.: в BI часто используют чешские имена).
 HATCH_KEYWORDS = [
     "hatch", "poklop", "turret", "vez", "kopul", "lid", "roof", "strech",
     "gunner", "commander", "cupola", "kruh", "krytk", "otoc", "mg_",
@@ -68,53 +67,59 @@ def extract_strings(data, min_len):
             continue
         if s not in seen:
             seen[s] = m.start()
-    return seen  # name -> offset of first occurrence
+    return seen  # имя -> смещение первого вхождения
 
 
 def looks_like_identifier(s):
-    # Names of bones/selections/sources: no spaces, a "reasonable" length.
+    # Имена костей, selection и источников: без пробелов, разумной длины.
     return 2 < len(s) <= 64 and " " not in s and re.fullmatch(r"[A-Za-z0-9_\\.:\-]+", s) is not None
 
 
 def main():
-    ap = argparse.ArgumentParser(description="DayZ P3D name scanner (search for the hatch on Offroad_02)")
-    ap.add_argument("p3d", help="path to a .p3d file")
-    ap.add_argument("--min-len", type=int, default=3)
-    ap.add_argument("--all", action="store_true", help="print all extracted strings")
-    ap.add_argument("--json", metavar="FILE", help="save the result as JSON")
+    # На Windows при перенаправлении вывода в файл кодировка может не поддерживать кириллицу.
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except AttributeError:
+        pass
+
+    ap = argparse.ArgumentParser(description="Сканер имён DayZ P3D (поиск люка у Offroad_02)")
+    ap.add_argument("p3d", help="путь к файлу .p3d")
+    ap.add_argument("--min-len", type=int, default=3, help="минимальная длина строки")
+    ap.add_argument("--all", action="store_true", help="вывести все извлечённые строки")
+    ap.add_argument("--json", metavar="FILE", help="сохранить результат в JSON")
     args = ap.parse_args()
 
     with open(args.p3d, "rb") as f:
         data = f.read()
 
     magic, version = read_header(data)
-    print(f"file:     {args.p3d}")
-    print(f"size:     {len(data)} bytes")
-    print(f"format:   {magic} (version {version})")
+    print(f"файл:     {args.p3d}")
+    print(f"размер:   {len(data)} байт")
+    print(f"формат:   {magic} (версия {version})")
     if magic not in ("ODOL", "MLOD"):
-        print("WARNING: unexpected signature; the file may not be a P3D or may be packed.")
+        print("ВНИМАНИЕ: неожиданная сигнатура; возможно, это не P3D или файл упакован.")
 
     strings = extract_strings(data, args.min_len)
     idents = {s: o for s, o in strings.items() if looks_like_identifier(s)}
     lower_map = {s.lower(): s for s in idents}
 
-    print(f"strings:  {len(strings)} unique, of which {len(idents)} look like names\n")
+    print(f"строк:    {len(strings)} уникальных, из них {len(idents)} похожи на имена\n")
 
-    # 1. Validate the method on known door sources.
-    print("== 1. AnimationSources from config.cpp found in the model ==")
+    # 1. Проверка метода на известных источниках дверей.
+    print("== 1. AnimationSources из config.cpp, найденные в модели ==")
     found_known, missing_known = [], []
     for src in KNOWN_CONFIG_SOURCES:
         hit = lower_map.get(src.lower())
         (found_known if hit else missing_known).append(src)
-    print("  found:     " + (", ".join(found_known) or "-"))
-    print("  not found: " + (", ".join(missing_known) or "-"))
+    print("  найдены:    " + (", ".join(found_known) or "-"))
+    print("  не найдены: " + (", ".join(missing_known) or "-"))
     if not found_known:
-        print("  !! None of the door sources was found. The names may be stored compressed;")
-        print("     in that case use the in-game diagnostic (diag_offroad02_console.c).")
+        print("  !! Не найден ни один источник дверей. Возможно, имена хранятся в сжатом виде;")
+        print("     в этом случае используйте внутриигровую диагностику (diag_offroad02_console.c).")
     print()
 
-    # 2. Hatch / turret / roof candidates.
-    print("== 2. Hatch / turret / roof candidates ==")
+    # 2. Кандидаты на люк, башню, крышу.
+    print("== 2. Кандидаты на люк / башню / крышу ==")
     hatch_hits = []
     for s, off in sorted(idents.items(), key=lambda kv: kv[1]):
         sl = s.lower()
@@ -122,11 +127,11 @@ def main():
             hatch_hits.append((s, off))
             print(f"  0x{off:08X}  {s}")
     if not hatch_hits:
-        print("  - (no names matching the keywords)")
+        print("  - (нет имён, совпадающих с ключевыми словами)")
     print()
 
-    # 3. Door-like/animated names that config.cpp does not define.
-    print("== 3. Door/animation-like names that config.cpp does not define ==")
+    # 3. Похожие на двери и анимации имена, которых нет в config.cpp.
+    print("== 3. Имена, похожие на двери и анимации, которых нет в config.cpp ==")
     known_lower = {k.lower() for k in KNOWN_CONFIG_SOURCES}
     anim_like = []
     for s, off in sorted(idents.items(), key=lambda kv: kv[1]):
@@ -138,32 +143,32 @@ def main():
             anim_like.append((s, off))
             print(f"  0x{off:08X}  {s}")
     if not anim_like:
-        print("  - none")
+        print("  - нет")
     print()
 
-    # 4. Proxies (crew seats etc.).
-    print("== 4. Proxies / crew positions ==")
+    # 4. Прокси (места экипажа и т. п.).
+    print("== 4. Прокси / позиции экипажа ==")
     proxies = [(s, o) for s, o in sorted(strings.items(), key=lambda kv: kv[1])
                if "proxy" in s.lower() or s.lower().startswith(("crew", "pos_", "seat_"))]
     for s, off in proxies:
         print(f"  0x{off:08X}  {s}")
     if not proxies:
-        print("  - none")
+        print("  - нет")
     print()
 
     if args.all:
-        print("== All strings ==")
+        print("== Все строки ==")
         for s, off in sorted(strings.items(), key=lambda kv: kv[1]):
             print(f"  0x{off:08X}  {s}")
 
     verdict = (
-        "HATCH CANDIDATES FOUND: verify them in-game (diag_offroad02_console.c)"
+        "НАЙДЕНЫ КАНДИДАТЫ НА ЛЮК: проверьте их в игре (diag_offroad02_console.c)"
         if hatch_hits else
-        "NO hatch names found: the hatch is most likely static geometry (option B)"
+        "Имён люка НЕ найдено: скорее всего, люк — статичная геометрия (вариант B)"
     )
     if not found_known:
-        verdict = "INCONCLUSIVE: the method did not find even the door sources"
-    print("VERDICT: " + verdict)
+        verdict = "НЕОПРЕДЕЛЁННО: метод не нашёл даже источники дверей"
+    print("ВЫВОД: " + verdict)
 
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:
@@ -175,7 +180,7 @@ def main():
                 "proxies": [s for s, _ in proxies],
                 "verdict": verdict,
             }, f, ensure_ascii=False, indent=2)
-        print(f"JSON saved: {args.json}")
+        print(f"JSON сохранён: {args.json}")
     return 0
 
 

@@ -1,16 +1,24 @@
 // =====================================================================================
-// HatchP0 — прототип P0: проверка привязки игрока к крыше ванильного Offroad_02.
+// HatchP0 — прототип P0: стрелок в люке ванильного Offroad_02.
 //
-// Вопросы, на которые отвечает тест:
-//   T1  Держит ли Human.LinkToLocalSpaceOf() игрока на крыше машины (стоя и на ходу)?
-//   T2  Работает ли штатное оружие у привязанного игрока (подъём, прицел, выстрел)?
-//   T3  Удерживает ли движок игрока на крыше сам, без явной привязки
-//       (с animPhysDetachSpeed в конфиге машины)?
-//   T4  Режим «в люке»: игрок опущен в крышу, коллизия и гравитация выключены.
-//   T5  Блокировка ходьбы: игрок может только поворачиваться и целиться.
+// Привязка к машине повторяет схему, уже проверенную в моде CrewFire на DayZ 1.30
+// (ветка claude/dayz-vehicle-shooting-animation-s15all): гравитация и коллизия капсулы
+// выключены, игрок привязан LinkToLocalSpaceOf и перепривязывается, если капсулу сдвинуло.
 //
-// Работает только в DayZDiag (DIAG_DEVELOPER). На обычном клиенте и сервере мод ничего не делает.
-// Весь вывод — в скрипт-лог с меткой [HATCHP0]. Управление: prototype/README.md
+// Вопросы теста:
+//   T1  Держится ли игрок в точке люка стоя и на 20/40/60 км/ч.
+//   T2  Работает ли штатное оружие в люке; с какими углами выстрел безопасен.
+//   T3  Удерживает ли движок игрока на крыше сам, без привязки (animPhysDetachSpeed в конфиге).
+//   T4  Как выглядит стрелок «по пояс в люке» и какая глубина правильная.
+//   T5  Не уходит ли игрок с точки при поворотах, смене стойки и стрельбе.
+//
+// ЗАЩИТА ОТ ВЫЛЕТА: выстрел, который сразу попадает в машину, к которой привязан игрок,
+// роняет игру (и сервер) — это выяснено в CrewFire. Поэтому, пока игрок привязан,
+// стрельба запрещена, если ствол опущен ниже MIN_AIM_UD, голова слишком близко к крыше
+// или стойка не «стоя».
+//
+// Работает только в DayZDiag (DIAG_DEVELOPER). Вывод — в скрипт-лог с меткой [HATCHP0].
+// Управление: prototype/README.md
 // =====================================================================================
 
 const int HATCHP0_RPC = 4761536;
@@ -18,18 +26,18 @@ const int HATCHP0_RPC = 4761536;
 enum HatchP0Cmd
 {
 	NONE,
-	LINK,			// поставить на крышу и привязать (LinkToLocalSpaceOf)
+	LINK,			// поставить в точку люка и привязать (схема CrewFire)
 	PLACE,			// поставить на крышу без привязки (тест T3)
 	UNLINK,			// отвязать и сбросить все режимы
 	AP_20,			// автопилот 20 км/ч
 	AP_40,			// автопилот 40 км/ч
 	AP_60,			// автопилот 60 км/ч
 	AP_STOP,		// плавная остановка
-	HATCH_MODE,		// вкл/выкл режим «в люке»
+	HATCH_MODE,		// переключить «на крыше» / «в люке» (глубина HATCH_DEPTH)
 	LOCK_MOVE,		// вкл/выкл блокировку ходьбы
 	DUMP,			// подробный срез состояния, включая других игроков рядом
-	HEIGHT_UP,		// поднять точку крепления на 0.1 м
-	HEIGHT_DOWN		// опустить точку крепления на 0.1 м
+	HEIGHT_UP,		// точка крепления выше на 0.1 м
+	HEIGHT_DOWN		// точка крепления ниже на 0.1 м
 };
 
 // -------------------------------------------------------------------------------------
@@ -191,8 +199,11 @@ class HatchP0
 	static const float	SEARCH_RADIUS	= 15.0;	// м, поиск Offroad_02 вокруг игрока
 	static const int	LOG_INTERVAL	= 500;	// мс, период строк TICK
 	static const int	LINK_GRACE		= 1000;	// мс после привязки, в течение которых не проверяем LINK_LOST
-	static const float	HATCH_DEPTH		= 0.7;	// м, на сколько опускать игрока в режиме «в люке»
-	static const float	DRIFT_WARN		= 1.0;	// м, отклонение от точки крепления для события DRIFT
+	static const float	HATCH_DEPTH		= 1.0;	// м, на сколько ниже крыши стоят ноги в режиме «в люке»
+	static const float	PIN_DISTANCE	= 0.03;	// м, сдвиг капсулы, после которого перепривязываем (как в CrewFire)
+	static const float	MAX_STRAY		= 0.8;	// м, дальше — игрока что-то вытолкнуло, только сообщаем
+	static const float	MIN_AIM_UD		= -5.0;	// град, ниже — стрельба запрещена (ствол смотрит в машину)
+	static const float	MIN_HEAD_ABOVE	= 0.35;	// м, голова ниже этого над крышей — стрельба запрещена
 
 	// ---------- поиск машины ----------
 	static CarScript FindCar(PlayerBase player)
@@ -222,8 +233,8 @@ class HatchP0
 		return best;
 	}
 
-	// ---------- точка на крыше в пространстве модели (положение стоп игрока) ----------
-	static bool GetHatchPointMS(CarScript car, PlayerBase player, out vector pointMS, out string method)
+	// ---------- точка люка на крыше в пространстве модели ----------
+	static bool GetRoofPointMS(CarScript car, PlayerBase player, out vector pointMS, out string method)
 	{
 		vector box[2];
 		if (!car.GetCollisionBox(box))
@@ -261,12 +272,31 @@ class HatchP0
 			heightMethod = "луч по Geometry LOD";
 		}
 
-		pointMS = Vector(basePos[0], roofY + 0.02, basePos[2]);
+		pointMS = Vector(basePos[0], roofY, basePos[2]);
 		method = method + ", высота: " + heightMethod;
 		return true;
 	}
 
-	// ---------- поставить на крышу (с привязкой или без) ----------
+	// ---------- привязка с сохранением текущего поворота игрока относительно машины ----------
+	static void Pin(PlayerBase player)
+	{
+		CarScript car = player.m_HatchP0Car;
+		if (!car)
+			return;
+
+		vector carTm[4];
+		vector playerTm[4];
+		vector localTm[4];
+		car.GetTransform(carTm);
+		player.GetTransform(playerTm);
+		Math3D.MatrixInvMultiply4(carTm, playerTm, localTm);
+		localTm[3] = player.m_HatchP0TargetMS;
+
+		player.UnlinkFromLocalSpace();
+		player.LinkToLocalSpaceOf(car, localTm);
+	}
+
+	// ---------- поставить в точку люка (с привязкой или без) ----------
 	static void PlaceOnRoof(PlayerBase player, CarScript car, bool link)
 	{
 		if (!car)
@@ -281,21 +311,20 @@ class HatchP0
 			return;
 		}
 
-		vector pointMS;
+		vector roofMS;
 		string method;
-		if (!GetHatchPointMS(car, player, pointMS, method))
+		if (!GetRoofPointMS(car, player, roofMS, method))
 		{
 			HatchP0Log.Notify("Не удалось вычислить точку на крыше");
 			return;
 		}
 
-		pointMS[1] = pointMS[1] + player.m_HatchP0HeightOffset;
+		float depth = 0;
+		if (player.m_HatchP0HatchMode)
+			depth = HATCH_DEPTH;
 
-		vector localTm[4];
-		localTm[0] = "1 0 0";
-		localTm[1] = "0 1 0";
-		localTm[2] = "0 0 1";
-		localTm[3] = pointMS;
+		vector feetMS = roofMS;
+		feetMS[1] = roofMS[1] + 0.02 - depth + player.m_HatchP0HeightOffset;
 
 		if (player.m_HatchP0Linked)
 		{
@@ -303,8 +332,14 @@ class HatchP0
 			player.m_HatchP0Linked = false;
 		}
 
+		// Поставить игрока в точку, лицом вперёд по машине
 		vector carTm[4];
 		car.GetTransform(carTm);
+		vector localTm[4];
+		localTm[0] = "1 0 0";
+		localTm[1] = "0 1 0";
+		localTm[2] = "0 0 1";
+		localTm[3] = feetMS;
 		vector worldTm[4];
 		Math3D.MatrixMultiply4(carTm, localTm, worldTm);
 
@@ -313,7 +348,8 @@ class HatchP0
 		player.SetOrientation(Vector(carOri[0], 0, 0));
 
 		player.m_HatchP0Car = car;
-		player.m_HatchP0TargetMS = pointMS;
+		player.m_HatchP0TargetMS = feetMS;
+		player.m_HatchP0RoofY = roofMS[1];
 		player.m_HatchP0LinkLostReported = false;
 		player.m_HatchP0DriftReported = false;
 		player.m_HatchP0LinkTime = GetGame().GetTime();
@@ -321,12 +357,26 @@ class HatchP0
 		string mode = "PLACE (без привязки)";
 		if (link)
 		{
+			// Схема CrewFire: без гравитации и коллизии капсула не выталкивается из машины
+			player.PhysicsEnableGravity(false);
+			player.PhysicsSetSolid(false);
+			HumanCommandMove hcm = player.GetCommand_Move();
+			if (hcm)
+				hcm.ForceStance(DayZPlayerConstants.STANCEIDX_ERECT);
+
 			player.LinkToLocalSpaceOf(car, localTm);
 			player.m_HatchP0Linked = true;
-			mode = "LINK (LinkToLocalSpaceOf)";
+			SetMoveLock(player, true);
+			mode = "LINK";
+		}
+		else
+		{
+			player.PhysicsEnableGravity(true);
+			player.PhysicsSetSolid(true);
 		}
 
-		HatchP0Log.Notify(string.Format("%1: точка(MS)=%2, смещение=%3 м, способ: %4", mode, pointMS, player.m_HatchP0HeightOffset, method));
+		HatchP0Log.Notify(string.Format("%1: ноги(MS)=%2, крыша Y=%3, «в люке»=%4, доп. смещение=%5 м, способ: %6",
+			mode, feetMS, roofMS[1], player.m_HatchP0HatchMode, player.m_HatchP0HeightOffset, method));
 		LogStatus(player, "AFTER_" + mode);
 	}
 
@@ -342,7 +392,6 @@ class HatchP0
 	// ---------- отвязать и сбросить режимы ----------
 	static void Unlink(PlayerBase player)
 	{
-		SetHatchMode(player, false);
 		SetMoveLock(player, false);
 
 		if (player.m_HatchP0Linked)
@@ -351,32 +400,20 @@ class HatchP0
 			player.m_HatchP0Linked = false;
 		}
 
+		player.PhysicsSetSolid(true);
+		player.PhysicsEnableGravity(true);
+
 		LogStatus(player, "BEFORE_RESET");
 		player.m_HatchP0Car = null;
+		player.m_HatchP0HatchMode = false;
 		player.m_HatchP0HeightOffset = 0;
 		HatchP0Log.Notify("Отвязан, режимы сброшены");
 	}
 
-	// ---------- режим «в люке»: опустить, выключить коллизию и гравитацию ----------
-	static void SetHatchMode(PlayerBase player, bool enable)
-	{
-		if (player.m_HatchP0HatchMode == enable)
-			return;
-
-		player.m_HatchP0HatchMode = enable;
-		player.PhysicsSetSolid(!enable);
-		player.PhysicsEnableGravity(!enable);
-
-		if (enable)
-			player.m_HatchP0HeightOffset = player.m_HatchP0HeightOffset - HATCH_DEPTH;
-		else
-			player.m_HatchP0HeightOffset = player.m_HatchP0HeightOffset + HATCH_DEPTH;
-	}
-
 	static void ToggleHatchMode(PlayerBase player)
 	{
-		SetHatchMode(player, !player.m_HatchP0HatchMode);
-		HatchP0Log.Notify(string.Format("Режим «в люке»: %1 (solid=%2)", player.m_HatchP0HatchMode, player.PhysicsIsSolid()));
+		player.m_HatchP0HatchMode = !player.m_HatchP0HatchMode;
+		HatchP0Log.Notify(string.Format("Режим «в люке» (ноги на %1 м ниже крыши): %2", HATCH_DEPTH, player.m_HatchP0HatchMode));
 		Relink(player);
 	}
 
@@ -407,8 +444,66 @@ class HatchP0
 	static void ChangeHeight(PlayerBase player, float delta)
 	{
 		player.m_HatchP0HeightOffset = player.m_HatchP0HeightOffset + delta;
-		HatchP0Log.Notify(string.Format("Смещение по высоте: %1 м", player.m_HatchP0HeightOffset));
+		HatchP0Log.Notify(string.Format("Доп. смещение по высоте: %1 м", player.m_HatchP0HeightOffset));
 		Relink(player);
+	}
+
+	// ---------- защита от вылета: можно ли сейчас стрелять ----------
+	static float HeadAboveRoof(PlayerBase player)
+	{
+		if (!player.m_HatchP0Car)
+			return 0;
+
+		vector headWS = player.GetBonePositionWS(player.GetBoneIndexByName("Head"));
+		vector headMS = player.m_HatchP0Car.WorldToModel(headWS);
+		return headMS[1] - player.m_HatchP0RoofY;
+	}
+
+	static bool IsFireBlocked(PlayerBase player, out string reason)
+	{
+		if (!player.m_HatchP0Linked)
+			return false;
+
+		HumanMovementState hms = new HumanMovementState();
+		player.GetMovementState(hms);
+		if (hms.m_iStanceIdx != DayZPlayerConstants.STANCEIDX_ERECT && hms.m_iStanceIdx != DayZPlayerConstants.STANCEIDX_RAISEDERECT)
+		{
+			reason = "стойка не «стоя»";
+			return true;
+		}
+
+		HumanCommandWeapons hcw = player.GetCommandModifier_Weapons();
+		if (!hcw)
+		{
+			reason = "нет данных о прицеле";
+			return true;
+		}
+
+		float aimUD = hcw.GetBaseAimingAngleUD();
+		if (aimUD < MIN_AIM_UD)
+		{
+			reason = string.Format("ствол опущен: %1° < %2°", aimUD, MIN_AIM_UD);
+			return true;
+		}
+
+		float headAbove = HeadAboveRoof(player);
+		if (headAbove < MIN_HEAD_ABOVE)
+		{
+			reason = string.Format("голова над крышей %1 м < %2 м", headAbove, MIN_HEAD_ABOVE);
+			return true;
+		}
+
+		return false;
+	}
+
+	static void ReportFireBlocked(PlayerBase player, string reason)
+	{
+		int now = GetGame().GetTime();
+		if (now - player.m_HatchP0LastBlockLog < 1000)
+			return;
+
+		player.m_HatchP0LastBlockLog = now;
+		HatchP0Log.Notify("Выстрел заблокирован: " + reason);
 	}
 
 	// ---------- состояние в лог ----------
@@ -432,7 +527,13 @@ class HatchP0
 		if (hic)
 			raised = hic.IsWeaponRaised();
 
-		string flags = string.Format("hatchMode=%1 moveLock=%2 solid=%3 testLinked=%4", player.m_HatchP0HatchMode, player.m_HatchP0MoveLocked, player.PhysicsIsSolid(), player.m_HatchP0Linked);
+		float aimUD = 0;
+		HumanCommandWeapons hcw = player.GetCommandModifier_Weapons();
+		if (hcw)
+			aimUD = hcw.GetBaseAimingAngleUD();
+
+		HumanMovementState hms = new HumanMovementState();
+		player.GetMovementState(hms);
 
 		HatchP0Log.Msg(string.Format("%1 cmd=%2 linkedEnt=%3 floorEnt=%4 slidingOff=%5 parent=%6 inVehicle=%7 raised=%8 %9",
 			tag,
@@ -444,7 +545,16 @@ class HatchP0
 			player.IsInVehicle(),
 			raised,
 			carInfo));
-		HatchP0Log.Msg("    " + flags);
+
+		HatchP0Log.Msg(string.Format("    testLinked=%1 hatchMode=%2 moveLock=%3 solid=%4 stance=%5 aimUD=%6 headAboveRoof=%7m pins=%8",
+			player.m_HatchP0Linked,
+			player.m_HatchP0HatchMode,
+			player.m_HatchP0MoveLocked,
+			player.PhysicsIsSolid(),
+			hms.m_iStanceIdx,
+			aimUD,
+			HeadAboveRoof(player),
+			player.m_HatchP0PinCount));
 	}
 
 	static void Dump(PlayerBase player)
@@ -467,30 +577,45 @@ class HatchP0
 		HatchP0Log.Notify("Состояние записано в лог");
 	}
 
-	// ---------- вызывается каждый шаг симуляции игрока (сервер и клиент-владелец) ----------
-	static void OnPlayerTick(PlayerBase player)
+	// ---------- каждый шаг симуляции игрока (сервер и клиент-владелец) ----------
+	static void OnPlayerTick(PlayerBase player, int commandID)
 	{
 		if (!player.m_HatchP0Car)
 			return;
 
 		int now = GetGame().GetTime();
 
-		if (player.m_HatchP0Linked && !player.m_HatchP0LinkLostReported && now - player.m_HatchP0LinkTime > LINK_GRACE)
+		if (player.m_HatchP0Linked)
 		{
-			if (player.PhysicsGetLinkedEntity() != player.m_HatchP0Car)
+			// Смерть, потеря сознания, вода: ничего не должно держать тело на машине (как в CrewFire)
+			if (commandID != DayZPlayerConstants.COMMANDID_MOVE && commandID != DayZPlayerConstants.COMMANDID_ACTION && commandID != DayZPlayerConstants.COMMANDID_MELEE && commandID != DayZPlayerConstants.COMMANDID_MELEE2)
 			{
-				player.m_HatchP0LinkLostReported = true;
-				LogStatus(player, "EVENT_LINK_LOST");
+				LogStatus(player, "EVENT_COMMAND_CHANGED");
+				Unlink(player);
+				return;
 			}
-		}
 
-		if (!player.m_HatchP0DriftReported)
-		{
+			// Смена стойки и повороты сдвигают капсулу: возвращаем в точку (как в CrewFire)
 			vector posMS = player.m_HatchP0Car.WorldToModel(player.GetPosition());
-			if (vector.Distance(posMS, player.m_HatchP0TargetMS) > DRIFT_WARN)
+			float stray = vector.Distance(posMS, player.m_HatchP0TargetMS);
+			if (stray > PIN_DISTANCE && stray < MAX_STRAY)
+			{
+				Pin(player);
+				player.m_HatchP0PinCount++;
+			}
+			else if (stray >= MAX_STRAY && !player.m_HatchP0DriftReported)
 			{
 				player.m_HatchP0DriftReported = true;
 				LogStatus(player, "EVENT_DRIFT");
+			}
+
+			if (!player.m_HatchP0LinkLostReported && now - player.m_HatchP0LinkTime > LINK_GRACE)
+			{
+				if (player.GetParent() != player.m_HatchP0Car && player.PhysicsGetLinkedEntity() != player.m_HatchP0Car)
+				{
+					player.m_HatchP0LinkLostReported = true;
+					LogStatus(player, "EVENT_LINK_LOST");
+				}
 			}
 		}
 
@@ -590,16 +715,19 @@ modded class PlayerBase
 	bool		m_HatchP0LinkLostReported;
 	bool		m_HatchP0DriftReported;
 	float		m_HatchP0HeightOffset;
+	float		m_HatchP0RoofY;
 	vector		m_HatchP0TargetMS;
 	int			m_HatchP0LastLog;
+	int			m_HatchP0LastBlockLog;
 	int			m_HatchP0LinkTime;
+	int			m_HatchP0PinCount;
 
 	override void CommandHandler(float pDt, int pCurrentCommandID, bool pCurrentCommandFinished)
 	{
 		super.CommandHandler(pDt, pCurrentCommandID, pCurrentCommandFinished);
 
 #ifdef DIAG_DEVELOPER
-		HatchP0.OnPlayerTick(this);
+		HatchP0.OnPlayerTick(this, pCurrentCommandID);
 #endif
 	}
 
@@ -623,10 +751,57 @@ modded class PlayerBase
 		HatchP0.Execute(this, data.param1, car);
 #endif
 	}
+
+	// В люке — только стойка «стоя»: присев, игрок опустит ствол в крышу
+	override bool CanChangeStance(int previousStance, int newStance)
+	{
+#ifdef DIAG_DEVELOPER
+		if (m_HatchP0Linked)
+			return newStance == DayZPlayerConstants.STANCEIDX_ERECT || newStance == DayZPlayerConstants.STANCEIDX_RAISEDERECT;
+#endif
+		return super.CanChangeStance(previousStance, newStance);
+	}
+
+	override bool CanJump()
+	{
+#ifdef DIAG_DEVELOPER
+		if (m_HatchP0Linked)
+			return false;
+#endif
+		return super.CanJump();
+	}
+
+	override bool CanClimb(int climbType, SHumanCommandClimbResult climbRes)
+	{
+#ifdef DIAG_DEVELOPER
+		if (m_HatchP0Linked)
+			return false;
+#endif
+		return super.CanClimb(climbType, climbRes);
+	}
 }
 
 // -------------------------------------------------------------------------------------
-// Выстрелы: пишем в лог, был ли игрок привязан и с какой скоростью ехала машина
+// Защита от вылета: нельзя стрелять в машину, к которой привязан игрок
+// -------------------------------------------------------------------------------------
+modded class WeaponManager
+{
+	override bool CanFire(Weapon_Base wpn)
+	{
+#ifdef DIAG_DEVELOPER
+		string reason;
+		if (m_player && HatchP0.IsFireBlocked(m_player, reason))
+		{
+			HatchP0.ReportFireBlocked(m_player, reason);
+			return false;
+		}
+#endif
+		return super.CanFire(wpn);
+	}
+}
+
+// -------------------------------------------------------------------------------------
+// Выстрелы: пишем в лог состояние игрока и машины в момент выстрела
 // -------------------------------------------------------------------------------------
 modded class Weapon_Base
 {

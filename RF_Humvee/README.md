@@ -13,10 +13,7 @@
 | `model/memory_points.json` | координаты memory-точек (ось люка, центры колёс) |
 | `preview/humvee_preview.html` | интерактивный 3D-просмотр (открыть в браузере): люк, окраска, камеры |
 | `source/generate_humvee.py` | генератор модели (`python3 source/generate_humvee.py`, нужен только numpy) |
-| `config.cpp` | классы `RF_Humvee`, `RF_Humvee_Desert`, `RF_HumveeWheel`, источник анимации `HatchRoof` |
-| `data/model.cfg` | анимация `hatch_roof` (поворот 0 → −110° вокруг `hatch_roof_axis`) |
-| `scripts/4_World/RF_Humvee/` | класс машины + действия «Открыть люк» / «Закрыть люк» (из салона и снаружи) |
-| `server/*_snippet.xml` | заготовки для `cfgeventspawns.xml`, `events.xml`, `types.xml` |
+| `../RF_Humvee_Mod/` | **готовый мод DayZ** (`@RF_Humvee`): P3D, текстуры, конфиги, скрипты, PBO — см. его README |
 
 ## Как устроен люк
 

@@ -1,7 +1,7 @@
-// Машина с люком на крыше. Состояние люка = фаза источника анимации "HatchRoof"
-// (source = "user" в config.cpp, синхронизируется с клиентами движком) и сохраняется в БД сервера.
+// Люк на крыше. Положение люка = фаза источника анимации "HatchRoof"
+// (source = "user" в config.cpp RF_Humvee — движок сам синхронизирует её с клиентами).
 
-class RF_Humvee extends OffroadHatchback
+modded class RF_Humvee
 {
 	static const string HATCH_SOURCE = "HatchRoof";
 	static const string HATCH_SELECTION = "hatch_roof";
@@ -35,14 +35,6 @@ class RF_Humvee extends OffroadHatchback
 		SetAnimationPhase(HATCH_SOURCE, phase);
 	}
 
-	void RF_ToggleHatch()
-	{
-		RF_SetHatchOpen(!RF_IsHatchOpen());
-	}
-
-	// Люк — ещё один путь в салон: открытый люк не мешает стрельбе/обзору пассажира сзади.
-	// При желании можно разрешить выход через люк, переопределив CrewCanGetThrough().
-
 	override void OnStoreSave(ParamsWriteContext ctx)
 	{
 		super.OnStoreSave(ctx);
@@ -67,4 +59,16 @@ class RF_Humvee extends OffroadHatchback
 	}
 }
 
-class RF_Humvee_Desert extends RF_Humvee {}
+// Без регистрации здесь AddAction() не найдёт действия.
+modded class ActionConstructor
+{
+	override void RegisterActions(TTypenameArray actions)
+	{
+		super.RegisterActions(actions);
+
+		actions.Insert(ActionRFOpenHatchInVehicle);
+		actions.Insert(ActionRFCloseHatchInVehicle);
+		actions.Insert(ActionRFOpenHatchOutside);
+		actions.Insert(ActionRFCloseHatchOutside);
+	}
+}

@@ -445,5 +445,6 @@ class CfgVehicles
 		// Своя модель с песочной текстурой в гранях: замена через hiddenSelections на небинаризованном p3d не работает
 		model = "\RF_Humvee\data\rf_humvee_desert.p3d";
 		hiddenSelectionsTextures[] = {"\RF_Humvee\data\rf_humvee_desert_co.paa"};
+		hiddenSelectionsMaterials[] = {"\RF_Humvee\data\rf_humvee_body_desert.rvmat"};
 	};
 };

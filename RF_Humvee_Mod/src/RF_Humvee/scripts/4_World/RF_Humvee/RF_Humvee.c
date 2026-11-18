@@ -136,6 +136,30 @@ class RF_Humvee extends OffroadHatchback
 
 class RF_Humvee_Desert extends RF_Humvee {}
 
+// На camo оказывался ванильный niva_body.rvmat от Ada (проверено GetObjectMaterial(0) на клиенте): его
+// зелёная многослойная окраска перекрывала нашу текстуру. Ставим свой материал из конфига.
+modded class RF_Humvee
+{
+	override void EEInit()
+	{
+		super.EEInit();
+		g_Game.GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(RF_ApplyBodyMaterial, 100, false);
+	}
+
+	override void EEHealthLevelChanged(int oldLevel, int newLevel, string zone)
+	{
+		super.EEHealthLevelChanged(oldLevel, newLevel, zone);
+		RF_ApplyBodyMaterial();
+	}
+
+	void RF_ApplyBodyMaterial()
+	{
+		TStringArray materials = GetHiddenSelectionsMaterials();
+		if (materials.Count() > 0)
+			SetObjectMaterial(0, materials[0]);
+	}
+}
+
 // «Открыть/Закрыть дверь» снаружи. Ванильные ActionCarDoorsOutside работают только с дверями-аттачментами
 // (target — CarDoor), у нас же цель — сама машина, компонент двери seat_* в View Geometry.
 class ActionRFDoorOutsideBase: ActionInteractBase

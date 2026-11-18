@@ -32,7 +32,20 @@ OUT_ADDONS = os.path.join(MOD, "@RF_Humvee", "Addons")
 
 TEX_CAMO = r"rf_humvee\data\rf_humvee_woodland_co.paa"
 TEX_DESERT = r"rf_humvee\data\rf_humvee_desert_co.paa"   # своя модель: hiddenSelections на небинаризованном p3d не работают
-MAT_BODY = r"rf_humvee\data\rf_humvee_body.rvmat"
+# у каждой окраски свой rvmat: подозрение, что игра запоминает текстуру вместе с материалом
+# (пустынная модель с общим материалом выглядела лесной)
+BODY_MAT = {TEX_CAMO: r"rf_humvee\data\rf_humvee_body.rvmat",
+            TEX_DESERT: r"rf_humvee\data\rf_humvee_body_desert.rvmat"}
+SURFACES = {  # материал генератора: (цвет, rvmat) — грани с файловой текстурой обязаны иметь rvmat
+    "rubber": (r"rf_humvee\data\rf_humvee_rubber_co.paa", r"rf_humvee\data\rf_humvee_rubber.rvmat"),
+    "dark": (r"rf_humvee\data\rf_humvee_metal_co.paa", r"rf_humvee\data\rf_humvee_metal.rvmat"),
+}
+
+
+def material_for(mat, camo=TEX_CAMO):
+    if mat == "paint":
+        return BODY_MAT[camo]
+    return SURFACES[mat][1] if mat in SURFACES else ""
 RES_GEOMETRY, RES_PHYS = 1e13, 4e13
 RES_MEMORY, RES_LANDCONTACT, RES_ROADWAY = 1e15, 2e15, 3e15
 RES_VIEWGEO, RES_FIREGEO = 6e15, 7e15
@@ -55,6 +68,8 @@ def to_p3d(p):
 def texture_for(mat, camo=TEX_CAMO):
     if mat == "paint":
         return camo
+    if mat in SURFACES:
+        return SURFACES[mat][0]
     rgb, _, _, extra = G.MATERIALS[mat]
     if "alpha" in extra:
         return "#(argb,8,8,3)color(%.3f,%.3f,%.3f,%.2f,ca)" % (*rgb, extra["alpha"])
@@ -110,7 +125,7 @@ class LodBuilder:
             if extra_sel and mat in extra_sel:
                 sel += extra_sel[mat]
             # Грань с текстурой-файлом PAA без rvmat игра не рисует (кузов был невидим), процедурным цветам материал не нужен.
-            self.add_geo(g, texture_for(mat, camo), MAT_BODY if mat == "paint" else "", sel)
+            self.add_geo(g, texture_for(mat, camo), material_for(mat, camo), sel)
 
     def add_component(self, g, mass, selections=()):
         """Выпуклое замкнутое тело для LOD геометрии."""
@@ -316,8 +331,8 @@ def build_car_p3d(path, camo=TEX_CAMO):
     # самый дальний LOD и источник тени: выпуклые блоки коллизии в камуфляже
     h = LodBuilder(HULL_LOD)
     for _, g, _, _ in collision_parts():
-        h.add_geo(g, camo, MAT_BODY, ["camo"], uv=True)
-    h.add_geo(hatch_collider(), camo, MAT_BODY, ["camo", "hatch_roof"], uv=True)
+        h.add_geo(g, camo, BODY_MAT[camo], ["camo"], uv=True)
+    h.add_geo(hatch_collider(), camo, BODY_MAT[camo], ["camo", "hatch_roof"], uv=True)
     add_proxies(h)
     lods.append(h.done())
 
@@ -417,7 +432,7 @@ def build_wheel_p3d(path):
         lods.append(v.done(props=NO_SHADOW))
     cyl = G.lathe([(0.0, -0.18), (G.WHEEL_R, -0.18), (G.WHEEL_R, 0.18), (0.0, 0.18)], seg=12, smooth_deg=5)
     h = LodBuilder(HULL_LOD)          # дальний LOD и тень колеса: 12-гранный цилиндр
-    h.add_geo(convex_hull_geo(cyl.P), texture_for("rubber"), "", uv=False)
+    h.add_geo(convex_hull_geo(cyl.P), texture_for("rubber"), material_for("rubber"), uv=False)
     lods.append(h.done())
     for res, mass in ((RES_GEOMETRY, True), (RES_VIEWGEO, False), (RES_FIREGEO, False)):
         b = LodBuilder(res)
@@ -435,20 +450,110 @@ def build_proxy_p3d(path):
 
 
 # --------------------------------------------------------------------------- текстуры
-def camo_texture(palette, n=1024, seed=7):
-    """Трёхцветный камуфляж крупными мягкими пятнами (как НАТО на M1025): основа, второй цвет, чёрный."""
+def _stamp(mask, rng, count, rmin, rmax, value=1.0):
+    """Сколы: count кружков радиусом rmin…rmax в бесшовной маске (перенос через край)."""
+    n = mask.shape[0]
+    for _ in range(count):
+        cx, cy = rng.integers(0, n, 2)
+        r = rng.uniform(rmin, rmax)
+        k = int(math.ceil(r))
+        dy, dx = np.mgrid[-k:k + 1, -k:k + 1]
+        disc = np.clip(r + 0.5 - np.hypot(dx, dy), 0, 1) * value
+        ys, xs = (cy + np.arange(-k, k + 1)) % n, (cx + np.arange(-k, k + 1)) % n
+        mask[np.ix_(ys, xs)] = np.maximum(mask[np.ix_(ys, xs)], disc)
+
+
+def _scratches(mask, rng, count, lmin, lmax):
+    """Царапины: тонкие отрезки толщиной в пиксель, бесшовно."""
+    n = mask.shape[0]
+    for _ in range(count):
+        x0, y0 = rng.uniform(0, n, 2)
+        a, L = rng.uniform(0, math.pi), rng.uniform(lmin, lmax)
+        t = np.arange(0, L, 0.5)
+        xs = (x0 + t * math.cos(a)).astype(int) % n
+        ys = (y0 + t * math.sin(a)).astype(int) % n
+        mask[ys, xs] = np.maximum(mask[ys, xs], rng.uniform(0.4, 1.0))
+
+
+def _normal_map(h, strength):
+    """Карта нормалей (_nohq) из карты высот: RGB = нормаль * 0.5 + 0.5."""
+    gx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) * 0.5 * strength
+    gy = (np.roll(h, -1, 0) - np.roll(h, 1, 0)) * 0.5 * strength
+    nrm = np.stack([-gx, gy, np.ones_like(h)], -1)
+    nrm /= np.linalg.norm(nrm, axis=-1, keepdims=True)
+    return np.clip((nrm * 0.5 + 0.5) * 255, 0, 255).astype(np.uint8)
+
+
+def _smdi(spec, gloss):
+    """_smdi: R не используется (белый), G — сила блика, B — глянец; spec/gloss в 0…1."""
+    s = np.stack([np.ones_like(spec), spec, gloss], -1)
+    return np.clip(s * 255, 0, 255).astype(np.uint8)
+
+
+def paint_textures(palette, dust, n=2048, seed=7):
+    """Краска кузова: трёхцветный камуфляж с чёткими краями пятен (как НАТО на M1025), зерно, грязь, пыль,
+    сколы до металла и царапины. Возвращает (_co, _nohq, _smdi). palette: основа, второй цвет, чёрный."""
     rng = np.random.default_rng(seed)
     base, c_second, c_black = [np.array(c, float) for c in palette]
-    A = G.periodic_field(n, 80, rng) + 0.25 * G.periodic_field(n, 20, rng)
-    B = G.periodic_field(n, 70, rng) + 0.25 * G.periodic_field(n, 18, rng)
+    A = G.periodic_field(n, 0.07 * n, rng) + 0.35 * G.periodic_field(n, 0.018 * n, rng)
+    B = G.periodic_field(n, 0.06 * n, rng) + 0.35 * G.periodic_field(n, 0.015 * n, rng)
     img = np.tile(base, (n, n, 1))
 
     def put(mask, col):
         mk = np.clip(mask, 0, 1)[..., None]
         img[:] = img * (1 - mk) + col * mk
-    put((A - 0.15) * 5 + 0.5, c_second)
-    put((B - 0.95) * 5 + 0.5, c_black)
-    return np.clip(img, 0, 255).astype(np.uint8)
+    put((A - 0.35) * 30 + 0.5, c_second)        # крутой порог — край пятна чёткий, как у трафаретной окраски
+    put((B - 0.85) * 30 + 0.5, c_black)
+    # въевшаяся грязь крупными пятнами и зерно краски
+    grime = np.clip(G.periodic_field(n, 0.12 * n, rng), -1.5, 1.5)
+    img *= (0.93 - 0.05 * grime)[..., None]
+    img *= (1 + 0.03 * G.periodic_field(n, 1.2, rng))[..., None]
+    dust_m = np.clip((G.periodic_field(n, 0.03 * n, rng) - 0.8) * 0.4, 0, 0.35)
+    put(dust_m, np.array(dust, float))
+    # сколы до грунта и металла, царапины
+    chips, scr = np.zeros((n, n)), np.zeros((n, n))
+    _stamp(chips, rng, int(1.2 * n), 0.8, 3.5)
+    _scratches(scr, rng, int(0.2 * n), 0.01 * n, 0.04 * n)
+    put(chips * 0.85, np.array([92, 92, 86.0]))
+    put(scr * 0.35, np.array([120, 118, 106.0]))
+    h = 0.35 * G.periodic_field(n, 1.5, rng) + 0.6 * G.periodic_field(n, 0.015 * n, rng) - 2.0 * chips - 0.8 * scr
+    spec = 0.22 + 0.45 * chips + 0.25 * scr - 0.15 * dust_m
+    gloss = 0.28 + 0.40 * chips + 0.2 * scr - 0.2 * dust_m
+    return np.clip(img, 0, 255).astype(np.uint8), _normal_map(h, 0.6), _smdi(spec, gloss)
+
+
+def surface_textures(base, dust, spec, gloss, n=1024, seed=3, scratches=0):
+    """Резина и тёмный металл: зерно, пятна, пыль, при желании царапины. Возвращает (_co, _nohq, _smdi)."""
+    rng = np.random.default_rng(seed)
+    img = np.tile(np.array(base, float), (n, n, 1))
+    img *= (1 + 0.06 * G.periodic_field(n, 1.0, rng) + 0.05 * G.periodic_field(n, 0.04 * n, rng))[..., None]
+    dust_m = np.clip((G.periodic_field(n, 0.05 * n, rng) - 0.6) * 0.3, 0, 0.25)[..., None]
+    img = img * (1 - dust_m) + np.array(dust, float) * dust_m
+    scr = np.zeros((n, n))
+    if scratches:
+        _scratches(scr, rng, scratches, 0.01 * n, 0.05 * n)
+        img = img * (1 - 0.4 * scr[..., None]) + np.array([96, 96, 90.0]) * 0.4 * scr[..., None]
+    h = G.periodic_field(n, 1.0, rng) + 0.5 * G.periodic_field(n, 0.02 * n, rng) - scr
+    sp = np.full((n, n), spec) + 0.3 * scr - 0.3 * dust_m[..., 0]
+    gl = np.full((n, n), gloss) + 0.3 * scr
+    return np.clip(img, 0, 255).astype(np.uint8), _normal_map(h, 0.5), _smdi(sp, gl)
+
+
+def write_rvmat(path, nohq, smdi, specular, power):
+    """Материал Super как у ванильных машин: свои карты нормалей и бликов, остальное процедурное."""
+    stages = [nohq, "#(argb,8,8,3)color(0.5,0.5,0.5,1,DT)", "#(argb,8,8,3)color(0,0,0,0,MC)",
+              "#(argb,8,8,3)color(1,1,1,1,AS)", smdi, "#(ai,32,128,1)fresnel(1.26,0.85)",
+              r"dz\data\data\env_land_co.paa"]
+    uv = ('\tuvSource="tex";\n\tclass uvTransform\n\t{\n\t\taside[]={1,0,0};\n\t\tup[]={0,1,0};\n'
+          '\t\tdir[]={0,0,1};\n\t\tpos[]={0,0,0};\n\t};\n')
+    out = ["// Сгенерировано RF_Humvee_Mod/tools/build_mod.py",
+           "ambient[]={1,1,1,1};", "diffuse[]={1,1,1,1};", "forcedDiffuse[]={0,0,0,0};", "emmisive[]={0,0,0,1};",
+           "specular[]={%g,%g,%g,1};" % ((specular,) * 3), "specularPower=%g;" % power,
+           'PixelShaderID="Super";', 'VertexShaderID="Super";']
+    for i, t in enumerate(stages, 1):
+        out.append('class Stage%d\n{\n\ttexture="%s";\n%s};' % (i, t, uv))
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(out) + "\n")
 
 
 # --------------------------------------------------------------------------- model.cfg
@@ -588,10 +693,24 @@ def main():
     build_wheel_p3d(os.path.join(DATA, "rf_humvee_wheel.p3d"))
     for name in WHEELS:
         build_proxy_p3d(os.path.join(DATA, "proxy", name + ".p3d"))
-    paa.write_paa(os.path.join(DATA, "rf_humvee_woodland_co.paa"),
-                  camo_texture([(100, 108, 70), (118, 96, 66), (44, 43, 38)]))
-    paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"),
-                  camo_texture([(176, 150, 108), (142, 112, 78), (104, 84, 62)], seed=11))
+    # краска: лесная НАТО и пустынная, общие карты нормалей и бликов (одинаковый рисунок сколов, seed=7)
+    co, nohq, smdi = paint_textures([(100, 108, 70), (118, 96, 66), (44, 43, 38)], dust=(150, 140, 118))
+    paa.write_paa(os.path.join(DATA, "rf_humvee_woodland_co.paa"), co)
+    paa.write_paa(os.path.join(DATA, "rf_humvee_body_nohq.paa"), nohq)
+    paa.write_paa(os.path.join(DATA, "rf_humvee_body_smdi.paa"), smdi)
+    co, _, _ = paint_textures([(176, 150, 108), (142, 112, 78), (104, 84, 62)], dust=(190, 175, 145))
+    paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"), co)
+    for mat in BODY_MAT.values():
+        write_rvmat(os.path.join(SRC, mat), r"rf_humvee\data\rf_humvee_body_nohq.paa",
+                    r"rf_humvee\data\rf_humvee_body_smdi.paa", 0.35, 25)
+    # резина и тёмный металл (рама, решётка, кенгурятник, петли)
+    for name, args, (spec, power) in (("rubber", ((36, 35, 33), (105, 96, 82), 0.12, 0.15), (0.12, 8)),
+                                      ("metal", ((46, 49, 42), (120, 112, 95), 0.35, 0.35), (0.5, 30))):
+        co, nohq, smdi = surface_textures(*args, scratches=0 if name == "rubber" else 300)
+        for kind, img in (("co", co), ("nohq", nohq), ("smdi", smdi)):
+            paa.write_paa(os.path.join(DATA, "rf_humvee_%s_%s.paa" % (name, kind)), img)
+        write_rvmat(os.path.join(DATA, "rf_humvee_%s.rvmat" % name), r"rf_humvee\data\rf_humvee_%s_nohq.paa" % name,
+                    r"rf_humvee\data\rf_humvee_%s_smdi.paa" % name, spec, power)
     with open(os.path.join(DATA, "model.cfg"), "w", encoding="utf-8") as f:
         f.write(model_cfg())
 

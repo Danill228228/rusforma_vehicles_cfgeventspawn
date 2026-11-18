@@ -1,0 +1,19 @@
+<!-- Вставить в mpmissions/<карта>/db/events.xml -->
+<event name="VehicleRF_Humvee">
+    <nominal>2</nominal>
+    <min>1</min>
+    <max>2</max>
+    <lifetime>3888000</lifetime>
+    <restock>0</restock>
+    <saferadius>500</saferadius>
+    <distanceradius>500</distanceradius>
+    <cleanupradius>200</cleanupradius>
+    <flags deletable="0" init_random="0" remove_damaged="1"/>
+    <position>fixed</position>
+    <limit>mixed</limit>
+    <active>1</active>
+    <children>
+        <child lootmax="0" lootmin="0" max="1" min="0" type="RF_Humvee"/>
+        <child lootmax="0" lootmin="0" max="1" min="0" type="RF_Humvee_Desert"/>
+    </children>
+</event>

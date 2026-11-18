@@ -1,0 +1,334 @@
+<title>RF Humvee — люк</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: workshop bay — the vehicle fills a stage, a stenciled spec plate sits beside it (below on phones). */
+:root {
+  --bg: #e9ebe3;
+  --stage: #d9ddd0;
+  --panel: #f6f7f2;
+  --fg: #1f231b;
+  --muted: #5d6455;
+  --line: #c3c8b8;
+  --accent: #b5651d;
+  --accent-fg: #ffffff;
+  --olive: #4b5531;
+  --font-display: "Oswald", "Arial Narrow", Impact, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15170f; --stage: #1d2016; --panel: #22261b; --fg: #e6e9dc; --muted: #9aa18c;
+    --line: #363b2c; --accent: #e08a3c; --accent-fg: #1a1205; --olive: #8f9c66; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15170f; --stage: #1d2016; --panel: #22261b; --fg: #e6e9dc; --muted: #9aa18c;
+  --line: #363b2c; --accent: #e08a3c; --accent-fg: #1a1205; --olive: #8f9c66; color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px;
+  box-sizing: border-box;
+}
+.wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; max-width: 1400px; margin: 0 auto; height: 100%; min-height: 560px; }
+.stage { position: relative; background: var(--stage); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; min-width: 0; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.stage .hint { position: absolute; left: 12px; bottom: 10px; font: 12px/1.4 var(--font-mono); color: var(--muted); pointer-events: none; }
+.stage .status { position: absolute; left: 12px; top: 10px; font: 500 12px/1 var(--font-mono); letter-spacing: .06em; color: var(--muted); text-transform: uppercase; pointer-events: none; }
+.stage .status b { color: var(--accent); font-weight: 500; }
+#loading[hidden] { display: none; }
+#loading { position: absolute; inset: 0; display: grid; place-items: center; font: 14px var(--font-mono); color: var(--muted); }
+aside { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: flex; flex-direction: column; gap: 18px; min-width: 0; overflow: auto; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.05; letter-spacing: .02em; text-transform: uppercase; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 4px 0 0; font-size: 13px; }
+.label { font: 500 11px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 8px; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#hatchBtn { width: 100%; padding: 12px 14px; border-radius: 4px; border: 0; background: var(--accent); color: var(--accent-fg);
+  font-family: var(--font-display); font-size: 18px; letter-spacing: .06em; text-transform: uppercase; }
+#hatchBtn:hover { filter: brightness(1.06); }
+.range { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; margin-top: 10px; }
+.range input { width: 100%; accent-color: var(--accent); }
+.range output { font: 13px var(--font-mono); font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 6px 10px; border-radius: 4px; border: 1px solid var(--line); background: transparent; color: var(--fg); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.chip i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; border: 1px solid var(--line); }
+.plate { border-top: 1px dashed var(--line); padding-top: 14px; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; font-size: 13px; }
+dt { color: var(--muted); }
+dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg); }
+.toggle input { accent-color: var(--accent); }
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .wrap { grid-template-columns: 1fr; height: auto; }
+  .stage { height: 62vh; min-height: 340px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <section class="stage" aria-label="3D-просмотр">
+    <canvas id="view"></canvas>
+    <div id="loading">Загрузка модели…</div>
+    <div class="status">Люк: <b id="hatchState">закрыт</b></div>
+    <div class="hint">ЛКМ — вращать · колесо — масштаб · клик по крышке или H — люк</div>
+  </section>
+
+  <aside>
+    <div>
+      <h1>RF Humvee</h1>
+      <p class="sub">Бронированный HMMWV-подобный внедорожник с жёсткой крышей и открываемым люком стрелка.</p>
+    </div>
+
+    <div>
+      <p class="label">Люк на крыше</p>
+      <button id="hatchBtn" type="button">Открыть люк</button>
+      <div class="range">
+        <input id="phase" type="range" min="0" max="100" value="0" aria-label="Положение люка">
+        <output id="phaseOut" for="phase">0°</output>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">Окраска</p>
+      <div class="chips" id="paints"></div>
+    </div>
+
+    <div>
+      <p class="label">Камера</p>
+      <div class="chips" id="cams">
+        <button class="chip" type="button" data-cam="three">3/4</button>
+        <button class="chip" type="button" data-cam="side">Борт</button>
+        <button class="chip" type="button" data-cam="front">Перед</button>
+        <button class="chip" type="button" data-cam="top">В люк</button>
+      </div>
+      <label class="toggle" style="margin-top:10px"><input id="spin" type="checkbox"> Автовращение</label>
+    </div>
+
+    <div class="plate">
+      <p class="label">Анимация (model.cfg)</p>
+      <dl>
+        <dt>Селекция</dt><dd>hatch_roof</dd>
+        <dt>Ось</dt><dd>hatch_roof_axis</dd>
+        <dt>Источник</dt><dd>HatchRoof</dd>
+        <dt>Угол</dt><dd>0 → −110°</dd>
+        <dt>Время</dt><dd>1.2 c</dd>
+      </dl>
+    </div>
+
+    <div class="plate">
+      <p class="label">Габариты</p>
+      <dl>
+        <dt>Длина</dt><dd>4.83 м</dd>
+        <dt>Ширина (без зеркал)</dt><dd>2.20 м</dd>
+        <dt>Высота (по люку)</dt><dd>1.98 м</dd>
+        <dt>База</dt><dd>3.24 м</dd>
+        <dt>Колесо</dt><dd>⌀ 0.95 м</dd>
+        <dt>Треугольников</dt><dd id="tris">—</dd>
+      </dl>
+    </div>
+  </aside>
+</div>
+
+<script type="application/json" id="model">__GLTF__</script>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+const OPEN_DEG = 110, PERIOD = 1.2;
+const PAINTS = [
+  { id: "olive",  name: "Олива",   rgb: [0.330, 0.360, 0.220] },
+  { id: "desert", name: "Пустыня", rgb: [0.700, 0.610, 0.440] },
+  { id: "winter", name: "Зима",    rgb: [0.840, 0.850, 0.830] },
+  { id: "black",  name: "Ночь",    rgb: [0.140, 0.150, 0.140] },
+];
+
+const canvas = document.getElementById("view");
+const stage = canvas.parentElement;
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(35, 1, 0.05, 100);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.target.set(0, 0.95, -0.1);
+controls.minDistance = 2.2; controls.maxDistance = 16;
+controls.maxPolarAngle = Math.PI * 0.495;
+
+scene.add(new THREE.HemisphereLight(0xdfe6d0, 0x3a3226, 0.55));
+const sun = new THREE.DirectionalLight(0xfff3e0, 2.4);
+sun.position.set(5, 8, 4);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 25 });
+sun.shadow.bias = -0.0004;
+scene.add(sun);
+
+const ground = new THREE.Mesh(new THREE.CircleGeometry(12, 64), new THREE.ShadowMaterial({ opacity: 0.32 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
+scene.add(ground);
+const grid = new THREE.GridHelper(16, 32);
+grid.material.transparent = true; grid.material.opacity = 0.18;
+scene.add(grid);
+
+function applyTheme() {
+  const cs = getComputedStyle(document.documentElement);
+  const stageCol = new THREE.Color(cs.getPropertyValue("--stage").trim());
+  scene.background = stageCol;
+  const lineCol = new THREE.Color(cs.getPropertyValue("--muted").trim());
+  grid.material.color = lineCol;
+}
+applyTheme();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+let pivot = null, lidMeshes = [], paintMat = null;
+let phase = 0, target = 0;
+
+const json = document.getElementById("model").textContent;
+new GLTFLoader().parse(json, "", (gltf) => {
+  const root = gltf.scene;
+  let tris = 0;
+  root.traverse((o) => {
+    if (o.isMesh) {
+      o.castShadow = true; o.receiveShadow = true;
+      const m = o.material;
+      if (m.name === "glass") { m.depthWrite = false; m.envMapIntensity = 1.4; o.renderOrder = 2; }
+      if (m.name === "paint") paintMat = m;
+      tris += o.geometry.index ? o.geometry.index.count / 3 : 0;
+    }
+  });
+  pivot = root.getObjectByName("hatch_roof_pivot");
+  pivot.traverse((o) => { if (o.isMesh) lidMeshes.push(o); });
+  scene.add(root);
+  document.getElementById("tris").textContent = Math.round(tris).toLocaleString("ru-RU");
+  document.getElementById("loading").hidden = true;
+  setPaint(PAINTS[0].id);
+}, (err) => {
+  document.getElementById("loading").textContent = "Не удалось загрузить модель: " + err.message;
+});
+
+// --- hatch
+const btn = document.getElementById("hatchBtn");
+const slider = document.getElementById("phase");
+const out = document.getElementById("phaseOut");
+const stateEl = document.getElementById("hatchState");
+function toggleHatch() { target = target > 0.5 ? 0 : 1; updateUi(); }
+function updateUi() {
+  btn.textContent = target > 0.5 ? "Закрыть люк" : "Открыть люк";
+}
+btn.addEventListener("click", toggleHatch);
+slider.addEventListener("input", () => { target = phase = slider.value / 100; updateUi(); });
+addEventListener("keydown", (e) => { if ((e.key === "h" || e.key === "H" || e.key === "р" || e.key === "Р") && !e.repeat) toggleHatch(); });
+
+// click on lid
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let downAt = null;
+function pick(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  return lidMeshes.length && ray.intersectObjects(lidMeshes, false).length > 0;
+}
+canvas.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
+canvas.addEventListener("pointerup", (e) => {
+  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5 && pick(e)) toggleHatch();
+  downAt = null;
+});
+canvas.addEventListener("pointermove", (e) => { if (!downAt) canvas.style.cursor = pick(e) ? "pointer" : "grab"; });
+
+// --- paint
+const paintsEl = document.getElementById("paints");
+for (const p of PAINTS) {
+  const b = document.createElement("button");
+  b.className = "chip"; b.type = "button"; b.dataset.paint = p.id;
+  const sw = new THREE.Color().setRGB(...p.rgb, THREE.SRGBColorSpace);
+  b.innerHTML = `<i style="background:#${sw.getHexString()}"></i>${p.name}`;
+  b.addEventListener("click", () => setPaint(p.id));
+  paintsEl.appendChild(b);
+}
+function setPaint(id) {
+  const p = PAINTS.find((x) => x.id === id);
+  if (paintMat) paintMat.color.setRGB(...p.rgb, THREE.SRGBColorSpace);
+  for (const b of paintsEl.children) b.setAttribute("aria-pressed", String(b.dataset.paint === id));
+}
+
+// --- cameras
+const CAMS = {
+  three: [[5.6, 2.9, 5.4], [0, 0.95, -0.1]],
+  side:  [[7.6, 1.5, -0.2], [0, 0.9, -0.1]],
+  front: [[1.6, 1.6, 7.2], [0, 0.9, 0]],
+  top:   [[1.2, 4.6, -2.6], [0, 1.4, -0.62]],
+};
+let camAnim = null;
+function goCam(id) {
+  const [p, t] = CAMS[id];
+  camAnim = { p0: camera.position.clone(), t0: controls.target.clone(), p1: new THREE.Vector3(...p), t1: new THREE.Vector3(...t), k: 0 };
+  for (const b of document.querySelectorAll("#cams .chip")) b.setAttribute("aria-pressed", String(b.dataset.cam === id));
+}
+for (const b of document.querySelectorAll("#cams .chip")) b.addEventListener("click", () => goCam(b.dataset.cam));
+camera.position.set(...CAMS.three[0]);
+document.querySelector('[data-cam="three"]').setAttribute("aria-pressed", "true");
+const spin = document.getElementById("spin");
+spin.addEventListener("change", () => { controls.autoRotate = spin.checked; });
+controls.autoRotateSpeed = 1.2;
+
+// --- loop
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ease = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+let last = performance.now();
+renderer.setAnimationLoop((now) => {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (phase !== target) {
+    const step = reduce ? 1 : dt / PERIOD;
+    phase = target > phase ? Math.min(target, phase + step) : Math.max(target, phase - step);
+    slider.value = Math.round(phase * 100);
+  }
+  if (pivot) pivot.rotation.x = -THREE.MathUtils.degToRad(OPEN_DEG) * ease(phase);
+  out.textContent = `${Math.round(-OPEN_DEG * ease(phase))}°`.replace("-0°", "0°");
+  stateEl.textContent = phase === 0 ? "закрыт" : phase === 1 ? "открыт" : "в движении";
+  if (camAnim) {
+    camAnim.k = Math.min(1, camAnim.k + (reduce ? 1 : dt / 0.8));
+    const k = ease(camAnim.k);
+    camera.position.lerpVectors(camAnim.p0, camAnim.p1, k);
+    controls.target.lerpVectors(camAnim.t0, camAnim.t1, k);
+    if (camAnim.k >= 1) camAnim = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>

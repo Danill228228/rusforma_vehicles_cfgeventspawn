@@ -1,0 +1,4 @@
+This work is based on "Low Poly Humvee FREE" (https://sketchfab.com/3d-models/low-poly-humvee-free-c0e2ddcc4ccf4d49a9303303a6307bcf) by MadTrollStudio (https://sketchfab.com/madtrollstudio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Changes: the model was converted to DayZ P3D; split into body, doors and wheels; a roof hatch with a ring was cut
+into the roof; glass panes, camouflage textures, collision, LODs and animations were added.

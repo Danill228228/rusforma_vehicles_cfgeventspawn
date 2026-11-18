@@ -1,7 +1,15 @@
 # RF_Humvee — HMMWV с открываемым люком
 
 Армейский внедорожник в стиле HMMWV M1114 (бронированная крыша и двери с X-рёбрами, кенгурятник, жалюзи на капоте,
-лесной камуфляж) с круглым люком стрелка на крыше, который открывается и закрывается. Модель собрана с нуля скриптом из примитивов, сторонних ассетов в ней нет.
+лесной камуфляж) с круглым люком стрелка на крыше, который открывается и закрывается.
+
+**Модель в моде.** Кузов, двери и колёса мода `RF_Humvee_Mod` взяты из модели «Low Poly Humvee FREE»
+(`source/low_poly_humvee/`, разбор и люк — `source/lowpoly_humvee.py`):
+
+> This work is based on "Low Poly Humvee FREE" (https://sketchfab.com/3d-models/low-poly-humvee-free-c0e2ddcc4ccf4d49a9303303a6307bcf) by MadTrollStudio (https://sketchfab.com/madtrollstudio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Файлы `model/` и `preview/` ниже — прежняя модель, собранная скриптом `generate_humvee.py` из примитивов;
+от неё в моде остались крышка и кольцо люка и помощники геометрии.
 
 ## Состав
 
@@ -12,7 +20,9 @@
 | `model/humvee_camo_woodland.png` | бесшовная текстура лесного камуфляжа (для DayZ сконвертировать в `rf_humvee_woodland_co.paa` через TexView 2) |
 | `model/memory_points.json` | координаты memory-точек (ось люка, центры колёс) |
 | `preview/humvee_preview.html` | интерактивный 3D-просмотр (открыть в браузере): люк, окраска, камеры |
-| `source/generate_humvee.py` | генератор модели (`python3 source/generate_humvee.py`, нужен только numpy) |
+| `source/generate_humvee.py` | генератор прежней модели (`python3 source/generate_humvee.py`, нужен только numpy) |
+| `source/lowpoly_humvee.py` | кузов мода: читает `source/low_poly_humvee/scene.gltf`, делит на кузов, салон, двери, колесо, вырезает люк, добавляет стёкла (`python3 source/lowpoly_humvee.py` — самопроверка) |
+| `source/low_poly_humvee/` | модель «Low Poly Humvee FREE» (MadTrollStudio, CC-BY-4.0) с `license.txt` |
 | `../RF_Humvee_Mod/` | **готовый мод DayZ** (`@RF_Humvee`): P3D, текстуры, конфиги, скрипты, PBO — см. его README |
 
 ## Как устроен люк

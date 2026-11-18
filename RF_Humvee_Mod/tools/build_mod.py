@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Сборка мода @RF_Humvee:
-  1. P3D (MLOD) машины, колеса и прокси из геометрии RF_Humvee/source/generate_humvee.py
+  1. P3D (MLOD) машины, колеса и прокси: кузов — модель «Low Poly Humvee FREE» (MadTrollStudio, CC-BY-4.0),
+     её разбор и люк — RF_Humvee/source/lowpoly_humvee.py, помощники геометрии — generate_humvee.py
   2. текстуры PAA (лесной и пустынный камуфляж)
   3. model.cfg
   4. упаковка PBO:  @RF_Humvee/Addons/RF_Humvee.pbo и RF_Humvee_Hatch.pbo
@@ -21,7 +22,7 @@ ROOT = os.path.dirname(MOD)
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(ROOT, "RF_Humvee", "source"))
 
-import generate_humvee as G  # noqa: E402
+import lowpoly_humvee as G  # noqa: E402  — генератор с размерами и деталями модели Sketchfab
 import p3d_mlod as P3D  # noqa: E402
 import paa  # noqa: E402
 import pbo  # noqa: E402
@@ -263,15 +264,10 @@ def collision_parts():
 
 
 def doors_parts():
-    xa, xb = G.CAB_W, G.CAB_W + 0.06
-    fr = (-0.27, 0.84)
-    rr = (-1.02, -0.31)
-    return [
-        ("seat_driver", box_geo(xa, xb, 0.60, G.YT - 0.04, *fr)),      # левая передняя (водитель)
-        ("seat_codriver", box_geo(-xa, -xb, 0.60, G.YT - 0.04, *fr)),
-        ("seat_cargo1", box_geo(xa, xb, 0.60, G.YT - 0.04, *rr)),
-        ("seat_cargo2", box_geo(-xa, -xb, 0.60, G.YT - 0.04, *rr)),
-    ]
+    xa, xb = G.DOOR_X
+    seat_of = {door: seat for seat, door in SEAT_DOOR.items()}
+    return [(seat_of[door], box_geo(side * xa, side * xb, *G.DOOR_Y, *G.DOOR_Z[front]))
+            for door, (side, front) in G.DOORS.items()]
 
 
 def hatch_collider():
@@ -285,11 +281,7 @@ def hatch_collider():
 
 
 CREW = [  # (селекция proxyPos из config.cpp, ванильный прокси, x, z) — те же места, что memory "crew*"
-    ("crewDriver", "crew_driver", 0.47, -0.02),
-    ("crewCoDriver", "crew_cargo", -0.47, -0.02),
-    ("crewCargo1", "crew_cargo", 0.47, -0.98),
-    ("crewCargo2", "crew_cargo", -0.47, -0.98),
-]
+    ("crew" + seat, "crew_driver" if seat == "Driver" else "crew_cargo", x, z) for seat, (x, z) in G.SEATS.items()]
 
 
 def add_proxies(b):
@@ -298,7 +290,7 @@ def add_proxies(b):
     for sel, model, x, z in CREW:
         # yaw180: без разворота CrewTransform давал взгляд назад (0,0,-1), у ванили (0,0,+1) — человек сидел
         # спиной вперёд и попадал телом в соседнее кресло
-        b.add_proxy(r"\DZ\vehicles\wheeled\proxies\%s" % model, (x, 1.08, z), yaw180=True, selections=[sel])
+        b.add_proxy(r"\DZ\vehicles\wheeled\proxies\%s" % model, (x, G.SEAT_Y, z), yaw180=True, selections=[sel])
     for name, (x, z, front) in WHEELS.items():
         b.add_proxy(r"\RF_Humvee\data\proxy\%s" % name, (x, G.WHEEL_Y, z), yaw180=(x < 0), selections=[name])
 
@@ -370,18 +362,12 @@ def build_car_p3d(path, camo=TEX_CAMO):
         m.add_memory(name + "_damper_axis", c, (x, G.WHEEL_Y + 1.0, z))
         if front:
             m.add_memory(name + "_steering_axis", (x, G.WHEEL_Y - 0.3, z), (x, G.WHEEL_Y + 0.3, z))
-    seats = {  # (селекция места, x сиденья, z сиденья, сторона)
-        "Driver": ("driver", 0.47, -0.02),
-        "CoDriver": ("codriver", -0.47, -0.02),
-        "Cargo1": ("cargo1", 0.47, -0.98),
-        "Cargo2": ("cargo2", -0.47, -0.98),
-    }
-    for crew, (nm, x, z) in seats.items():
-        s = 1 if x > 0 else -1
-        o = (x, 1.08, z)
-        m.add_memory("crew" + crew, o, (x, 3.08, z), (x, 1.08, z + 1.0))
-        m.add_memory("pos_" + nm, (s * 1.85, 0.05, z + 0.25))
-        m.add_memory("pos_" + nm + "_dir", (s * 1.30, 0.05, z + 0.25))
+    for crew, (x, z) in G.SEATS.items():
+        s, y = (1 if x > 0 else -1), G.SEAT_Y
+        zd = sum(G.DOOR_Z[z > 0]) / 2       # встать для посадки напротив середины своей двери
+        m.add_memory("crew" + crew, (x, y, z), (x, y + 2.0, z), (x, y, z + 1.0))
+        m.add_memory("pos_" + crew.lower(), (s * 1.85, 0.05, zd))
+        m.add_memory("pos_" + crew.lower() + "_dir", (s * 1.30, 0.05, zd))
     m.add_memory("hatch_roof_axis", (-0.25, G.HINGE_Y, G.HINGE_Z), (0.25, G.HINGE_Y, G.HINGE_Z))
     for sel, (side, front) in G.DOORS.items():   # петли дверей: вертикальная ось по передней кромке
         x, z = side * G.DOOR_XB, G.DOOR_HINGE_Z[front]
@@ -395,13 +381,13 @@ def build_car_p3d(path, camo=TEX_CAMO):
         "light_left_dir": (G.HEADLIGHT_X, G.HEADLIGHT_Y - 0.06, G.FRONT_Z + 1.05),
         "light_right_dir": (-G.HEADLIGHT_X, G.HEADLIGHT_Y - 0.06, G.FRONT_Z + 1.05),
         "light_reverse": (0.0, 1.00, G.Z_REAR - 0.05),
-        "light_1_2": (0.90, 1.08, -2.34), "light_2_2": (-0.90, 1.08, -2.34),
-        "light_brake_1_2": (0.90, 1.08, -2.34), "light_brake_2_2": (-0.90, 1.08, -2.34),
-        "light_reverse_1_2": (0.90, 0.97, -2.34), "light_reverse_2_2": (-0.90, 0.97, -2.34),
+        "light_1_2": (0.87, 1.0, G.Z_REAR - 0.02), "light_2_2": (-0.87, 1.0, G.Z_REAR - 0.02),
+        "light_brake_1_2": (0.87, 1.0, G.Z_REAR - 0.02), "light_brake_2_2": (-0.87, 1.0, G.Z_REAR - 0.02),
+        "light_reverse_1_2": (0.87, 0.93, G.Z_REAR - 0.02), "light_reverse_2_2": (-0.87, 0.93, G.Z_REAR - 0.02),
         "exhaust_start": G.EXHAUST_START, "exhaust_end": G.EXHAUST_END,
         "dmgZone_chassis": (0, 0.9, 0), "dmgZone_engine": (0, 1.0, 1.6),
         "dmgZone_fuelTank": (0.85, 1.0, -1.8), "fire_pos": (0, 1.0, 1.6),
-        "dashboard": (0.47, 1.38, 0.62), "engine": (0, 1.0, 1.6),
+        "dashboard": (0.69, 1.30, 0.70), "engine": (0, 1.0, 1.6),
     }.items():
         m.add_memory(name, p)
     lods.append(m.done())
@@ -412,8 +398,9 @@ def build_car_p3d(path, camo=TEX_CAMO):
         lc.add_memory(name + "_contact", (x, 0.0, z))
     lods.append(lc.done())
     rw = LodBuilder(RES_ROADWAY)
-    rw.add_geo(G.face([(-G.CAB_W, G.YT + 0.01, G.Z_ROOF_R), (G.CAB_W, G.YT + 0.01, G.Z_ROOF_R),
-                       (G.CAB_W, G.YT + 0.01, G.ZF_T), (-G.CAB_W, G.YT + 0.01, G.ZF_T)], (0, 1, 0)), uv=False)
+    x0, x1, z0, z1 = G.ROOF_RECT
+    y = G.YT + 0.01
+    rw.add_geo(G.face([(x0, y, z0), (x1, y, z0), (x1, y, z1), (x0, y, z1)], (0, 1, 0)), uv=False)
     lods.append(rw.done())
     P3D.write(path, lods)
     return lods

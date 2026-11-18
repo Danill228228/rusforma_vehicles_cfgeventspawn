@@ -1,6 +1,13 @@
 # @RF_Humvee — отдельный мод DayZ
 
-Бронированный HMMWV-подобный внедорожник с люком стрелка на крыше. Модель своя, построена с нуля.
+Бронированный HMMWV с люком стрелка на крыше.
+
+Модель кузова, дверей и колёс основана на «Low Poly Humvee FREE» от MadTrollStudio, лицензия CC-BY-4.0.
+При распространении мода указывайте автора, текст атрибуции лежит в `@RF_Humvee/CREDITS.txt`:
+
+> This work is based on "Low Poly Humvee FREE" (https://sketchfab.com/3d-models/low-poly-humvee-free-c0e2ddcc4ccf4d49a9303303a6307bcf) by MadTrollStudio (https://sketchfab.com/madtrollstudio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Люк, стёкла, камуфляж, коллизия, LOD, анимации и скрипты написаны для мода (`RF_Humvee/source/lowpoly_humvee.py`).
 
 Мод состоит из двух аддонов, чтобы проверять по шагам:
 

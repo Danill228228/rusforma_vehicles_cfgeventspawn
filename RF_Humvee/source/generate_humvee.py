@@ -535,17 +535,20 @@ def build_body():
     parts["dark"] += cbox(CAB_W + 0.04, 1.55, -2.12, 0.08, 0.12, 0.10)
     parts["dark"] += tube((CAB_W + 0.04, 1.60, -2.12), (CAB_W + 0.14, 3.20, -2.30), 0.007, 6)
 
-    # кольцо люка и шарнир
+    hatch_ring(parts)
+    return parts
+
+
+def hatch_ring(parts, y=YT, cz=HATCH_Z):
+    """Кольцо люка на крыше высотой y с центром z = cz, шарнир и крепления (без оружия)."""
     ring = lathe([(RING_IN, -0.035), (RING_OUT, -0.035), (RING_OUT, 0.06), (RING_OUT - 0.02, 0.095),
                   (RING_IN + 0.02, 0.10), (RING_IN, 0.08), (RING_IN, -0.035)], seg=64, smooth_deg=35)
-    parts["paint"] += ring.transformed(chain(T(0, YT, HATCH_Z), AX_TO_Y))
+    parts["paint"] += ring.transformed(chain(T(0, y, cz), AX_TO_Y))
     for s in (1, -1):
-        parts["dark"] += cbox(s * 0.20, RING_TOP + 0.006, HINGE_Z - 0.005, 0.07, 0.04, 0.06)
-    # крепления на кольце (без оружия)
+        parts["dark"] += cbox(s * 0.20, y + (RING_TOP - YT) + 0.006, cz + (HINGE_Z - HATCH_Z) - 0.005, 0.07, 0.04, 0.06)
     for a in (0.35, -0.35, math.pi / 2, -math.pi / 2):
-        x, z = RING_OUT * math.sin(a), HATCH_Z + RING_OUT * math.cos(a)
-        parts["dark"] += cbox(x, YT + 0.05, z, 0.06, 0.08, 0.06)
-    return parts
+        x, z = RING_OUT * math.sin(a), cz + RING_OUT * math.cos(a)
+        parts["dark"] += cbox(x, y + 0.05, z, 0.06, 0.08, 0.06)
 
 
 DOORS = {  # селекция DayZ: (борт: +1 левый, передняя ли). Петли на передней кромке, ось вертикальная
@@ -615,10 +618,10 @@ def build_doors():
     return out
 
 
-def roof_with_hole(y, hint):
-    """Прямоугольник крыши с круглым отверстием (кольцевая лента между окружностью и контуром)."""
-    xmin, xmax, zmin, zmax = -CAB_W, CAB_W, Z_ROOF_R, ZF_T
-    cx, cz = 0.0, HATCH_Z
+def roof_with_hole(y, hint, rect=(-CAB_W, CAB_W, Z_ROOF_R, ZF_T), cz=HATCH_Z):
+    """Прямоугольник крыши rect = (xmin, xmax, zmin, zmax) с круглым отверстием (лента между окружностью и контуром)."""
+    xmin, xmax, zmin, zmax = rect
+    cx = 0.0
     corners = [(xmax, zmax), (xmin, zmax), (xmin, zmin), (xmax, zmin)]
     angs = set(math.atan2(z - cz, x - cx) % (2 * math.pi) for x, z in corners)
     n = 72

@@ -121,8 +121,8 @@ class CfgVehicles
 		inventorySlot[] = {"RF_HumveeWheel_1_1", "RF_HumveeWheel_1_2", "RF_HumveeWheel_2_1", "RF_HumveeWheel_2_2"};
 		rotationFlags = 8;
 		physLayer = "item_large";
-		radiusByDamage[] = {0, 0.482, 0.3, 0.44, 0.9998, 0.36, 0.9999, 0.30};
-		radius = 0.482;
+		radiusByDamage[] = {0, 0.485, 0.3, 0.44, 0.9998, 0.36, 0.9999, 0.30};
+		radius = 0.485;
 		width = 0.36;
 		friction = 0.95;
 		tyreRollResistance = 0.018;

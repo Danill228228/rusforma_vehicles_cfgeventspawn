@@ -214,6 +214,16 @@ class CfgVehicles
 				animPeriod = 1.2;
 				initPhase = 0;
 			};
+			// Подвеска: как у ванильного M1025, покой = 0.5 (см. SUSP_TRAVEL в build_mod.py)
+			class damper_1_1
+			{
+				source = "user";
+				animPeriod = 1;
+				initPhase = 0.5;
+			};
+			class damper_2_1: damper_1_1 {};
+			class damper_1_2: damper_1_1 {};
+			class damper_2_2: damper_1_1 {};
 		};
 
 		class Crew

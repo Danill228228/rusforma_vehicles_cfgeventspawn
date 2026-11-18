@@ -189,7 +189,7 @@ def box_geo(x0, x1, y0, y1, z0, z1):
 
 def collision_parts():
     """[(имя, Geo, масса, [селекции])] в исходных координатах."""
-    cab = [(G.ZF_B, G.YB), (G.ZF_T, G.YT), (G.Z_ROOF_R, G.YT), (G.Z_REAR + 0.04, 1.62), (G.Z_REAR, G.YB)]
+    cab = [(G.ZF_B, G.YB), (G.ZF_T, G.YT), (G.Z_ROOF_R, G.YT), (G.Z_REAR + 0.05, G.TAIL_Y), (G.Z_REAR, G.YB)]
     cab_pts = [(x, y, z) for z, y in cab for x in (-G.CAB_W, G.CAB_W)]
     hood_pts = [(x, y, z) for x in (-G.FENDER_W, G.FENDER_W)
                 for z, y in ((G.HOOD_Z0, 1.30), (2.22, 1.08), (2.24, 0.62), (G.HOOD_Z0, 1.06), (2.24, 1.06))]
@@ -213,10 +213,10 @@ def doors_parts():
     fr = (-0.27, 0.84)
     rr = (-1.02, -0.31)
     return [
-        ("seat_driver", box_geo(xa, xb, 0.60, 1.88, *fr)),      # левая передняя (водитель)
-        ("seat_codriver", box_geo(-xa, -xb, 0.60, 1.88, *fr)),
-        ("seat_cargo1", box_geo(xa, xb, 0.60, 1.88, *rr)),
-        ("seat_cargo2", box_geo(-xa, -xb, 0.60, 1.88, *rr)),
+        ("seat_driver", box_geo(xa, xb, 0.60, G.YT - 0.04, *fr)),      # левая передняя (водитель)
+        ("seat_codriver", box_geo(-xa, -xb, 0.60, G.YT - 0.04, *fr)),
+        ("seat_cargo1", box_geo(xa, xb, 0.60, G.YT - 0.04, *rr)),
+        ("seat_cargo2", box_geo(-xa, -xb, 0.60, G.YT - 0.04, *rr)),
     ]
 
 
@@ -313,11 +313,11 @@ def build_car_p3d(path):
     m.add_memory("hatch_roof_axis", (-0.25, G.HINGE_Y, G.HINGE_Z), (0.25, G.HINGE_Y, G.HINGE_Z))
     m.add_memory("hatch_roof_center", (0, G.RING_TOP, G.HATCH_Z))
     for name, p in {
-        "light_1_1": (0.89, 0.92, 2.25), "light_2_1": (-0.89, 0.92, 2.25),
+        "light_1_1": (G.HEADLIGHT_X, G.HEADLIGHT_Y, G.FRONT_Z + 0.04), "light_2_1": (-G.HEADLIGHT_X, G.HEADLIGHT_Y, G.FRONT_Z + 0.04),
         "light_1_2": (0.90, 1.08, -2.34), "light_2_2": (-0.90, 1.08, -2.34),
         "light_brake_1_2": (0.90, 1.08, -2.34), "light_brake_2_2": (-0.90, 1.08, -2.34),
         "light_reverse_1_2": (0.90, 0.97, -2.34), "light_reverse_2_2": (-0.90, 0.97, -2.34),
-        "exhaust_start": (-0.85, 0.47, -2.35), "exhaust_end": (-0.85, 0.47, -2.47),
+        "exhaust_start": G.EXHAUST_START, "exhaust_end": G.EXHAUST_END,
         "dmgZone_chassis": (0, 0.9, 0), "dmgZone_engine": (0, 1.0, 1.6),
         "dmgZone_fuelTank": (0.85, 1.0, -1.8), "fire_pos": (0, 1.0, 1.6),
         "dashboard": (0.47, 1.38, 0.62), "engine": (0, 1.0, 1.6),
@@ -361,24 +361,29 @@ def build_proxy_p3d(path):
 
 # --------------------------------------------------------------------------- текстуры
 def camo_texture(palette, n=1024, seed=7):
+    """Трёхцветный камуфляж крупными мягкими пятнами (как НАТО на M1025): основа, второй цвет, чёрный."""
     rng = np.random.default_rng(seed)
-    base, c_brown, c_black, c_light = [np.array(c, float) for c in palette]
-    A = G.periodic_field(n, 46, rng) + 0.35 * G.periodic_field(n, 12, rng)
-    B = G.periodic_field(n, 38, rng) + 0.30 * G.periodic_field(n, 9, rng)
-    C = G.periodic_field(n, 60, rng)
-    D = G.periodic_field(n, 20, rng) + 0.3 * G.periodic_field(n, 6, rng)
+    base, c_second, c_black = [np.array(c, float) for c in palette]
+    A = G.periodic_field(n, 80, rng) + 0.25 * G.periodic_field(n, 20, rng)
+    B = G.periodic_field(n, 70, rng) + 0.25 * G.periodic_field(n, 18, rng)
     img = np.tile(base, (n, n, 1))
 
     def put(mask, col):
         mk = np.clip(mask, 0, 1)[..., None]
         img[:] = img * (1 - mk) + col * mk
-    put((A - 0.10) * 6 + 0.5, c_brown)
-    put((D - 1.85) * 6 + 0.5, c_light)
-    put((0.30 - np.abs(B)) * 12 * (C > -0.4), c_black)
+    put((A - 0.15) * 5 + 0.5, c_second)
+    put((B - 0.95) * 5 + 0.5, c_black)
     return np.clip(img, 0, 255).astype(np.uint8)
 
 
 # --------------------------------------------------------------------------- model.cfg
+# Источник damper_* движок ведёт в диапазоне 0…1 (0.5 — покой, как initPhase у ванильного M1025), а ось
+# wheel_*_damper_axis длиной 1 м: смещение в метрах = ход подвески travelMaxUp/Down из config.cpp. Прежние
+# -1…1 → ±1 м поднимали колёса в покое на 0.5 м выше капота.
+SUSP_TRAVEL = 0.16
+STEER_RAD = 0.5585   # 32° = maxSteeringAngle в config.cpp (было ±1 рад = 57°)
+
+
 def model_cfg():
     bones = []
     anims = []
@@ -399,8 +404,8 @@ def model_cfg():
 				selection = "{name}_damper";
 				axis = "{name}_damper_axis";
 				memory = 1;
-				minValue = -1; maxValue = 1;
-				offset0 = -1; offset1 = 1;
+				minValue = 0; maxValue = 1;
+				offset0 = -{SUSP_TRAVEL}; offset1 = {SUSP_TRAVEL};
 			}};""")
         if front:
             anims.append(f"""			class turn{pos}{side}
@@ -411,7 +416,7 @@ def model_cfg():
 				axis = "{name}_steering_axis";
 				memory = 1;
 				minValue = -1; maxValue = 1;
-				angle0 = -1; angle1 = 1;
+				angle0 = -{STEER_RAD}; angle1 = {STEER_RAD};
 			}};""")
         anims.append(f"""			class wheel{pos}{side}
 			{{
@@ -488,9 +493,9 @@ def main():
     for name in WHEELS:
         build_proxy_p3d(os.path.join(DATA, "proxy", name + ".p3d"))
     paa.write_paa(os.path.join(DATA, "rf_humvee_woodland_co.paa"),
-                  camo_texture([(62, 74, 44), (78, 60, 40), (26, 26, 22), (128, 116, 84)]))
+                  camo_texture([(100, 108, 70), (118, 96, 66), (44, 43, 38)]))
     paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"),
-                  camo_texture([(176, 150, 108), (142, 112, 78), (104, 84, 62), (206, 188, 146)], seed=11))
+                  camo_texture([(176, 150, 108), (142, 112, 78), (104, 84, 62)], seed=11))
     with open(os.path.join(DATA, "model.cfg"), "w", encoding="utf-8") as f:
         f.write(model_cfg())
 

@@ -333,10 +333,14 @@ BOT_Y = 0.55
 BELT_Y = 1.30
 
 CAB_W = 1.04                  # борта кабины (вертикальные, броня)
-ZF_B, ZF_T = 0.88, 0.66       # лобовое стекло: низ / верх
-YB, YT = BELT_Y, 1.92
-Z_ROOF_R = -1.50              # конец плоской крыши
+ZF_B, ZF_T = 0.84, 0.68       # лобовое стекло: низ / верх (почти вертикально, как у M1025)
+YB, YT = BELT_Y, 1.84         # крыша ниже прежних 1.92: у M1025 ≈1.80–1.86
+Z_ROOF_R = -1.17              # конец плоской крыши, дальше скос к корме (у M1025 петля крышки на z −1.17)
 Z_REAR = -2.32
+TAIL_Y = 1.55                 # верх задней стенки, куда спускается скос крыши
+FRONT_Z = 2.24                # передняя панель: решётка, фары и передок крыльев
+HEADLIGHT_X, HEADLIGHT_Y = 0.55, 0.93   # фары в панели решётки (у M1025 x ±0.55, y 0.93)
+EXHAUST_START, EXHAUST_END = (0.90, 0.45, -0.97), (1.10, 0.42, -1.04)   # +X = левый борт
 
 HATCH_Z = -0.55
 HATCH_HOLE_R = 0.47
@@ -394,49 +398,48 @@ def build_body():
            (Z_REAR + 0.02, BELT_Y), (Z_REAR, BELT_Y), (Z_REAR, 0.64), (Z_REAR + 0.05, BOT_Y)]
     add2(extrude_x2(tub, -INNER_X, INNER_X))
 
-    # --- передние крылья: широкие, с высоко вырезанной аркой
+    # --- передние крылья: передок в одной плоскости с панелью решётки (z = FRONT_Z), как у M1025,
+    # чтобы колесо спереди закрывалось, а не торчало из высоко вырезанной арки
     zc = AXLE_F
-    fend = [(2.20, 0.76), (2.15, FEND_Y1), (HOOD_Z0, FEND_Y0), (HOOD_Z0, BOT_Y), (zc - 0.60, BOT_Y),
-            (zc - 0.56, 0.93), (zc - 0.38, 1.075), (zc + 0.30, 1.075), (zc + 0.50, 0.86), (2.17, 0.77)]
+    fend = [(FRONT_Z, 0.72), (FRONT_Z, FEND_Y1), (HOOD_Z0, FEND_Y0), (HOOD_Z0, BOT_Y), (zc - 0.60, BOT_Y),
+            (zc - 0.56, 0.93), (zc - 0.38, 1.06), (zc + 0.30, 1.06), (zc + 0.52, 0.86), (2.20, 0.72)]
     both_sides(extrude_x2(fend, 0.64, FENDER_W, alt={4, 5, 6, 7, 8}))
 
-    # --- центральная часть капота + решётка
-    hood = [(2.24, 0.62), (2.24, 1.05), (2.19, HOOD_Y1), (HOOD_Z0, HOOD_Y0), (HOOD_Z0, BOT_Y), (2.10, BOT_Y)]
+    # --- центральная часть капота + решётка: вертикальные щели только между фарами
+    hood = [(FRONT_Z, 0.62), (FRONT_Z, 1.05), (2.19, HOOD_Y1), (HOOD_Z0, HOOD_Y0), (HOOD_Z0, BOT_Y), (2.10, BOT_Y)]
     add2(extrude_x2(hood, -0.66, 0.66))
-    for k in range(13):
-        x = -0.54 + k * 0.09
-        parts["dark"] += box(x - 0.026, x + 0.026, 0.68, 0.99, 2.240, 2.246)
-    parts["dark"] += box(-0.60, 0.60, 0.635, 0.655, 2.240, 2.246)
+    for k in range(9):
+        x = -0.36 + k * 0.09
+        parts["dark"] += box(x - 0.026, x + 0.026, 0.74, 1.00, FRONT_Z, FRONT_Z + 0.006)
+    parts["dark"] += box(-0.42, 0.42, 0.70, 0.72, FRONT_Z, FRONT_Z + 0.006)
 
-    # жалюзи воздухозаборника на капоте (смещены к пассажиру)
+    # воздухозаборник с жалюзи посередине капота у переднего края
     slope = math.atan2(HOOD_Y0 - HOOD_Y1, HOOD_Z1 - HOOD_Z0)
-    zc_v = 1.20
-    base = chain(T(-0.18, hood_y(zc_v) + 0.004, zc_v), Rx(slope))
-    parts["dark"] += cbox(0, 0, 0, 0.70, 0.006, 0.42).transformed(base)
-    for k in range(8):
-        parts["paint"] += cbox(0, 0.012, -0.18 + k * 0.05, 0.66, 0.016, 0.018).transformed(base)
+    zc_v = 1.92
+    base = chain(T(0, hood_y(zc_v) + 0.004, zc_v), Rx(slope))
+    parts["dark"] += cbox(0, 0, 0, 0.62, 0.006, 0.30).transformed(base)
+    for k in range(6):
+        parts["paint"] += cbox(0, 0.012, -0.125 + k * 0.05, 0.58, 0.016, 0.018).transformed(base)
     # стыки капота и крыльев
     for s in (1, -1):
         parts["dark"] += tube((s * 0.655, hood_y(HOOD_Z0) - 0.03, HOOD_Z0 + 0.02),
                               (s * 0.655, hood_y(2.16) - 0.03, 2.16), 0.008, 6)
 
-    # фары в крыльях, решётки фар, поворотники
-    fn = np.array([0.0, (2.20 - 2.15), (FEND_Y1 - 0.76)])
-    fn /= np.linalg.norm(fn)
-    tilt = math.atan2(fn[1], fn[2])
+    # фары по бокам решётки в квадратных нишах (как у M1025), поворотники на передке крыльев
     for s in (1, -1):
-        M = chain(T(s * 0.89, 0.92, 2.183), Rx(-tilt), AX_TO_Z)
+        M = chain(T(s * HEADLIGHT_X, HEADLIGHT_Y, FRONT_Z), AX_TO_Z)
+        parts["dark"] += cbox(s * HEADLIGHT_X, HEADLIGHT_Y, FRONT_Z + 0.003, 0.26, 0.24, 0.006)
         parts["dark"] += lathe([(0.105, -0.02), (0.105, 0.03), (0.088, 0.035)], seg=32).transformed(M)
         parts["light"] += lathe([(0.088, 0.025), (0.06, 0.034), (0.0, 0.038)], seg=32).transformed(M)
-        parts["amber"] += cbox(s * 0.74, 0.86, 2.20, 0.08, 0.06, 0.03)
+        parts["amber"] += cbox(s * 0.86, 0.84, FRONT_Z + 0.012, 0.10, 0.06, 0.024)
         # резиновые Т-замки капота на боках крыльев
         parts["rubber"] += cbox(s * (FENDER_W + 0.008), 0.97, 2.02, 0.016, 0.16, 0.035)
         parts["rubber"] += cbox(s * (FENDER_W + 0.008), 1.04, 2.02, 0.016, 0.03, 0.12)
         # затемнённая маскировочная фара над поворотником
-        parts["dark"] += cbox(s * 0.74, 0.96, 2.205, 0.07, 0.05, 0.03)
+        parts["dark"] += cbox(s * 0.86, 0.96, FRONT_Z + 0.012, 0.08, 0.05, 0.024)
 
     # --- кабина: полая оболочка (без пола и без крыши — крыша отдельно, с люком)
-    cab = [(ZF_B, YB), (ZF_T, YT), (Z_ROOF_R, YT), (Z_REAR + 0.04, 1.62), (Z_REAR, YB)]
+    cab = [(ZF_B, YB), (ZF_T, YT), (Z_ROOF_R, YT), (Z_REAR + 0.05, TAIL_Y), (Z_REAR, YB)]
     # рёбра: 0 лобовое, 1 крыша (отдельно, с люком), 2 скос, 3 зад, 4 низ (открыт в салон)
     g, _ = extrude_x2(cab, -CAB_W, CAB_W, skip={1, 4})
     parts["paint"] += g
@@ -467,7 +470,7 @@ def build_body():
     # двери: бронеплиты с маленькими окнами и X-рёбрами
     for s in (1, -1):
         xa, xb = CAB_W, CAB_W + 0.045
-        y_top = 1.88
+        y_top = YT - 0.04
         front = [(0.84, 0.60), (0.84, 1.30), (windshield_z(y_top) - 0.03, y_top), (-0.27, y_top), (-0.27, 0.60)]
         rear = [(-0.31, 0.60), (-0.31, y_top), (-1.02, y_top), (-1.02, 0.60)]
         for poly in (front, rear):
@@ -477,7 +480,7 @@ def build_body():
             parts["paint"] += g if s > 0 else g.transformed(MIRROR_X)
         xo = s * (xb + 0.002)
 
-        def win(zf_fn, z_back, y0=1.42, y1=1.80):
+        def win(zf_fn, z_back, y0=1.40, y1=YT - 0.11):
             return [(xo, y0, zf_fn(y0)), (xo, y0, z_back), (xo, y1, z_back), (xo, y1, zf_fn(y1))]
         f_win = win(lambda y: windshield_z(y) - 0.15, -0.16)
         r_win = win(lambda y: -0.43, -0.92)
@@ -514,8 +517,8 @@ def build_body():
         parts["dark"] += cbox(s * (CAB_W + 0.27), 1.62, 0.80, 0.05, 0.28, 0.19)
         parts["glass"] += cbox(s * (CAB_W + 0.27), 1.62, 0.773, 0.044, 0.25, 0.004)
         # бортовая панель грузового отсека (без окна) — рёбра жёсткости
-        for zr in (-1.30, -1.80):
-            parts["paint"] += cbox(s * (CAB_W + 0.006), 1.60, zr, 0.012, 0.50, 0.03)
+        for zr in (-1.30, -1.80):   # под скосом крыши, чтобы не торчали над ним
+            parts["paint"] += cbox(s * (CAB_W + 0.006), 1.48, zr, 0.012, 0.30, 0.03)
         # порог-подножка
         parts["dark"] += box(s * HALF_W - 0.02 if s > 0 else -HALF_W - 0.03,
                              HALF_W + 0.03 if s > 0 else -HALF_W + 0.02, 0.55, 0.59, -1.02, 0.84)
@@ -554,7 +557,7 @@ def build_body():
             parts["dark"] += cbox(s * 0.66, WHEEL_Y + 0.04, zc, 0.10, 0.28, 0.24)
             parts["dark"] += tube((s * 0.55, WHEEL_Y + 0.10, zc + 0.10 * s), (s * 0.30, 0.90, zc), 0.035)
     parts["dark"] += tube((0, 0.45, -1.4), (0, 0.45, 1.4), 0.04)
-    parts["metal"] += tube((-0.85, 0.47, -1.9), (-0.85, 0.47, -2.45), 0.04)
+    parts["metal"] += tube(EXHAUST_START, EXHAUST_END, 0.04)   # слева под порогом перед задним колесом, как у M1025
 
     # антенна на заднем углу
     parts["dark"] += cbox(CAB_W + 0.04, 1.55, -2.12, 0.08, 0.12, 0.10)

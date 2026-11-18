@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дорожная карта сервера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-1: #0d0618;
+    --bg-2: #1a0b2e;
+    --card: #241038;
+    --card-2: #2c1446;
+    --accent: #8b5cf6;
+    --accent-soft: #c4b5fd;
+    --text: #ede9fe;
+    --muted: #a99cc9;
+    --border: rgba(139, 92, 246, 0.28);
+    --border-strong: rgba(139, 92, 246, 0.6);
+    --glow: 0 0 0 1px rgba(139, 92, 246, 0.55), 0 10px 40px -8px rgba(139, 92, 246, 0.55);
+    --done: #a78bfa;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    min-height: 100vh;
+    font-family: "Rubik", "Segoe UI", Arial, sans-serif;
+    color: var(--text);
+    background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    background-color: var(--bg-1);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* мягкие фиолетовые пятна на фоне */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(600px 400px at 15% 0%, rgba(139, 92, 246, 0.16), transparent 70%),
+      radial-gradient(500px 500px at 100% 60%, rgba(196, 181, 253, 0.07), transparent 70%);
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  /* ---------- Шапка ---------- */
+  header {
+    padding: 56px 0 36px;
+    text-align: center;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(36, 16, 56, 0.6);
+    color: var(--accent-soft);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .badge .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  h1 {
+    margin: 18px 0 10px;
+    font-size: clamp(28px, 6vw, 46px);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  h1 .name {
+    color: var(--accent-soft);
+    text-shadow: 0 0 24px rgba(139, 92, 246, 0.6);
+  }
+
+  .subtitle {
+    max-width: 560px;
+    margin: 0 auto;
+    color: var(--muted);
+    font-size: clamp(15px, 2.5vw, 17px);
+    text-wrap: pretty;
+  }
+
+  .overall {
+    margin: 32px auto 0;
+    max-width: 560px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(36, 16, 56, 0.75);
+    text-align: left;
+  }
+
+  .overall-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .overall-label {
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .overall-count {
+    color: var(--accent-soft);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  .bar {
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(13, 6, 24, 0.8);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+    box-shadow: 0 0 14px rgba(139, 92, 246, 0.8);
+    transition: width 0.6s cubic-bezier(.2, .8, .2, 1);
+  }
+
+  /* ---------- Карточки ---------- */
+  .roadmap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 20px;
+  }
+
+  .card {
+    position: relative;
+    padding: 22px 22px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  }
+
+  .card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--glow);
+  }
+
+  .card.complete {
+    border-color: rgba(196, 181, 253, 0.55);
+    background: linear-gradient(160deg, var(--card-2), var(--card));
+  }
+
+  /* появление при прокрутке */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(.2, .8, .2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; }
+    .bar-fill, .mini-fill { transition: none; }
+    .badge .dot { animation: none; }
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .icon {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(139, 92, 246, 0.14);
+    border: 1px solid var(--border);
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .head-text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .num {
+    display: block;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .card-title {
+    font-size: clamp(17px, 3.2vw, 20px);
+    font-weight: 700;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  .counter {
+    flex: 0 0 auto;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(13, 6, 24, 0.55);
+    color: var(--accent-soft);
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .card.complete .counter {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .mini-bar {
+    margin: 16px 0 6px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(13, 6, 24, 0.7);
+    overflow: hidden;
+  }
+
+  .mini-fill {
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    border-radius: inherit;
+    transition: width 0.5s ease;
+  }
+
+  .tasks {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .task label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 10px;
+    margin: 0 -10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .task label:hover {
+    background: rgba(139, 92, 246, 0.09);
+  }
+
+  .task input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .check {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    border-radius: 7px;
+    border: 2px solid var(--border-strong);
+    background: rgba(13, 6, 24, 0.6);
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .check svg {
+    width: 14px;
+    height: 14px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    transition: stroke-dashoffset 0.25s ease;
+  }
+
+  .task input:checked + .check {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.7);
+  }
+
+  .task input:checked + .check svg {
+    stroke-dashoffset: 0;
+  }
+
+  .task input:focus-visible + .check {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 2px;
+  }
+
+  .task-text {
+    font-size: 15.5px;
+    transition: color 0.2s ease;
+  }
+
+  .task input:checked ~ .task-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: rgba(196, 181, 253, 0.5);
+  }
+
+  /* ---------- Низ страницы ---------- */
+  .actions {
+    display: flex;
+    justify-content: center;
+    padding: 28px 0 12px;
+  }
+
+  .btn {
+    font: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 12px 22px;
+    border-radius: 12px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--accent-soft);
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  }
+
+  .btn:hover {
+    background: rgba(139, 92, 246, 0.15);
+    box-shadow: var(--glow);
+    color: var(--text);
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 3px;
+  }
+
+  footer {
+    margin-top: 28px;
+    padding: 28px 0 36px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .discord {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 11px 20px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .discord:hover {
+    box-shadow: 0 8px 30px -6px rgba(139, 92, 246, 0.9);
+    transform: translateY(-1px);
+  }
+
+  .discord svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+
+  /* ---------- Телефоны ---------- */
+  @media (max-width: 560px) {
+    header { padding: 36px 0 28px; }
+    .card { padding: 18px 16px 14px; }
+    .icon { width: 44px; height: 44px; font-size: 22px; border-radius: 12px; }
+    .card-head { gap: 12px; }
+    .counter { font-size: 13px; padding: 4px 9px; }
+    .task label { padding: 9px 8px; margin: 0 -8px; }
+    .overall { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="badge"><span class="dot"></span>DayZ · план развития</span>
+    <h1>Дорожная карта сервера <span class="name" id="serverName"></span></h1>
+    <p class="subtitle">Что уже сделано и что ждёт сервер впереди: от железа и своих модов до Discord и автодоната.</p>
+
+    <div class="overall">
+      <div class="overall-top">
+        <span class="overall-label">Общий прогресс</span>
+        <span class="overall-count" id="overallCount">0 / 0</span>
+      </div>
+      <div class="bar" role="progressbar" aria-label="Общий прогресс" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="overallBar">
+        <div class="bar-fill" id="overallFill"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="roadmap" id="roadmap"></main>
+
+  <div class="actions">
+    <button class="btn" type="button" id="resetBtn">Сбросить прогресс</button>
+  </div>
+
+  <footer>
+    <a class="discord" id="discordLink" href="#">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.3 4.4A19.7 19.7 0 0 0 15.4 3l-.6 1.3a18.3 18.3 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.4C.6 9 -.3 13.6.2 18.1a19.8 19.8 0 0 0 6 3l1.3-2a12.8 12.8 0 0 1-2-1l.5-.4a14.1 14.1 0 0 0 12 0l.5.4c-.6.4-1.3.7-2 1l1.3 2a19.7 19.7 0 0 0 6-3c.6-5.2-.8-9.7-3.5-13.7ZM8.5 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Zm7 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Z"/></svg>
+      Наш Discord
+    </a>
+    <div id="footerText"></div>
+  </footer>
+</div>
+
+<script>
+/* =====================================================================
+   НАСТРОЙКИ — меняй здесь
+   ===================================================================== */
+
+// Название сервера (подставляется в заголовок и подвал)
+const SERVER_NAME = "[НАЗВАНИЕ]";
+
+// Ссылка на Discord (пока заглушка)
+const DISCORD_URL = "#";
+
+/*
+  План развития. Каждый пункт — карточка:
+    id    — уникальный ключ (латиницей), по нему сохраняется прогресс
+    icon  — emoji
+    title — заголовок
+    tasks — подпункты: { id: "уникальный-ключ", text: "текст" }
+
+  Чтобы добавить пункт — скопируй блок { ... } и поменяй id и текст.
+  Если поменять id подпункта, его галочка сбросится.
+*/
+const ROADMAP = [
+  {
+    id: "minipc",
+    icon: "🖥️",
+    title: "Купить мини-ПК для DayZ-сервера",
+    tasks: [
+      { id: "minipc-setup", text: "Дать Claude полный доступ к мини-ПК, пробросить порты и настроить всё, чтобы на сервер могли заходить все игроки" }
+    ]
+  },
+  {
+    id: "mods",
+    icon: "🛠️",
+    title: "Написать свои моды для DayZ-сервера",
+    tasks: [
+      { id: "mods-car-shooting", text: "Стрельба из автомобилей" },
+      { id: "mods-nobuild",      text: "Зоны запрета строительства на карте" },
+      { id: "mods-player-map",   text: "Интерактивная веб-карта для игроков: все ивенты и спавн игроков" },
+      { id: "mods-admin-map",    text: "Такая же карта для админов, но обновляющаяся в реальном времени" }
+    ]
+  },
+  {
+    id: "promo",
+    icon: "🎬",
+    title: "Пиар сервера и Discord",
+    tasks: [
+      { id: "promo-video", text: "Снять видео для TikTok и YouTube Shorts: что умеет сервер, что на нём уже есть и что будет" }
+    ]
+  },
+  {
+    id: "discord",
+    icon: "💬",
+    title: "Сделать Discord-сервер",
+    tasks: [
+      { id: "discord-info", text: "Расписать, что на данный момент есть на сервере" }
+    ]
+  },
+  {
+    id: "donate",
+    icon: "💳",
+    title: "Сайт сервера с автодонатом",
+    tasks: [
+      { id: "donate-gpay",  text: "Оплата через Google Pay" },
+      { id: "donate-cards", text: "Приём карт РФ, Украины и Беларуси" }
+    ]
+  }
+];
+
+/* =====================================================================
+   Дальше — логика страницы, менять не обязательно
+   ===================================================================== */
+
+const STORAGE_KEY = "dayz-roadmap-progress-v1";
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    return data && typeof data === "object" ? data : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  } catch (e) {
+    /* хранилище недоступно — прогресс просто не сохранится */
+  }
+}
+
+let progress = loadProgress();
+
+const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5 12.5 10 17 19 7"/></svg>';
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function render() {
+  const root = document.getElementById("roadmap");
+  root.innerHTML = ROADMAP.map((item, i) => `
+    <section class="card reveal" data-card="${escapeHtml(item.id)}">
+      <div class="card-head">
+        <div class="icon" aria-hidden="true">${item.icon || "⭐"}</div>
+        <div class="head-text">
+          <span class="num">Этап ${String(i + 1).padStart(2, "0")}</span>
+          <h2 class="card-title">${escapeHtml(item.title)}</h2>
+        </div>
+        <span class="counter" data-counter></span>
+      </div>
+      <div class="mini-bar"><div class="mini-fill" data-mini></div></div>
+      <ul class="tasks">
+        ${item.tasks.map(task => `
+          <li class="task">
+            <label>
+              <input type="checkbox" data-task="${escapeHtml(task.id)}" ${progress[task.id] ? "checked" : ""}>
+              <span class="check">${CHECK_SVG}</span>
+              <span class="task-text">${escapeHtml(task.text)}</span>
+            </label>
+          </li>`).join("")}
+      </ul>
+    </section>
+  `).join("");
+
+  updateCounters();
+  observeReveal();
+}
+
+function updateCounters() {
+  let total = 0;
+  let done = 0;
+
+  ROADMAP.forEach(item => {
+    const card = document.querySelector(`[data-card="${CSS.escape(item.id)}"]`);
+    if (!card) return;
+    const cardDone = item.tasks.filter(t => progress[t.id]).length;
+    const cardTotal = item.tasks.length;
+    total += cardTotal;
+    done += cardDone;
+
+    card.querySelector("[data-counter]").textContent = `${cardDone}/${cardTotal}`;
+    card.querySelector("[data-mini]").style.width = cardTotal ? `${(cardDone / cardTotal) * 100}%` : "0";
+    card.classList.toggle("complete", cardTotal > 0 && cardDone === cardTotal);
+  });
+
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById("overallCount").textContent = `${done} / ${total} · ${pct}%`;
+  document.getElementById("overallFill").style.width = `${pct}%`;
+  document.getElementById("overallBar").setAttribute("aria-valuenow", String(pct));
+}
+
+function observeReveal() {
+  const cards = document.querySelectorAll(".reveal");
+  if (!("IntersectionObserver" in window)) {
+    cards.forEach(c => c.classList.add("visible"));
+    return;
+  }
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+  cards.forEach((c, i) => {
+    c.style.transitionDelay = `${Math.min(i, 4) * 60}ms`;
+    c.addEventListener("transitionend", () => { c.style.transitionDelay = "0ms"; }, { once: true });
+    io.observe(c);
+  });
+}
+
+document.getElementById("roadmap").addEventListener("change", e => {
+  const id = e.target.dataset && e.target.dataset.task;
+  if (!id) return;
+  if (e.target.checked) progress[id] = true;
+  else delete progress[id];
+  saveProgress();
+  updateCounters();
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Сбросить весь прогресс? Все отметки будут сняты.")) return;
+  progress = {};
+  saveProgress();
+  document.querySelectorAll("[data-task]").forEach(cb => { cb.checked = false; });
+  updateCounters();
+});
+
+document.getElementById("serverName").textContent = SERVER_NAME;
+document.title = `Дорожная карта сервера ${SERVER_NAME}`;
+document.getElementById("discordLink").href = DISCORD_URL;
+document.getElementById("footerText").textContent = `© ${new Date().getFullYear()} ${SERVER_NAME} · DayZ-сервер`;
+
+render();
+</script>
+</body>
+</html>

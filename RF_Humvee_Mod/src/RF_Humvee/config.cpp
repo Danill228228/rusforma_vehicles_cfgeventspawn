@@ -41,13 +41,72 @@ class CfgSlots
 	class Slot_RF_HumveeWheel_2_2 { name = "RF_HumveeWheel_2_2"; displayName = "Колесо (правое заднее)";  selection = "wheel_2_2"; ghostIcon = "set:dayz_inventory image:wheel"; };
 };
 
+// Прокси колёс в LOD 0 связываются со слотами только через эти классы (имя = "Proxy" + имя файла прокси),
+// как ProxyNivaWheel у ванильной Ada. Без них колёса висят в инвентаре, но машина их не видит (WheelCountPresent = 0).
+class CfgNonAIVehicles
+{
+	class ProxyVehiclePart;
+	class Proxywheel_1_1: ProxyVehiclePart { model = "\RF_Humvee\data\proxy\wheel_1_1.p3d"; inventorySlot[] = {"RF_HumveeWheel_1_1"}; };
+	class Proxywheel_1_2: ProxyVehiclePart { model = "\RF_Humvee\data\proxy\wheel_1_2.p3d"; inventorySlot[] = {"RF_HumveeWheel_1_2"}; };
+	class Proxywheel_2_1: ProxyVehiclePart { model = "\RF_Humvee\data\proxy\wheel_2_1.p3d"; inventorySlot[] = {"RF_HumveeWheel_2_1"}; };
+	class Proxywheel_2_2: ProxyVehiclePart { model = "\RF_Humvee\data\proxy\wheel_2_2.p3d"; inventorySlot[] = {"RF_HumveeWheel_2_2"}; };
+};
+
 class CfgVehicles
 {
+	// Цепочка классов как в ванильном DZ_Vehicles_Wheeled: без неё парсер не видит Axles/Front/Wheels/Left/Right
+	// ("Undefined base class 'Axles'").
 	class CarWheel;
-	class CarScript;
+	class Car;
+	class CarScript: Car
+	{
+		class SimulationModule
+		{
+			class Axles
+			{
+				class Front
+				{
+					class Wheels
+					{
+						class Left;
+						class Right;
+					};
+				};
+				class Rear
+				{
+					class Wheels
+					{
+						class Left;
+						class Right;
+					};
+				};
+			};
+		};
+	};
 	class OffroadHatchback: CarScript
 	{
-		class SimulationModule;
+		class SimulationModule: SimulationModule
+		{
+			class Axles: Axles
+			{
+				class Front: Front
+				{
+					class Wheels: Wheels
+					{
+						class Left;
+						class Right;
+					};
+				};
+				class Rear: Rear
+				{
+					class Wheels: Wheels
+					{
+						class Left;
+						class Right;
+					};
+				};
+			};
+		};
 	};
 
 	// ------------------------------------------------------------------ колесо
@@ -71,6 +130,16 @@ class CfgVehicles
 		tyreOffroadResistance = 0.7;
 		tyreGrip = 1.0;
 	};
+	// Скрипт CarWheelType требует пару "<колесо>_Ruined" (как HatchbackWheel_Ruined), иначе ошибка при каждом колесе.
+	class RF_HumveeWheel_Ruined: RF_HumveeWheel
+	{
+		displayName = "Колесо Humvee (разрушено)";
+		weight = 30000;
+		radius = 0.3;
+		tyreRollResistance = 0.3;
+		tyreOffroadResistance = 0.1;
+		tyreGrip = 0.2;
+	};
 
 	// ------------------------------------------------------------------ машина
 	// Конфиг наследует звук, двигатель и коробку от ванильного Ada 4x4 (OffroadHatchback),
@@ -87,7 +156,9 @@ class CfgVehicles
 
 		hiddenSelections[] = {"camo"};
 		hiddenSelectionsTextures[] = {"\RF_Humvee\data\rf_humvee_woodland_co.paa"};
-		hiddenSelectionsMaterials[] = {""};
+		// Без строки наследуется прозрачный материал фар Ada. Небинаризованный p3d hiddenSelections не применяет
+		// (пустынная окраска пока выглядит лесной), кузов рисуется с материалом, записанным в грани модели.
+		hiddenSelectionsMaterials[] = {"\RF_Humvee\data\rf_humvee_body.rvmat"};
 
 		doors[] = {};
 		attachments[] =
@@ -311,6 +382,25 @@ class CfgVehicles
 					fatalInjuryCoef = 0.001;
 					inventorySlots[] = {"CarBattery", "SparkPlug", "CarRadiator"};
 					inventorySlotsCoefs[] = {0.3, 0.3, 0.3};
+				};
+				// CarScript.EEItemAttached ищет зону с именем слота фары: без неё "Could not find zone Reflector_1_1".
+				class Reflector_1_1
+				{
+					class Health
+					{
+						hitpoints = 10;
+						transferToGlobalCoef = 0;
+						healthLevels[] = {{1.0, {}}, {0.7, {}}, {0.5, {}}, {0.3, {}}, {0.0, {}}};
+					};
+					componentNames[] = {};
+					memoryPoints[] = {"light_1_1"};
+					fatalInjuryCoef = -1;
+					inventorySlots[] = {"Reflector_1_1"};
+				};
+				class Reflector_2_1: Reflector_1_1
+				{
+					memoryPoints[] = {"light_2_1"};
+					inventorySlots[] = {"Reflector_2_1"};
 				};
 				class FuelTank
 				{

@@ -6,8 +6,8 @@
   3. model.cfg
   4. упаковка PBO:  @RF_Humvee/Addons/RF_Humvee.pbo и RF_Humvee_Hatch.pbo
 
-Система координат P3D: X вправо, Y вверх, Z вперёд (левая). В исходной модели +X — левый борт,
-поэтому X зеркалится. Запуск: python3 RF_Humvee_Mod/tools/build_mod.py
+В исходной модели +X — левый борт, +Z — перёд; в файле P3D зеркалится Z (см. to_p3d), тогда в игре
+перёд на +Z, водитель на -X, как у ванильной Ada. Запуск: python3 RF_Humvee_Mod/tools/build_mod.py
 """
 import math
 import os
@@ -31,6 +31,7 @@ DATA = os.path.join(SRC, "RF_Humvee", "data")
 OUT_ADDONS = os.path.join(MOD, "@RF_Humvee", "Addons")
 
 TEX_CAMO = r"rf_humvee\data\rf_humvee_woodland_co.paa"
+MAT_BODY = r"rf_humvee\data\rf_humvee_body.rvmat"
 RES_GEOMETRY, RES_PHYS = 1e13, 4e13
 RES_MEMORY, RES_LANDCONTACT, RES_ROADWAY = 1e15, 2e15, 3e15
 RES_VIEWGEO, RES_FIREGEO = 6e15, 7e15
@@ -44,8 +45,10 @@ WHEELS = {  # селекция: (x в исходной модели, z, пере
 
 
 def to_p3d(p):
-    """исходные координаты -> P3D"""
-    return (-float(p[0]), float(p[1]), float(p[2]))
+    """исходные координаты -> P3D. Отражается Z, а не X: с отражением X игра видела машину развёрнутой на 180°
+    (фары на z = -2.25, водитель на x = +1.85, у ванильной Ada фара на z = +1.84, водитель на x = -1.12)
+    и на первой передаче ехала задом."""
+    return (float(p[0]), float(p[1]), -float(p[2]))
 
 
 def texture_for(mat):
@@ -84,8 +87,8 @@ class LodBuilder:
         if not len(g.I):
             return
         UV = G.compute_uv(g) if uv else np.zeros((len(g.P), 2))
-        P = g.P * np.array([-1.0, 1.0, 1.0])
-        N = g.N * np.array([1.0, -1.0, -1.0])         # отражённая нормаль, развернутая внутрь
+        P = g.P * np.array([1.0, 1.0, -1.0])           # как to_p3d
+        N = g.N * np.array([-1.0, -1.0, 1.0])         # отражённая нормаль, развернутая внутрь
         pidx = [self.point(p) for p in P]
         nidx = [self.normal(n) for n in N]
         f0 = len(self.L.faces)
@@ -105,7 +108,8 @@ class LodBuilder:
             sel = list(selections)
             if extra_sel and mat in extra_sel:
                 sel += extra_sel[mat]
-            self.add_geo(g, texture_for(mat), "", sel)
+            # Грань с текстурой-файлом PAA без rvmat игра не рисует (кузов был невидим), процедурным цветам материал не нужен.
+            self.add_geo(g, texture_for(mat), MAT_BODY if mat == "paint" else "", sel)
 
     def add_component(self, g, mass, selections=()):
         """Выпуклое замкнутое тело для LOD геометрии."""
@@ -124,7 +128,7 @@ class LodBuilder:
     def add_proxy(self, path, origin, yaw180=False, selections=(), size=1.0):
         o = np.array(to_p3d(origin))
         up = np.array([0, 2.0, 0]) * size
-        fw = np.array([0, 0, -1.0 if yaw180 else 1.0]) * size
+        fw = np.array([0, 0, 1.0 if yaw180 else -1.0]) * size   # «вперёд» исходной модели после to_p3d
         idx = [self.point(tuple(o)), self.point(tuple(o + up)), self.point(tuple(o + fw))]
         n = self.normal((1.0, 0.0, 0.0))
         self.L.faces.append(dict(verts=[(i, n, 0.0, 0.0) for i in idx], flags=0, texture="", material=""))
@@ -226,6 +230,23 @@ def hatch_collider():
     return convex_hull_geo(pts)
 
 
+CREW = [  # (селекция proxyPos из config.cpp, ванильный прокси, x, z) — те же места, что memory "crew*"
+    ("crewDriver", "crew_driver", 0.47, -0.02),
+    ("crewCoDriver", "crew_cargo", -0.47, -0.02),
+    ("crewCargo1", "crew_cargo", 0.47, -0.98),
+    ("crewCargo2", "crew_cargo", -0.47, -0.98),
+]
+
+
+def add_proxies(b):
+    """Прокси экипажа и колёс — в LOD 0, View и Fire Geometry, как у ванильной Ada.
+    Без прокси экипажа в View Geometry: "Proxy with bone name 'crewDriver' was not found in view geometry"."""
+    for sel, model, x, z in CREW:
+        b.add_proxy(r"\DZ\vehicles\wheeled\proxies\%s" % model, (x, 1.08, z), selections=[sel])
+    for name, (x, z, front) in WHEELS.items():
+        b.add_proxy(r"\RF_Humvee\data\proxy\%s" % name, (x, G.WHEEL_Y, z), yaw180=(x < 0), selections=[name])
+
+
 # --------------------------------------------------------------------------- модели
 def build_car_p3d(path):
     body = G.clean(G.build_body())
@@ -238,8 +259,7 @@ def build_car_p3d(path):
     v.add_parts(body, extra_sel={"paint": ["camo"]})
     v.add_parts(interior)
     v.add_parts(lid_world, selections=["hatch_roof"], extra_sel={"paint": ["camo"]})
-    for name, (x, z, front) in WHEELS.items():
-        v.add_proxy(r"\RF_Humvee\data\proxy\%s" % name, (x, G.WHEEL_Y, z), yaw180=(x < 0), selections=[name])
+    add_proxies(v)
     lods = [v.done()]
 
     # Geometry (масса), Geometry Phys, View/Fire geometry
@@ -252,11 +272,20 @@ def build_car_p3d(path):
                 b.add_component(g, 25 if mass else 0, [sel])
         if with_hatch:
             b.add_component(hatch_collider(), 15 if mass else 0, ["hatch_roof"])
+        if res == RES_GEOMETRY:
+            # Ступицы: движок ищет wheelHub (wheel_X_Y_damper_land) в Geometry LOD, как у ванильной Ada,
+            # иначе "Won't simulate, wheel ... has no proper selection in geometry" и машина не создаётся.
+            for name, (x, z, _) in WHEELS.items():
+                hub = box_geo(x - 0.1, x + 0.1, G.WHEEL_Y - 0.1, G.WHEEL_Y + 0.1, z - 0.1, z + 0.1)
+                b.add_component(hub, 20, [name + "_damper_land"])
+        if res in (RES_VIEWGEO, RES_FIREGEO):
+            add_proxies(b)
         props = [("autocenter", "0")] if mass else []
         return b.done(with_mass=mass, props=props)
 
     lods.append(geo_lod(RES_GEOMETRY, True, True, True))
-    lods.append(geo_lod(RES_PHYS, False, False, True))
+    # Geometry Phys (4e13) нет, как у ванильной Ada: с ним физика строит тело без ступиц wheel_*_damper_land,
+    # и машину на первом шаге выбрасывает за пределы мира ("Overflow in AABB").
     lods.append(geo_lod(RES_VIEWGEO, True, True, False))
     lods.append(geo_lod(RES_FIREGEO, True, True, False))
 
@@ -396,6 +425,9 @@ def model_cfg():
 				angle0 = 0; angle1 = -6.2831855;
 			}};""")
     bones.append('"hatch_roof",""')
+    # Кости мест экипажа, как crewdriver/crewcodriver/crewcargo1/2 в скелете ванильной Ada: без них движок
+    # не находит прокси экипажа ("Proxy with bone name 'crewDriver' was not found in view geometry").
+    bones += ['"%s",""' % sel for sel, _, _, _ in CREW]
     anims.append("""			// Люк: 0 -> закрыт, 1 -> открыт (110°). Если крышка уходит внутрь салона — поменяйте знак angle1.
 			class hatch_roof
 			{

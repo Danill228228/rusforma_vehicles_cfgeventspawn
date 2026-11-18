@@ -1,7 +1,8 @@
 // Машина: посадка экипажа, анимации сидений, камера.
+// Скрипт наследует OffroadHatchback (как и config.cpp): оттуда аккумулятор как источник питания, звуки двигателя, фары, гудок.
 // Действия с люком добавляет отдельный аддон RF_Humvee_Hatch (modded class RF_Humvee).
 
-class RF_Humvee extends CarScript
+class RF_Humvee extends OffroadHatchback
 {
 	override int GetAnimInstance()
 	{
@@ -39,6 +40,25 @@ class RF_Humvee extends CarScript
 	override bool CrewCanGetThrough(int posIdx)
 	{
 		return true;
+	}
+
+	// Где надо стоять, чтобы сесть (ActionGetInTransport -> CanReachSeatFromDoors). Ада ищет seat_con_*,
+	// в нашей модели у дверей стоят pos_*: без этого действие «Сесть» не появляется.
+	override string GetDoorConditionPointFromSelection(string selection)
+	{
+		switch (selection)
+		{
+			case "seat_driver":
+				return "pos_driver";
+			case "seat_codriver":
+				return "pos_codriver";
+			case "seat_cargo1":
+				return "pos_cargo1";
+			case "seat_cargo2":
+				return "pos_cargo2";
+		}
+
+		return "";
 	}
 
 	override bool CanReachSeatFromSeat(int currentSeat, int nextSeat)

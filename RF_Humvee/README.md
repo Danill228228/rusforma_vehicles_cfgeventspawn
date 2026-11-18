@@ -1,7 +1,7 @@
 # RF_Humvee — HMMWV с открываемым люком
 
-Армейский внедорожник в стиле HMMWV M1025 (жёсткая бронированная крыша, 4 двери) с круглым люком стрелка
-на крыше, который открывается и закрывается. Модель собрана с нуля скриптом из примитивов, сторонних ассетов в ней нет.
+Армейский внедорожник в стиле HMMWV M1114 (бронированная крыша и двери с X-рёбрами, кенгурятник, жалюзи на капоте,
+лесной камуфляж) с круглым люком стрелка на крыше, который открывается и закрывается. Модель собрана с нуля скриптом из примитивов, сторонних ассетов в ней нет.
 
 ## Состав
 
@@ -9,6 +9,7 @@
 |---|---|
 | `model/humvee.gltf` | 3D-модель glTF 2.0: ноды `body`, `interior`, `wheel_1_1…wheel_2_2`, `hatch_roof_pivot → hatch_roof` |
 | `model/humvee.obj` + `.mtl` | та же модель в OBJ, объекты названы как селекции DayZ, плюс ребро `hatch_roof_axis` |
+| `model/humvee_camo_woodland.png` | бесшовная текстура лесного камуфляжа (для DayZ сконвертировать в `rf_humvee_woodland_co.paa` через TexView 2) |
 | `model/memory_points.json` | координаты memory-точек (ось люка, центры колёс) |
 | `preview/humvee_preview.html` | интерактивный 3D-просмотр (открыть в браузере): люк, окраска, камеры |
 | `source/generate_humvee.py` | генератор модели (`python3 source/generate_humvee.py`, нужен только numpy) |
@@ -20,7 +21,7 @@
 ## Как устроен люк
 
 * В модели крышка — отдельная селекция **`hatch_roof`**, ось шарнира — две точки **`hatch_roof_axis`**
-  в LOD Memory (x = ±0.25, y = 1.932, z = −1.075).
+  в LOD Memory (x = ±0.25, y = 2.032, z = −1.005).
 * `config.cpp` → `AnimationSources/HatchRoof` (`source = "user"`, 1.2 с).
 * `model.cfg` → `Animations/hatch_roof`, `type = "rotation"`, `angle1 = -1.9199` (−110°).
 * Скрипт: `RF_Humvee.RF_SetHatchOpen(bool)` вызывает `SetAnimationPhase("HatchRoof", 0/1)` на сервере;

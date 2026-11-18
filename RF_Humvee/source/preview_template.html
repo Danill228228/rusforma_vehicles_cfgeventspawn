@@ -85,7 +85,7 @@ dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-num
   <aside>
     <div>
       <h1>RF Humvee</h1>
-      <p class="sub">Бронированный HMMWV-подобный внедорожник с жёсткой крышей и открываемым люком стрелка.</p>
+      <p class="sub">Бронированный HMMWV-подобный внедорожник: лесной камуфляж, кенгурятник, броне­двери и открываемый люк стрелка.</p>
     </div>
 
     <div>
@@ -127,10 +127,10 @@ dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-num
     <div class="plate">
       <p class="label">Габариты</p>
       <dl>
-        <dt>Длина</dt><dd>4.83 м</dd>
-        <dt>Ширина (без зеркал)</dt><dd>2.20 м</dd>
-        <dt>Высота (по люку)</dt><dd>1.98 м</dd>
-        <dt>База</dt><dd>3.24 м</dd>
+        <dt>Длина</dt><dd>4.88 м</dd>
+        <dt>Ширина (без зеркал)</dt><dd>2.24 м</dd>
+        <dt>Высота (по люку)</dt><dd>2.08 м</dd>
+        <dt>База</dt><dd>3.28 м</dd>
         <dt>Колесо</dt><dd>⌀ 0.95 м</dd>
         <dt>Треугольников</dt><dd id="tris">—</dd>
       </dl>
@@ -154,6 +154,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 const OPEN_DEG = 110, PERIOD = 1.2;
 const PAINTS = [
+  { id: "camo",   name: "Лесной камуфляж", rgb: null },
   { id: "olive",  name: "Олива",   rgb: [0.330, 0.360, 0.220] },
   { id: "desert", name: "Пустыня", rgb: [0.700, 0.610, 0.440] },
   { id: "winter", name: "Зима",    rgb: [0.840, 0.850, 0.830] },
@@ -208,7 +209,7 @@ applyTheme();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
 new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-let pivot = null, lidMeshes = [], paintMat = null;
+let pivot = null, lidMeshes = [], paintMat = null, camoTex = null;
 let phase = 0, target = 0;
 
 const json = document.getElementById("model").textContent;
@@ -220,7 +221,7 @@ new GLTFLoader().parse(json, "", (gltf) => {
       o.castShadow = true; o.receiveShadow = true;
       const m = o.material;
       if (m.name === "glass") { m.depthWrite = false; m.envMapIntensity = 1.4; o.renderOrder = 2; }
-      if (m.name === "paint") paintMat = m;
+      if (m.name === "paint") { paintMat = m; camoTex = m.map; if (camoTex) camoTex.anisotropy = 8; }
       tris += o.geometry.index ? o.geometry.index.count / 3 : 0;
     }
   });
@@ -268,14 +269,19 @@ const paintsEl = document.getElementById("paints");
 for (const p of PAINTS) {
   const b = document.createElement("button");
   b.className = "chip"; b.type = "button"; b.dataset.paint = p.id;
-  const sw = new THREE.Color().setRGB(...p.rgb, THREE.SRGBColorSpace);
-  b.innerHTML = `<i style="background:#${sw.getHexString()}"></i>${p.name}`;
+  const bg = p.rgb ? "#" + new THREE.Color().setRGB(...p.rgb, THREE.SRGBColorSpace).getHexString()
+    : "conic-gradient(#4a5634 0 30%, #58442e 0 55%, #1e1e1a 0 70%, #928460 0 80%, #4a5634 0)";
+  b.innerHTML = `<i style="background:${bg}"></i>${p.name}`;
   b.addEventListener("click", () => setPaint(p.id));
   paintsEl.appendChild(b);
 }
 function setPaint(id) {
   const p = PAINTS.find((x) => x.id === id);
-  if (paintMat) paintMat.color.setRGB(...p.rgb, THREE.SRGBColorSpace);
+  if (paintMat) {
+    if (p.rgb) { paintMat.map = null; paintMat.color.setRGB(...p.rgb, THREE.SRGBColorSpace); }
+    else { paintMat.map = camoTex; paintMat.color.set(0xffffff); }
+    paintMat.needsUpdate = true;
+  }
   for (const b of paintsEl.children) b.setAttribute("aria-pressed", String(b.dataset.paint === id));
 }
 
@@ -284,7 +290,7 @@ const CAMS = {
   three: [[5.6, 2.9, 5.4], [0, 0.95, -0.1]],
   side:  [[7.6, 1.5, -0.2], [0, 0.9, -0.1]],
   front: [[1.6, 1.6, 7.2], [0, 0.9, 0]],
-  top:   [[1.2, 4.6, -2.6], [0, 1.4, -0.62]],
+  top:   [[1.2, 4.7, -2.5], [0, 1.5, -0.55]],
 };
 let camAnim = null;
 function goCam(id) {

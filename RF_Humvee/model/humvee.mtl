@@ -2,19 +2,21 @@ newmtl paint
 Kd 0.3300 0.3600 0.2200
 Ns 80.0
 d 1.000
+Kd 1 1 1
+map_Kd humvee_camo_woodland.png
 
 newmtl dark
-Kd 0.1500 0.1600 0.1400
-Ns 60.0
+Kd 0.1100 0.1150 0.1000
+Ns 70.0
 d 1.000
 
 newmtl rubber
-Kd 0.0850 0.0850 0.0880
-Ns 16.0
+Kd 0.1100 0.1080 0.1040
+Ns 14.0
 d 1.000
 
 newmtl rim
-Kd 0.2700 0.2900 0.1900
+Kd 0.1500 0.1650 0.1200
 Ns 90.0
 d 1.000
 
@@ -24,9 +26,9 @@ Ns 120.0
 d 1.000
 
 newmtl glass
-Kd 0.2000 0.2600 0.2800
-Ns 184.0
-d 0.450
+Kd 0.3300 0.4000 0.4400
+Ns 188.0
+d 0.550
 
 newmtl light
 Kd 0.9800 0.9600 0.8800

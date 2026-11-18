@@ -31,11 +31,7 @@ DATA = os.path.join(SRC, "RF_Humvee", "data")
 OUT_ADDONS = os.path.join(MOD, "@RF_Humvee", "Addons")
 
 TEX_CAMO = r"rf_humvee\data\rf_humvee_woodland_co.paa"
-TEX_DESERT = r"rf_humvee\data\rf_humvee_desert_co.paa"   # своя модель: hiddenSelections на небинаризованном p3d не работают
-# у каждой окраски свой rvmat: подозрение, что игра запоминает текстуру вместе с материалом
-# (пустынная модель с общим материалом выглядела лесной)
-BODY_MAT = {TEX_CAMO: r"rf_humvee\data\rf_humvee_body.rvmat",
-            TEX_DESERT: r"rf_humvee\data\rf_humvee_body_desert.rvmat"}
+MAT_BODY = r"rf_humvee\data\rf_humvee_body.rvmat"   # пустынная окраска — только своя текстура в config.cpp
 SURFACES = {  # материал генератора: (цвет, rvmat) — грани с файловой текстурой обязаны иметь rvmat
     "rubber": (r"rf_humvee\data\rf_humvee_rubber_co.paa", r"rf_humvee\data\rf_humvee_rubber.rvmat"),
     "dark": (r"rf_humvee\data\rf_humvee_metal_co.paa", r"rf_humvee\data\rf_humvee_metal.rvmat"),
@@ -44,7 +40,7 @@ SURFACES = {  # материал генератора: (цвет, rvmat) — г�
 
 def material_for(mat, camo=TEX_CAMO):
     if mat == "paint":
-        return BODY_MAT[camo]
+        return MAT_BODY
     return SURFACES[mat][1] if mat in SURFACES else ""
 RES_GEOMETRY, RES_PHYS = 1e13, 4e13
 RES_MEMORY, RES_LANDCONTACT, RES_ROADWAY = 1e15, 2e15, 3e15
@@ -331,8 +327,8 @@ def build_car_p3d(path, camo=TEX_CAMO):
     # самый дальний LOD и источник тени: выпуклые блоки коллизии в камуфляже
     h = LodBuilder(HULL_LOD)
     for _, g, _, _ in collision_parts():
-        h.add_geo(g, camo, BODY_MAT[camo], ["camo"], uv=True)
-    h.add_geo(hatch_collider(), camo, BODY_MAT[camo], ["camo", "hatch_roof"], uv=True)
+        h.add_geo(g, camo, MAT_BODY, ["camo"], uv=True)
+    h.add_geo(hatch_collider(), camo, MAT_BODY, ["camo", "hatch_roof"], uv=True)
     add_proxies(h)
     lods.append(h.done())
 
@@ -680,7 +676,6 @@ class CfgModels
 {anim_txt}
 		}};
 	}};
-	class rf_humvee_desert: rf_humvee {{}};
 	class rf_humvee_wheel: Default {{}};
 }};
 """
@@ -689,20 +684,19 @@ class CfgModels
 def main():
     os.makedirs(os.path.join(DATA, "proxy"), exist_ok=True)
     lods = build_car_p3d(os.path.join(DATA, "rf_humvee.p3d"))
-    build_car_p3d(os.path.join(DATA, "rf_humvee_desert.p3d"), camo=TEX_DESERT)
     build_wheel_p3d(os.path.join(DATA, "rf_humvee_wheel.p3d"))
     for name in WHEELS:
         build_proxy_p3d(os.path.join(DATA, "proxy", name + ".p3d"))
-    # краска: лесная НАТО и пустынная, общие карты нормалей и бликов (одинаковый рисунок сколов, seed=7)
-    co, nohq, smdi = paint_textures([(100, 108, 70), (118, 96, 66), (44, 43, 38)], dust=(150, 140, 118))
+    # краска: лесная НАТО и пустынная, общие карты нормалей и бликов (одинаковый рисунок сколов, seed=7).
+    # Яркость подобрана по ванильному M1025 рядом в игре: на экране у него ≈65, у прежней палитры было ≈130.
+    co, nohq, smdi = paint_textures([(64, 69, 48), (72, 62, 46), (31, 31, 28)], dust=(108, 102, 88))
     paa.write_paa(os.path.join(DATA, "rf_humvee_woodland_co.paa"), co)
     paa.write_paa(os.path.join(DATA, "rf_humvee_body_nohq.paa"), nohq)
     paa.write_paa(os.path.join(DATA, "rf_humvee_body_smdi.paa"), smdi)
-    co, _, _ = paint_textures([(176, 150, 108), (142, 112, 78), (104, 84, 62)], dust=(190, 175, 145))
+    co, _, _ = paint_textures([(124, 108, 82), (100, 82, 60), (74, 61, 48)], dust=(138, 128, 108))
     paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"), co)
-    for mat in BODY_MAT.values():
-        write_rvmat(os.path.join(SRC, mat), r"rf_humvee\data\rf_humvee_body_nohq.paa",
-                    r"rf_humvee\data\rf_humvee_body_smdi.paa", 0.35, 25)
+    write_rvmat(os.path.join(SRC, MAT_BODY), r"rf_humvee\data\rf_humvee_body_nohq.paa",
+                r"rf_humvee\data\rf_humvee_body_smdi.paa", 0.35, 25)
     # резина и тёмный металл (рама, решётка, кенгурятник, петли)
     for name, args, (spec, power) in (("rubber", ((36, 35, 33), (105, 96, 82), 0.12, 0.15), (0.12, 8)),
                                       ("metal", ((46, 49, 42), (120, 112, 95), 0.35, 0.35), (0.5, 30))):

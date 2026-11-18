@@ -154,11 +154,13 @@ class CfgVehicles
 		fuelCapacity = 95;
 		fuelConsumption = 14;
 
-		hiddenSelections[] = {"camo"};
-		hiddenSelectionsTextures[] = {"\RF_Humvee\data\rf_humvee_woodland_co.paa"};
-		// Без строки наследуется прозрачный материал фар Ada. Небинаризованный p3d hiddenSelections не применяет
-		// (пустынная окраска пока выглядит лесной), кузов рисуется с материалом, записанным в грани модели.
-		hiddenSelectionsMaterials[] = {"\RF_Humvee\data\rf_humvee_body.rvmat"};
+		// CarScript меняет материалы фар по жёстким номерам 0…8 (SELECTION_ID_FRONT_LIGHT_L = 0 … DASHBOARD = 8),
+		// поэтому, как у ванильных машин, первыми идут фары, а кузов camo — десятым. Раньше camo был нулевым,
+		// и на кузов ставился материал выключенной фары Ada (green\niva_body.rvmat): машина была тёмно-зелёной.
+		hiddenSelections[] = {"light_left", "light_right", "light_brake_1_2", "light_brake_2_2", "light_reverse_1_2",
+			"light_reverse_2_2", "light_1_2", "light_2_2", "light_dashboard", "camo"};
+		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "\RF_Humvee\data\rf_humvee_woodland_co.paa"};
+		hiddenSelectionsMaterials[] = {"", "", "", "", "", "", "", "", "", "\RF_Humvee\data\rf_humvee_body.rvmat"};
 
 		doors[] = {};
 		attachments[] =
@@ -442,9 +444,6 @@ class CfgVehicles
 	class RF_Humvee_Desert: RF_Humvee
 	{
 		displayName = "Humvee M1114 (пустынный)";
-		// Своя модель с песочной текстурой в гранях: замена через hiddenSelections на небинаризованном p3d не работает
-		model = "\RF_Humvee\data\rf_humvee_desert.p3d";
-		hiddenSelectionsTextures[] = {"\RF_Humvee\data\rf_humvee_desert_co.paa"};
-		hiddenSelectionsMaterials[] = {"\RF_Humvee\data\rf_humvee_body_desert.rvmat"};
+		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "\RF_Humvee\data\rf_humvee_desert_co.paa"};
 	};
 };

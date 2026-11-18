@@ -56,6 +56,12 @@ modded class RF_Humvee
 	{
 		super.AfterStoreLoad();
 		RF_SetHatchOpen(m_RF_HatchOpen);
+
+		// после рестарта люк сразу стоит как был, а не открывается заново на глазах
+		float phase = 0;
+		if (m_RF_HatchOpen)
+			phase = 1;
+		SetAnimationPhaseNow(HATCH_SOURCE, phase);
 	}
 }
 

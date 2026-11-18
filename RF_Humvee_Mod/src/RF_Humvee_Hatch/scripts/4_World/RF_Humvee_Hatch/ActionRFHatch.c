@@ -115,8 +115,10 @@ class ActionRFHatchOutsideBase: ActionInteractBase
 		if (!car)
 			return false;
 
-		string selection = car.GetActionComponentName(target.GetComponentIndex());
-		if (selection != RF_Humvee.HATCH_SELECTION)
+		// у компонента люка несколько имён (ComponentNN и hatch_roof), смотрим весь список
+		TStringArray selections = new TStringArray;
+		car.GetActionComponentNameList(target.GetComponentIndex(), selections);
+		if (selections.Find(RF_Humvee.HATCH_SELECTION) == -1)
 			return false;
 
 		return car.RF_IsHatchOpen() != m_RF_WantOpen;

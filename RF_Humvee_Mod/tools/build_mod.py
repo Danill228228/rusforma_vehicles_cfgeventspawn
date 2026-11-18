@@ -31,6 +31,7 @@ DATA = os.path.join(SRC, "RF_Humvee", "data")
 OUT_ADDONS = os.path.join(MOD, "@RF_Humvee", "Addons")
 
 TEX_CAMO = r"rf_humvee\data\rf_humvee_woodland_co.paa"
+TEX_DESERT = r"rf_humvee\data\rf_humvee_desert_co.paa"   # своя модель: hiddenSelections на небинаризованном p3d не работают
 MAT_BODY = r"rf_humvee\data\rf_humvee_body.rvmat"
 RES_GEOMETRY, RES_PHYS = 1e13, 4e13
 RES_MEMORY, RES_LANDCONTACT, RES_ROADWAY = 1e15, 2e15, 3e15
@@ -51,9 +52,9 @@ def to_p3d(p):
     return (float(p[0]), float(p[1]), -float(p[2]))
 
 
-def texture_for(mat):
+def texture_for(mat, camo=TEX_CAMO):
     if mat == "paint":
-        return TEX_CAMO
+        return camo
     rgb, _, _, extra = G.MATERIALS[mat]
     if "alpha" in extra:
         return "#(argb,8,8,3)color(%.3f,%.3f,%.3f,%.2f,ca)" % (*rgb, extra["alpha"])
@@ -103,13 +104,13 @@ class LodBuilder:
         for s in selections:
             self.L.select(s, pts, faces)
 
-    def add_parts(self, parts, selections=(), extra_sel=None):
+    def add_parts(self, parts, selections=(), extra_sel=None, camo=TEX_CAMO):
         for mat, g in parts.items():
             sel = list(selections)
             if extra_sel and mat in extra_sel:
                 sel += extra_sel[mat]
             # Грань с текстурой-файлом PAA без rvmat игра не рисует (кузов был невидим), процедурным цветам материал не нужен.
-            self.add_geo(g, texture_for(mat), MAT_BODY if mat == "paint" else "", sel)
+            self.add_geo(g, texture_for(mat, camo), MAT_BODY if mat == "paint" else "", sel)
 
     def add_component(self, g, mass, selections=()):
         """Выпуклое замкнутое тело для LOD геометрии."""
@@ -143,6 +144,48 @@ class LodBuilder:
             self.L.mass = self.mass
         self.L.properties = list(props)
         return self.L
+
+
+# --------------------------------------------------------------------------- дальние LOD
+def simplify(parts, min_size):
+    """Для дальних LOD: убирает мелкие детали — связные куски (по совпадающим точкам) с диагональю меньше min_size."""
+    out = {}
+    for mat, g in parts.items():
+        if not len(g.I):
+            out[mat] = g
+            continue
+        _, vid = np.unique(np.round(g.P, 4), axis=0, return_inverse=True)
+        vid = vid.reshape(-1)
+        parent = list(range(vid.max() + 1))
+
+        def find(a):
+            while parent[a] != a:
+                parent[a] = parent[parent[a]]
+                a = parent[a]
+            return a
+        for a, b, c in vid[g.I]:
+            ra, rb, rc = find(a), find(b), find(c)
+            parent[rb] = ra
+            parent[rc] = ra
+        root = np.array([find(v) for v in vid])
+        keep = np.zeros(len(g.P), bool)
+        for r in np.unique(root):
+            m = root == r
+            if np.linalg.norm(g.P[m].max(0) - g.P[m].min(0)) >= min_size:
+                keep |= m
+        tris = g.I[keep[g.I].all(1)]
+        used = np.unique(tris)
+        remap = np.full(len(g.P), -1)
+        remap[used] = np.arange(len(used))
+        out[mat] = G.Geo(g.P[used], g.N[used], remap[tris])
+    return out
+
+
+# Видимые LOD: (разрешение, мельче чего убрать, оставить ли салон). Всем ставится lodnoshadow, как у ванильных
+# машин, а тень отбрасывает только грубый LOD HULL_LOD из блоков коллизии (иначе "Too detailed shadow lod ...").
+VISUAL_LODS = ((0.0, 0.0, True), (1.0, 0.15, True), (2.0, 0.45, False))
+HULL_LOD = 3.0
+NO_SHADOW = [("lodnoshadow", "1")]
 
 
 # --------------------------------------------------------------------------- геометрия столкновений
@@ -242,25 +285,41 @@ def add_proxies(b):
     """Прокси экипажа и колёс — в LOD 0, View и Fire Geometry, как у ванильной Ada.
     Без прокси экипажа в View Geometry: "Proxy with bone name 'crewDriver' was not found in view geometry"."""
     for sel, model, x, z in CREW:
-        b.add_proxy(r"\DZ\vehicles\wheeled\proxies\%s" % model, (x, 1.08, z), selections=[sel])
+        # yaw180: без разворота CrewTransform давал взгляд назад (0,0,-1), у ванили (0,0,+1) — человек сидел
+        # спиной вперёд и попадал телом в соседнее кресло
+        b.add_proxy(r"\DZ\vehicles\wheeled\proxies\%s" % model, (x, 1.08, z), yaw180=True, selections=[sel])
     for name, (x, z, front) in WHEELS.items():
         b.add_proxy(r"\RF_Humvee\data\proxy\%s" % name, (x, G.WHEEL_Y, z), yaw180=(x < 0), selections=[name])
 
 
 # --------------------------------------------------------------------------- модели
-def build_car_p3d(path):
+def build_car_p3d(path, camo=TEX_CAMO):
     body = G.clean(G.build_body())
     interior = G.clean(G.build_interior())
     lid = G.clean(G.build_hatch_lid())
     lid_world = {m: g.transformed(G.T(0, G.HINGE_Y, G.HINGE_Z)) for m, g in lid.items()}
+    doors = {sel: G.clean(p) for sel, p in G.build_doors().items()}
 
-    # LOD 0 — визуальная модель
-    v = LodBuilder(0.0)
-    v.add_parts(body, extra_sel={"paint": ["camo"]})
-    v.add_parts(interior)
-    v.add_parts(lid_world, selections=["hatch_roof"], extra_sel={"paint": ["camo"]})
-    add_proxies(v)
-    lods = [v.done()]
+    # LOD 0…2 — визуальная модель, дальние без мелких деталей
+    lods = []
+    for res, min_size, with_interior in VISUAL_LODS:
+        cut = (lambda p: simplify(p, min_size)) if min_size else (lambda p: p)
+        v = LodBuilder(res)
+        v.add_parts(cut(body), extra_sel={"paint": ["camo"]}, camo=camo)
+        if with_interior:
+            v.add_parts(cut(interior), camo=camo)
+        v.add_parts(cut(lid_world), selections=["hatch_roof"], extra_sel={"paint": ["camo"]}, camo=camo)
+        for sel, p in doors.items():
+            v.add_parts(cut(p), selections=[sel], extra_sel={"paint": ["camo"]}, camo=camo)
+        add_proxies(v)
+        lods.append(v.done(props=NO_SHADOW))
+    # самый дальний LOD и источник тени: выпуклые блоки коллизии в камуфляже
+    h = LodBuilder(HULL_LOD)
+    for _, g, _, _ in collision_parts():
+        h.add_geo(g, camo, MAT_BODY, ["camo"], uv=True)
+    h.add_geo(hatch_collider(), camo, MAT_BODY, ["camo", "hatch_roof"], uv=True)
+    add_proxies(h)
+    lods.append(h.done())
 
     # Geometry (масса), Geometry Phys, View/Fire geometry
     def geo_lod(res, with_doors, with_hatch, mass):
@@ -269,7 +328,9 @@ def build_car_p3d(path):
             b.add_component(g, m, sel if res == RES_FIREGEO else ())
         if with_doors:
             for sel, g in doors_parts():
-                b.add_component(g, 25 if mass else 0, [sel])
+                # в View/Fire Geometry коллайдер двери поворачивается вместе с ней (цель «Сесть»/«Открыть» и попадания)
+                door = [SEAT_DOOR[sel]] if res in (RES_VIEWGEO, RES_FIREGEO) else []
+                b.add_component(g, 25 if mass else 0, [sel] + door)
         if with_hatch:
             b.add_component(hatch_collider(), 15 if mass else 0, ["hatch_roof"])
         if res == RES_GEOMETRY:
@@ -311,9 +372,18 @@ def build_car_p3d(path):
         m.add_memory("pos_" + nm, (s * 1.85, 0.05, z + 0.25))
         m.add_memory("pos_" + nm + "_dir", (s * 1.30, 0.05, z + 0.25))
     m.add_memory("hatch_roof_axis", (-0.25, G.HINGE_Y, G.HINGE_Z), (0.25, G.HINGE_Y, G.HINGE_Z))
+    for sel, (side, front) in G.DOORS.items():   # петли дверей: вертикальная ось по передней кромке
+        x, z = side * G.DOOR_XB, G.DOOR_HINGE_Z[front]
+        m.add_memory(sel + "_axis", (x, 0.65, z), (x, 1.75, z))
     m.add_memory("hatch_roof_center", (0, G.RING_TOP, G.HATCH_Z))
     for name, p in {
         "light_1_1": (G.HEADLIGHT_X, G.HEADLIGHT_Y, G.FRONT_Z + 0.04), "light_2_1": (-G.HEADLIGHT_X, G.HEADLIGHT_Y, G.FRONT_Z + 0.04),
+        # CarScript ставит лучи фар и фонарь заднего хода по этим именам; без них свет был в начале координат модели
+        "light_left": (G.HEADLIGHT_X, G.HEADLIGHT_Y, G.FRONT_Z + 0.05),
+        "light_right": (-G.HEADLIGHT_X, G.HEADLIGHT_Y, G.FRONT_Z + 0.05),
+        "light_left_dir": (G.HEADLIGHT_X, G.HEADLIGHT_Y - 0.06, G.FRONT_Z + 1.05),
+        "light_right_dir": (-G.HEADLIGHT_X, G.HEADLIGHT_Y - 0.06, G.FRONT_Z + 1.05),
+        "light_reverse": (0.0, 1.00, G.Z_REAR - 0.05),
         "light_1_2": (0.90, 1.08, -2.34), "light_2_2": (-0.90, 1.08, -2.34),
         "light_brake_1_2": (0.90, 1.08, -2.34), "light_brake_2_2": (-0.90, 1.08, -2.34),
         "light_reverse_1_2": (0.90, 0.97, -2.34), "light_reverse_2_2": (-0.90, 0.97, -2.34),
@@ -340,10 +410,15 @@ def build_car_p3d(path):
 
 def build_wheel_p3d(path):
     wheel = G.clean(G.build_wheel())
-    v = LodBuilder(0.0)
-    v.add_parts(wheel)
-    lods = [v.done()]
+    lods = []
+    for res, min_size, _ in VISUAL_LODS:
+        v = LodBuilder(res)
+        v.add_parts(simplify(wheel, min_size) if min_size else wheel)
+        lods.append(v.done(props=NO_SHADOW))
     cyl = G.lathe([(0.0, -0.18), (G.WHEEL_R, -0.18), (G.WHEEL_R, 0.18), (0.0, 0.18)], seg=12, smooth_deg=5)
+    h = LodBuilder(HULL_LOD)          # дальний LOD и тень колеса: 12-гранный цилиндр
+    h.add_geo(convex_hull_geo(cyl.P), texture_for("rubber"), "", uv=False)
+    lods.append(h.done())
     for res, mass in ((RES_GEOMETRY, True), (RES_VIEWGEO, False), (RES_FIREGEO, False)):
         b = LodBuilder(res)
         b.add_component(convex_hull_geo(cyl.P), 40 if mass else 0)
@@ -381,6 +456,12 @@ def camo_texture(palette, n=1024, seed=7):
 # wheel_*_damper_axis длиной 1 м: смещение в метрах = ход подвески travelMaxUp/Down из config.cpp. Прежние
 # -1…1 → ±1 м поднимали колёса в покое на 0.5 м выше капота.
 SUSP_TRAVEL = 0.16
+DOOR_OPEN_RAD = 1.2   # ≈69°
+# Источники анимации дверей и места — как у ванили (Transport.GetSeatIndexFromDoor: DoorsDriver = 0 ... DoorsCargo2 = 3)
+DOOR_SOURCE = {"doors_driver": "DoorsDriver", "doors_codriver": "DoorsCoDriver",
+               "doors_cargo1": "DoorsCargo1", "doors_cargo2": "DoorsCargo2"}
+SEAT_DOOR = {"seat_driver": "doors_driver", "seat_codriver": "doors_codriver",
+             "seat_cargo1": "doors_cargo1", "seat_cargo2": "doors_cargo2"}
 STEER_RAD = 0.5585   # 32° = maxSteeringAngle в config.cpp (было ±1 рад = 57°)
 
 
@@ -430,6 +511,19 @@ def model_cfg():
 				angle0 = 0; angle1 = -6.2831855;
 			}};""")
     bones.append('"hatch_roof",""')
+    for sel, (side, _) in G.DOORS.items():
+        bones.append('"%s",""' % sel)
+        # +угол открывает левую дверь наружу (проверено по люку: та же ось вращения), правой нужен минус
+        anims.append(f"""			class {sel}
+			{{
+				type = "rotation";
+				source = "{DOOR_SOURCE[sel]}";
+				selection = "{sel}";
+				axis = "{sel}_axis";
+				memory = 1;
+				minValue = 0; maxValue = 1;
+				angle0 = 0; angle1 = {side * DOOR_OPEN_RAD};
+			}};""")
     # Кости мест экипажа, как crewdriver/crewcodriver/crewcargo1/2 в скелете ванильной Ada: без них движок
     # не находит прокси экипажа ("Proxy with bone name 'crewDriver' was not found in view geometry").
     bones += ['"%s",""' % sel for sel, _, _, _ in CREW]
@@ -481,6 +575,7 @@ class CfgModels
 {anim_txt}
 		}};
 	}};
+	class rf_humvee_desert: rf_humvee {{}};
 	class rf_humvee_wheel: Default {{}};
 }};
 """
@@ -489,6 +584,7 @@ class CfgModels
 def main():
     os.makedirs(os.path.join(DATA, "proxy"), exist_ok=True)
     lods = build_car_p3d(os.path.join(DATA, "rf_humvee.p3d"))
+    build_car_p3d(os.path.join(DATA, "rf_humvee_desert.p3d"), camo=TEX_DESERT)
     build_wheel_p3d(os.path.join(DATA, "rf_humvee_wheel.p3d"))
     for name in WHEELS:
         build_proxy_p3d(os.path.join(DATA, "proxy", name + ".p3d"))

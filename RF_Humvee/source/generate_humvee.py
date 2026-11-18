@@ -276,14 +276,15 @@ def plane_quad(corners, hint, eps):
 
 
 # --------------------------------------------------------------------------- extra helpers
-def extrude_x2(profile, x0, x1, skip=(), alt=()):
-    """Как extrude_x, но: skip — индексы рёбер без боковой грани, alt — рёбра во втором материале.
+def extrude_x2(profile, x0, x1, skip=(), alt=(), caps=True):
+    """Как extrude_x, но: skip — индексы рёбер без боковой грани, alt — рёбра во втором материале,
+    caps=False — без торцов (стенки с проёмами строятся отдельно).
     Профиль (z, y) обязан идти против часовой стрелки. Возвращает (основная Geo, Geo рёбер alt)."""
     prof = [tuple(p) for p in profile]
     area = sum(_area2((0, 0), prof[i], prof[(i + 1) % len(prof)]) for i in range(len(prof)))
     assert area > 0, "профиль должен быть CCW"
     g, ga = Geo(), Geo()
-    for xc, hx in ((x1, 1.0), (x0, -1.0)):
+    for xc, hx in ((x1, 1.0), (x0, -1.0)) if caps else ():
         for (a, b, c) in triangulate(prof):
             g += face([(xc, prof[i][1], prof[i][0]) for i in (a, b, c)], (hx, 0, 0))
     n = len(prof)
@@ -387,7 +388,9 @@ def build_body():
 
     # --- боковые секции нижнего кузова (двери снизу + задние арки)
     ra = rear_arch(AXLE_R)
-    prof = [(HOOD_Z0, BOT_Y), (HOOD_Z0, BELT_Y), (Z_REAR, BELT_Y), (Z_REAR, 0.64), (Z_REAR + 0.05, BOT_Y)]
+    # в зоне дверей только порог до уровня пола: за открытой дверью виден салон, а не глухой борт
+    prof = [(HOOD_Z0, BOT_Y), (HOOD_Z0, FLOOR_Y), (DOOR_REAR_Z, FLOOR_Y), (DOOR_REAR_Z, BELT_Y),
+            (Z_REAR, BELT_Y), (Z_REAR, 0.64), (Z_REAR + 0.05, BOT_Y)]
     a0 = len(prof)
     prof += ra
     arch_edges = set(range(a0, a0 + len(ra) - 1))
@@ -441,8 +444,14 @@ def build_body():
     # --- кабина: полая оболочка (без пола и без крыши — крыша отдельно, с люком)
     cab = [(ZF_B, YB), (ZF_T, YT), (Z_ROOF_R, YT), (Z_REAR + 0.05, TAIL_Y), (Z_REAR, YB)]
     # рёбра: 0 лобовое, 1 крыша (отдельно, с люком), 2 скос, 3 зад, 4 низ (открыт в салон)
-    g, _ = extrude_x2(cab, -CAB_W, CAB_W, skip={1, 4})
+    g, _ = extrude_x2(cab, -CAB_W, CAB_W, skip={1, 4}, caps=False)
     parts["paint"] += g
+    # боковины кабины с проёмами дверей: стойки A и B, рейка над дверями и часть за задней дверью;
+    # изнутри — обшивка, иначе стенка из салона прозрачная (грани односторонние)
+    for s in (1, -1):
+        for poly in cab_side_pieces():
+            parts["paint"] += face([(s * CAB_W, y, z) for z, y in poly], (s, 0, 0))
+            parts["interior"] += face([(s * (CAB_W - 0.005), y, z) for z, y in poly], (-s, 0, 0))
     parts["paint"] += roof_with_hole(YT, (0, 1, 0))
     parts["interior"] += roof_with_hole(YT - 0.035, (0, -1, 0))
     for s in (1, -1):  # водостоки
@@ -467,46 +476,9 @@ def build_body():
     # козырёк над стеклом
     parts["paint"] += box(-CAB_W, CAB_W, YT - 0.05, YT, ZF_T - 0.02, ZF_T + 0.05)
 
-    # двери: бронеплиты с маленькими окнами и X-рёбрами
+    # двери — отдельными частями в build_doors() (анимация открытия)
     for s in (1, -1):
-        xa, xb = CAB_W, CAB_W + 0.045
         y_top = YT - 0.04
-        front = [(0.84, 0.60), (0.84, 1.30), (windshield_z(y_top) - 0.03, y_top), (-0.27, y_top), (-0.27, 0.60)]
-        rear = [(-0.31, 0.60), (-0.31, y_top), (-1.02, y_top), (-1.02, 0.60)]
-        for poly in (front, rear):
-            ccw = poly[::-1] if sum(_area2((0, 0), poly[i], poly[(i + 1) % len(poly)])
-                                    for i in range(len(poly))) < 0 else poly
-            g, _ = extrude_x2(ccw, xa, xb)
-            parts["paint"] += g if s > 0 else g.transformed(MIRROR_X)
-        xo = s * (xb + 0.002)
-
-        def win(zf_fn, z_back, y0=1.40, y1=YT - 0.11):
-            return [(xo, y0, zf_fn(y0)), (xo, y0, z_back), (xo, y1, z_back), (xo, y1, zf_fn(y1))]
-        f_win = win(lambda y: windshield_z(y) - 0.15, -0.16)
-        r_win = win(lambda y: -0.43, -0.92)
-        for w in (f_win, r_win):
-            w = np.array(w)
-            c = w.mean(0)
-            frame = c + (w - c) * np.array([1, 1.16, 1.10])
-            parts["dark"] += face(frame, (s, 0, 0))
-            parts["glass"] += face(w + np.array([s * 0.003, 0, 0]), (s, 0, 0))
-        # X-рёбра на нижних панелях
-        for z0, z1 in ((-0.20, 0.76), (-0.95, -0.38)):
-            y0, y1 = 0.68, 1.26
-            zc_, yc_ = (z0 + z1) / 2, (y0 + y1) / 2
-            L = math.hypot(z1 - z0, y1 - y0)
-            ang = math.atan2(y1 - y0, z1 - z0)
-            for a in (ang, -ang):
-                parts["paint"] += cbox(0, 0, 0, 0.012, 0.035, L).transformed(
-                    chain(T(s * (xb + 0.006), yc_, zc_), Rx(-a)))
-            for (pa, pb) in (((z0, y0), (z1, y0)), ((z0, y1), (z1, y1)), ((z0, y0), (z0, y1)), ((z1, y0), (z1, y1))):
-                parts["paint"] += tube((s * (xb + 0.004), pa[1], pa[0]), (s * (xb + 0.004), pb[1], pb[0]), 0.012, 6)
-        # петли и ручки
-        for zh in (0.80, -0.35):
-            for yh in (0.80, 1.62):
-                parts["dark"] += cbox(s * (xb + 0.012), yh, zh, 0.03, 0.10, 0.06)
-        for zh in (-0.22, -0.96):
-            parts["dark"] += cbox(s * (xb + 0.015), 1.34, zh, 0.03, 0.035, 0.12)
         # стойка B и щель
         parts["dark"] += box(s * CAB_W - 0.01, s * (CAB_W + 0.03), 0.60, y_top, -0.31, -0.27)
         # зеркала на кронштейнах
@@ -574,6 +546,73 @@ def build_body():
         x, z = RING_OUT * math.sin(a), HATCH_Z + RING_OUT * math.cos(a)
         parts["dark"] += cbox(x, YT + 0.05, z, 0.06, 0.08, 0.06)
     return parts
+
+
+DOORS = {  # селекция DayZ: (борт: +1 левый, передняя ли). Петли на передней кромке, ось вертикальная
+    "doors_driver": (1, True), "doors_codriver": (-1, True),
+    "doors_cargo1": (1, False), "doors_cargo2": (-1, False),
+}
+DOOR_XB = CAB_W + 0.045              # наружная плоскость двери
+DOOR_HINGE_Z = {True: 0.84, False: -0.31}
+DOOR_REAR_Z = -1.02                  # задняя кромка задней двери
+FLOOR_Y = 0.82                       # пол салона (верх «ванны»), до него опущен порог в проёмах
+
+
+def cab_side_pieces():
+    """Боковина кабины (z, y) без проёмов дверей: стойка A, рейка над дверями, стойка B, часть за задней дверью.
+    Проёмы повторяют контур дверей из build_doors()."""
+    y_top = YT - 0.04
+    za = windshield_z(y_top)
+    return [
+        [(ZF_B, YB), (za, y_top), (za - 0.03, y_top)],                                   # стойка A
+        [(za, y_top), (ZF_T, YT), (DOOR_REAR_Z, YT), (DOOR_REAR_Z, y_top)],              # рейка над дверями
+        [(-0.27, YB), (-0.27, y_top), (-0.31, y_top), (-0.31, YB)],                      # стойка B
+        [(DOOR_REAR_Z, YB), (DOOR_REAR_Z, YT), (Z_ROOF_R, YT), (Z_REAR + 0.05, TAIL_Y), (Z_REAR, YB)],
+    ]
+
+
+def build_doors():
+    """Двери: {селекция: parts} — бронеплита, окно, X-рёбра, петли и ручка, чтобы открывались целиком."""
+    out = {}
+    xa, xb = CAB_W, DOOR_XB
+    y_top = YT - 0.04
+    for sel, (s, front) in DOORS.items():
+        parts = {m: Geo() for m in MATERIALS}
+        if front:
+            poly = [(0.84, 0.60), (0.84, 1.30), (windshield_z(y_top) - 0.03, y_top), (-0.27, y_top), (-0.27, 0.60)]
+        else:
+            poly = [(-0.31, 0.60), (-0.31, y_top), (-1.02, y_top), (-1.02, 0.60)]
+        ccw = poly[::-1] if sum(_area2((0, 0), poly[i], poly[(i + 1) % len(poly)])
+                                for i in range(len(poly))) < 0 else poly
+        g, _ = extrude_x2(ccw, xa, xb)
+        parts["paint"] += g if s > 0 else g.transformed(MIRROR_X)
+        xo = s * (xb + 0.002)
+        y0, y1 = 1.40, YT - 0.11
+        if front:
+            w = [(xo, y0, windshield_z(y0) - 0.15), (xo, y0, -0.16), (xo, y1, -0.16), (xo, y1, windshield_z(y1) - 0.15)]
+        else:
+            w = [(xo, y0, -0.43), (xo, y0, -0.92), (xo, y1, -0.92), (xo, y1, -0.43)]
+        w = np.array(w)
+        c = w.mean(0)
+        parts["dark"] += face(c + (w - c) * np.array([1, 1.16, 1.10]), (s, 0, 0))
+        parts["glass"] += face(w + np.array([s * 0.003, 0, 0]), (s, 0, 0))
+        # X-рёбра на нижней панели
+        z0, z1 = (-0.20, 0.76) if front else (-0.95, -0.38)
+        ry0, ry1 = 0.68, 1.26
+        zc_, yc_ = (z0 + z1) / 2, (ry0 + ry1) / 2
+        L = math.hypot(z1 - z0, ry1 - ry0)
+        ang = math.atan2(ry1 - ry0, z1 - z0)
+        for a in (ang, -ang):
+            parts["paint"] += cbox(0, 0, 0, 0.012, 0.035, L).transformed(chain(T(s * (xb + 0.006), yc_, zc_), Rx(-a)))
+        for (pa, pb) in (((z0, ry0), (z1, ry0)), ((z0, ry1), (z1, ry1)), ((z0, ry0), (z0, ry1)), ((z1, ry0), (z1, ry1))):
+            parts["paint"] += tube((s * (xb + 0.004), pa[1], pa[0]), (s * (xb + 0.004), pb[1], pb[0]), 0.012, 6)
+        # петли (у передней кромки) и ручка (у задней)
+        zh = 0.80 if front else -0.35
+        for yh in (0.80, 1.62):
+            parts["dark"] += cbox(s * (xb + 0.012), yh, zh, 0.03, 0.10, 0.06)
+        parts["dark"] += cbox(s * (xb + 0.015), 1.34, -0.22 if front else -0.96, 0.03, 0.035, 0.12)
+        out[sel] = parts
+    return out
 
 
 def roof_with_hole(y, hint):
@@ -881,6 +920,9 @@ def transform_parts(parts, M):
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     body = clean(build_body())
+    for door in build_doors().values():   # в превью двери закрыты, вместе с кузовом
+        for m, g in clean(door).items():
+            body[m] += g
     interior = clean(build_interior())
     wheel = clean(build_wheel())
     lid = clean(build_hatch_lid())

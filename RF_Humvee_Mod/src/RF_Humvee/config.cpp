@@ -224,6 +224,16 @@ class CfgVehicles
 			class damper_2_1: damper_1_1 {};
 			class damper_1_2: damper_1_1 {};
 			class damper_2_2: damper_1_1 {};
+			// Двери — анимированные части кузова, имена источников как у ванили (сиденья 0…3)
+			class DoorsDriver
+			{
+				source = "user";
+				animPeriod = 0.5;
+				initPhase = 0;
+			};
+			class DoorsCoDriver: DoorsDriver {};
+			class DoorsCargo1: DoorsDriver {};
+			class DoorsCargo2: DoorsDriver {};
 		};
 
 		class Crew
@@ -432,6 +442,8 @@ class CfgVehicles
 	class RF_Humvee_Desert: RF_Humvee
 	{
 		displayName = "Humvee M1114 (пустынный)";
+		// Своя модель с песочной текстурой в гранях: замена через hiddenSelections на небинаризованном p3d не работает
+		model = "\RF_Humvee\data\rf_humvee_desert.p3d";
 		hiddenSelectionsTextures[] = {"\RF_Humvee\data\rf_humvee_desert_co.paa"};
 	};
 };

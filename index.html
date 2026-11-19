@@ -67,9 +67,78 @@
     padding: 0 16px;
   }
 
+  /* ---------- Верхнее меню ---------- */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding-top: env(safe-area-inset-top);
+    background: rgba(13, 6, 24, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .topnav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 10px 16px;
+  }
+
+  .brand {
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 0.01em;
+    color: var(--accent-soft);
+    text-shadow: 0 0 18px rgba(139, 92, 246, 0.6);
+    white-space: nowrap;
+  }
+
+  .seg {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(36, 16, 56, 0.7);
+  }
+
+  .seg a {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .seg a:hover { color: var(--text); }
+
+  .seg a[aria-current="page"] {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.6);
+  }
+
+  .seg a:focus-visible {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 2px;
+  }
+
+  .view[hidden] { display: none; }
+
   /* ---------- Шапка ---------- */
   header {
-    padding: calc(56px + env(safe-area-inset-top)) 0 36px;
+    padding: 48px 0 36px;
     text-align: center;
   }
 
@@ -256,6 +325,7 @@
     font-weight: 700;
     line-height: 1.25;
     text-wrap: balance;
+    overflow-wrap: anywhere;
   }
 
   .counter {
@@ -380,6 +450,154 @@
     text-decoration-color: rgba(196, 181, 253, 0.5);
   }
 
+  /* ---------- Раздел DayZ Server ---------- */
+  .cat-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .cat-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .cat-tab:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--glow);
+  }
+
+  .cat-tab[aria-selected="true"] {
+    border-color: var(--accent);
+    background: linear-gradient(160deg, rgba(139, 92, 246, 0.32), var(--card));
+    box-shadow: var(--glow);
+  }
+
+  .cat-tab:focus-visible {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 3px;
+  }
+
+  .cat-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .cat-title {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .cat-count {
+    color: var(--muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cat-tab[aria-selected="true"] .cat-count { color: var(--accent-soft); }
+
+  .mods {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+    gap: 20px;
+  }
+
+  .mod-img {
+    display: block;
+    width: calc(100% + 44px);
+    margin: -22px -22px 18px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius) var(--radius) 0 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .status {
+    display: inline-block;
+    margin-bottom: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+  }
+
+  .status-ready { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .status-wip   { background: rgba(139, 92, 246, 0.16); color: var(--accent-soft); border-color: var(--border-strong); }
+  .status-plan  { background: rgba(13, 6, 24, 0.55); color: var(--muted); }
+
+  .mod-desc {
+    margin-top: 14px;
+    color: var(--text);
+    font-size: 15.5px;
+    text-wrap: pretty;
+  }
+
+  .mod-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .mod-features li {
+    position: relative;
+    padding-left: 20px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .mod-features li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.55em;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    transform: rotate(45deg);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.8);
+  }
+
+  .empty {
+    grid-column: 1 / -1;
+    padding: 40px 20px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    display: block;
+    font-size: 34px;
+    margin-bottom: 10px;
+    opacity: 0.8;
+  }
+
+  .empty strong {
+    display: block;
+    color: var(--text);
+    font-size: 17px;
+    margin-bottom: 4px;
+  }
+
   /* ---------- Низ страницы ---------- */
   .actions {
     display: flex;
@@ -448,7 +666,13 @@
 
   /* ---------- Телефоны ---------- */
   @media (max-width: 560px) {
-    header { padding: calc(36px + env(safe-area-inset-top)) 0 28px; }
+    header { padding: 32px 0 28px; }
+    .seg a { padding: 8px 12px; font-size: 14px; }
+    .cat-tabs { gap: 8px; }
+    .cat-tab { padding: 14px 4px 12px; }
+    .cat-icon { font-size: 24px; }
+    .cat-title { font-size: 14.5px; }
+    .mod-img { width: calc(100% + 32px); margin: -18px -16px 16px; }
     .card { padding: 18px 16px 14px; }
     .icon { width: 44px; height: 44px; font-size: 22px; border-radius: 12px; }
     .card-head { gap: 12px; }
@@ -456,11 +680,28 @@
     .task label { padding: 9px 8px; margin: 0 -8px; }
     .overall { padding: 16px; }
   }
+
+  @media (max-width: 400px) {
+    .brand { display: none; }
+    .seg { flex: 1; }
+    .seg a { flex: 1; justify-content: center; }
+  }
 </style>
 </head>
 <body>
 
+<nav class="topnav" aria-label="Разделы">
+  <div class="topnav-inner">
+    <span class="brand" id="brandName"></span>
+    <div class="seg">
+      <a href="#roadmap" data-view="roadmap"><span aria-hidden="true">🗺️</span>Дорожная карта</a>
+      <a href="#server" data-view="server"><span aria-hidden="true">🎮</span>DayZ Server</a>
+    </div>
+  </div>
+</nav>
+
 <div class="wrap">
+ <div class="view" id="view-roadmap">
   <header>
     <span class="badge"><span class="dot"></span>DayZ · план развития</span>
     <h1>Дорожная карта сервера <span class="name" id="serverName"></span></h1>
@@ -482,6 +723,18 @@
   <div class="actions">
     <button class="btn" type="button" id="resetBtn">Сбросить прогресс</button>
   </div>
+ </div>
+
+ <div class="view" id="view-server" hidden>
+  <header>
+    <span class="badge"><span class="dot"></span><span id="serverBadge"></span></span>
+    <h1>DayZ Server</h1>
+    <p class="subtitle">Мои моды, сделанные специально для сервера: транспорт, одежда и снаряжение.</p>
+  </header>
+
+  <div class="cat-tabs" role="tablist" aria-label="Категории модов" id="catTabs"></div>
+  <section class="mods" role="tabpanel" id="modList" aria-live="polite"></section>
+ </div>
 
   <footer>
     <a class="discord" id="discordLink" href="#">
@@ -575,6 +828,44 @@ const ROADMAP = [
 ];
 
 /* =====================================================================
+   РАЗДЕЛ «DayZ Server» — мои моды
+   ===================================================================== */
+
+// Меню раздела (вкладки). Можно переименовать или добавить новую.
+const MOD_CATEGORIES = [
+  { id: "transport", icon: "🚙", title: "Транспорт" },
+  { id: "clothes",   icon: "🧥", title: "Одежда" },
+  { id: "gear",      icon: "🎒", title: "Снаряжение" }
+];
+
+/*
+  Мои моды. Каждый мод — карточка:
+    category    — в какое меню: "transport", "clothes" или "gear"
+    icon        — emoji
+    name        — название
+    status      — "ready" (Готово), "wip" (В разработке) или "plan" (В планах)
+    description — описание
+    features    — (необязательно) список особенностей
+    image       — (необязательно) картинка, например "images/hummer.jpg"
+
+  Чтобы добавить мод — скопируй блок { ... } и поменяй поля.
+*/
+const MODS = [
+  {
+    category: "transport",
+    icon: "🚙",
+    name: "Хаммер с открывающимся люком",
+    status: "wip",
+    description: "Свой Хаммер для сервера с люком, который открывается.",
+    features: [
+      "Открывающийся люк",
+      "Сейчас: текстура, покраска под стиль игры, проверка езды и анимаций",
+      "Дальше: стрельба из Хаммера"
+    ]
+  }
+];
+
+/* =====================================================================
    Дальше — логика страницы, менять не обязательно
    ===================================================================== */
 
@@ -661,7 +952,8 @@ function updateCounters() {
 }
 
 function observeReveal() {
-  const cards = document.querySelectorAll(".reveal");
+  const cards = document.querySelectorAll(".reveal:not(.observed)");
+  cards.forEach(c => c.classList.add("observed"));
   if (!("IntersectionObserver" in window)) {
     cards.forEach(c => c.classList.add("visible"));
     return;
@@ -698,12 +990,129 @@ document.getElementById("resetBtn").addEventListener("click", () => {
   updateCounters();
 });
 
+/* ---------- Раздел DayZ Server ---------- */
+
+const STATUS_LABELS = { ready: "Готово", wip: "В разработке", plan: "В планах" };
+const CAT_KEY = "dayz-mods-category-v1";
+
+function loadCategory() {
+  try {
+    const saved = localStorage.getItem(CAT_KEY);
+    if (MOD_CATEGORIES.some(c => c.id === saved)) return saved;
+  } catch (e) { /* нет доступа к хранилищу */ }
+  return MOD_CATEGORIES[0].id;
+}
+
+let currentCategory = loadCategory();
+
+function modsWord(n) {
+  const n10 = n % 10, n100 = n % 100;
+  if (n10 === 1 && n100 !== 11) return "мод";
+  if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return "мода";
+  return "модов";
+}
+
+function renderCategoryTabs() {
+  document.getElementById("catTabs").innerHTML = MOD_CATEGORIES.map(cat => {
+    const count = MODS.filter(m => m.category === cat.id).length;
+    const selected = cat.id === currentCategory;
+    return `
+      <button class="cat-tab" type="button" role="tab" id="tab-${escapeHtml(cat.id)}"
+              aria-controls="modList" aria-selected="${selected}" tabindex="${selected ? 0 : -1}"
+              data-cat="${escapeHtml(cat.id)}">
+        <span class="cat-icon" aria-hidden="true">${cat.icon}</span>
+        <span class="cat-title">${escapeHtml(cat.title)}</span>
+        <span class="cat-count">${count} ${modsWord(count)}</span>
+      </button>`;
+  }).join("");
+}
+
+function renderMods() {
+  const list = document.getElementById("modList");
+  list.setAttribute("aria-labelledby", `tab-${currentCategory}`);
+  const mods = MODS.filter(m => m.category === currentCategory);
+
+  if (!mods.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <span class="empty-icon" aria-hidden="true">🛠️</span>
+        <strong>Пока пусто</strong>
+        Скоро здесь появятся мои моды для этого раздела.
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = mods.map(mod => {
+    const status = STATUS_LABELS[mod.status] ? mod.status : "plan";
+    const features = (mod.features || []).map(f => `<li>${escapeHtml(f)}</li>`).join("");
+    return `
+      <article class="card reveal">
+        ${mod.image ? `<img class="mod-img" src="${escapeHtml(mod.image)}" alt="${escapeHtml(mod.name)}" loading="lazy">` : ""}
+        <div class="card-head">
+          <div class="icon" aria-hidden="true">${mod.icon || "📦"}</div>
+          <div class="head-text">
+            <span class="status status-${status}">${STATUS_LABELS[status]}</span>
+            <h2 class="card-title">${escapeHtml(mod.name)}</h2>
+          </div>
+        </div>
+        ${mod.description ? `<p class="mod-desc">${escapeHtml(mod.description)}</p>` : ""}
+        ${features ? `<ul class="mod-features">${features}</ul>` : ""}
+      </article>`;
+  }).join("");
+  observeReveal();
+}
+
+function selectCategory(id, focus) {
+  currentCategory = id;
+  try { localStorage.setItem(CAT_KEY, id); } catch (e) { /* не страшно */ }
+  renderCategoryTabs();
+  renderMods();
+  if (focus) document.getElementById(`tab-${id}`).focus();
+}
+
+document.getElementById("catTabs").addEventListener("click", e => {
+  const tab = e.target.closest("[data-cat]");
+  if (tab) selectCategory(tab.dataset.cat, false);
+});
+
+document.getElementById("catTabs").addEventListener("keydown", e => {
+  const i = MOD_CATEGORIES.findIndex(c => c.id === currentCategory);
+  let next = null;
+  if (e.key === "ArrowRight") next = (i + 1) % MOD_CATEGORIES.length;
+  if (e.key === "ArrowLeft") next = (i - 1 + MOD_CATEGORIES.length) % MOD_CATEGORIES.length;
+  if (next === null) return;
+  e.preventDefault();
+  selectCategory(MOD_CATEGORIES[next].id, true);
+});
+
+/* ---------- Переключение разделов ---------- */
+
+function showView() {
+  const view = location.hash === "#server" ? "server" : "roadmap";
+  document.getElementById("view-roadmap").hidden = view !== "roadmap";
+  document.getElementById("view-server").hidden = view !== "server";
+  document.querySelectorAll("[data-view]").forEach(a => {
+    if (a.dataset.view === view) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+  document.title = view === "server"
+    ? `DayZ Server · ${SERVER_NAME}`
+    : `Дорожная карта сервера ${SERVER_NAME}`;
+  window.scrollTo(0, 0);
+}
+
+window.addEventListener("hashchange", showView);
+
+document.getElementById("brandName").textContent = SERVER_NAME;
+document.getElementById("serverBadge").textContent = `${SERVER_NAME} · мои моды`;
 document.getElementById("serverName").textContent = SERVER_NAME;
-document.title = `Дорожная карта сервера ${SERVER_NAME}`;
 document.getElementById("discordLink").href = DISCORD_URL;
 document.getElementById("footerText").textContent = `© ${new Date().getFullYear()} ${SERVER_NAME} · DayZ-сервер`;
 
 render();
+renderCategoryTabs();
+renderMods();
+showView();
 </script>
 </body>
 </html>

@@ -2,12 +2,17 @@
 name = "dawnline"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
+workers_dev = true
 
 [vars]
 SITE_URL = "https://danill228228.github.io/rusforma_vehicles_cfgeventspawn/"
-ADMIN_STEAM_IDS = ""   # твой Steam ID (17 цифр); несколько — через запятую
+ADMIN_STEAM_IDS = ""   # можно не заполнять: админ назначается одноразовым кодом ADMIN_CLAIM_CODE
 
-[[d1_databases]]
-binding = "DB"
-database_name = "dawnline-comments"
-database_id = "ВСТАВЬ_ID_БАЗЫ"
+# Данные магазина: SQLite внутри Durable Object (доступно на бесплатном тарифе)
+[[durable_objects.bindings]]
+name = "SHOP"
+class_name = "Shop"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Shop"]

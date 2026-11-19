@@ -5,31 +5,37 @@
 - проводит вход через Steam: проверяет ответ Steam, чтобы вход нельзя было подделать;
 - хранит баланс игроков, заявки на пополнение и покупки модов;
 - проверяет, что у покупателя есть DayZ-сервер (IP, Port, QPort и код в названии сервера);
-- хранит отзывы покупателей, лайки и комментарии под модами в базе Cloudflare D1.
+- хранит отзывы покупателей, лайки и комментарии под модами.
 
 Цены берутся из `data.json` сайта. Их меняет владелец сайта: 🔒 → ✏️ → мод → «Цена».
 Пока сервер не запущен, магазин показывает моды и цены, но купить их нельзя.
 
-## Запуск через сайт Cloudflare (без установки программ)
+## Запуск
 
-1. Зарегистрируйся на https://dash.cloudflare.com (бесплатный тариф).
-2. **База:** Storage & Databases → **D1** → Create → имя `dawnline-comments` → Create.
-3. **Сервер:** Workers & Pages → Create → **Create Worker** → имя `dawnline` → Deploy.
-4. Нажми **Edit code**, удали пример, вставь весь файл `worker/src/index.js` и нажми **Deploy**.
-5. Открой воркер → **Settings → Bindings → Add → D1 database**:
-   - Variable name: `DB`;
-   - база: `dawnline-comments`.
-6. **Settings → Variables and Secrets → Add**:
+Данные магазина (балансы, покупки, отзывы) хранятся в самом воркере: в Durable Object со встроенной базой SQLite. Это есть на бесплатном тарифе, отдельная база D1 не нужна.
+
+**Проще всего — Claude разворачивает сам.** Для этого нужен токен Cloudflare:
+1. https://dash.cloudflare.com/profile/api-tokens → **Create Token** → шаблон **Edit Cloudflare Workers** → **Use template**.
+2. **Account Resources:** Include → твой аккаунт. **Zone Resources:** Include → All zones.
+3. **Continue to summary** → **Create Token** → скопируй и вставь в защищённое окно, которое откроет Claude.
+
+**Вручную через сайт Cloudflare:**
+1. Workers & Pages → Create → **Create Worker** → имя `dawnline` → Deploy.
+2. **Edit code** → удали пример → вставь `worker/src/index.js` → **Deploy**.
+3. **Settings → Bindings → Add → Durable Object**: имя переменной `SHOP`, класс `Shop` (с хранилищем SQLite).
+4. **Settings → Variables and Secrets**:
 
    | Имя | Тип | Значение |
    |---|---|---|
    | `SITE_URL` | Text | `https://danill228228.github.io/rusforma_vehicles_cfgeventspawn/` |
-   | `ADMIN_STEAM_IDS` | Text | твой Steam ID: 17 цифр, несколько — через запятую |
-   | `SESSION_SECRET` | **Secret** | любая длинная случайная строка, не короче 24 символов |
-   | `STEAM_API_KEY` | **Secret** | ключ Steam Web API, см. ниже (без него серверы проверяешь вручную) |
-   | `PAYMENT_INFO` | Text | как оплатить пополнение: например «Перевод по номеру … , в комментарии укажи код» |
+   | `SESSION_SECRET` | **Secret** | длинная случайная строка, не короче 24 символов |
+   | `ADMIN_CLAIM_CODE` | **Secret** | одноразовый код: кто введёт его в кабинете, станет администратором |
+   | `STEAM_API_KEY` | **Secret** | необязательно, см. ниже |
+   | `ADMIN_STEAM_IDS` | Text | необязательно: Steam ID администраторов через запятую |
 
-7. Скопируй адрес воркера, вида `https://dawnline.<имя>.workers.dev`. Его нужно вписать в `index.html` в `CONFIG.api`, это сделает Claude.
+Реквизиты для пополнения задаются прямо на сайте: кабинет → «Админка» → «Реквизиты для пополнения».
+
+Адрес воркера (`https://dawnline.<поддомен>.workers.dev`) вписывается в `index.html` → `CONFIG.api`.
 
 ### Где взять Steam ID
 
@@ -60,14 +66,14 @@ Steam → твой профиль → «Об аккаунте» (Account details
 - Игрок входит через Steam. Сайт получает только его Steam ID, ник и аватар, пароль остаётся у Steam.
 - Комментарий — не больше 1000 символов. Писать можно не чаще одного раза в 20 секунд.
 - Игрок может удалить свой комментарий.
-- Администраторы из `ADMIN_STEAM_IDS` могут удалить любой комментарий и заблокировать игрока. После блокировки все его комментарии удаляются, и писать он больше не может.
+- Администраторы (получившие права по коду `ADMIN_CLAIM_CODE` или указанные в `ADMIN_STEAM_IDS`) могут удалить любой комментарий и заблокировать игрока. После блокировки все его комментарии удаляются, и писать он больше не может.
 - Таблицы в базе создаются сами при первом запросе.
 
 ## Запуск из командной строки (для разработчика)
 
 ```
 cd worker
-npx wrangler d1 create dawnline-comments   # вставь database_id в wrangler.toml
 npx wrangler secret put SESSION_SECRET
+npx wrangler secret put ADMIN_CLAIM_CODE
 npx wrangler deploy
 ```

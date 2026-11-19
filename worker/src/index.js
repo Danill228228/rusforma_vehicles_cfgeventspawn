@@ -1,14 +1,14 @@
 // DawnLine: вход через Steam, магазин модов, баланс, проверка DayZ-сервера,
-// отзывы, лайки и комментарии. Cloudflare Worker + база D1.
+// отзывы, лайки и комментарии. Cloudflare Worker; данные хранятся в Durable Object (SQLite).
 // Как развернуть — в worker/README.md.
 //
 // Переменные (Settings → Variables):
 //   SITE_URL         — адрес сайта, например https://danill228228.github.io/rusforma_vehicles_cfgeventspawn/
-//   ADMIN_STEAM_IDS  — Steam ID администраторов через запятую
+//   ADMIN_STEAM_IDS  — (необязательно) Steam ID администраторов через запятую
 //   SESSION_SECRET   — секрет (Secret): длинная случайная строка для подписи входа
-//   STEAM_API_KEY    — (Secret) ключ Steam Web API: ники и автоматическая проверка серверов
-//   PAYMENT_INFO     — (необязательно) текст «как оплатить», который видит игрок при пополнении
-// Привязка базы: D1 с именем переменной DB.
+//   ADMIN_CLAIM_CODE — (Secret) одноразовый код: кто введёт его в кабинете, станет администратором
+//   STEAM_API_KEY    — (Secret, необязательно) ключ Steam Web API: ники и автоматическая проверка серверов
+//   PAYMENT_INFO     — (необязательно) текст «как оплатить»; его же можно задать в админке
 
 const STEAM_OPENID = "https://steamcommunity.com/openid/login";
 const STEAM_API = "https://api.steampowered.com";
@@ -33,7 +33,9 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS servers (steamid TEXT PRIMARY KEY, ip TEXT NOT NULL, port INTEGER NOT NULL, qport INTEGER NOT NULL, code TEXT NOT NULL, status TEXT NOT NULL, name TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '', ts INTEGER NOT NULL, checked_ts INTEGER NOT NULL DEFAULT 0)`,
   `CREATE TABLE IF NOT EXISTS reviews (steamid TEXT NOT NULL, mod TEXT NOT NULL, rating INTEGER NOT NULL, text TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (steamid, mod))`,
   `CREATE TABLE IF NOT EXISTS likes (steamid TEXT NOT NULL, mod TEXT NOT NULL, PRIMARY KEY (steamid, mod))`,
-  `CREATE TABLE IF NOT EXISTS delivery (mod TEXT PRIMARY KEY, url TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '')`
+  `CREATE TABLE IF NOT EXISTS delivery (mod TEXT PRIMARY KEY, url TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '')`,
+  `CREATE TABLE IF NOT EXISTS admins (steamid TEXT PRIMARY KEY, ts INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`
 ];
 
 let schemaReady = false;
@@ -109,7 +111,36 @@ async function readToken(env, request) {
 }
 
 const isAdmin = (env, steamid) =>
-  !!steamid && String(env.ADMIN_STEAM_IDS || "").split(",").map(s => s.trim()).includes(steamid);
+  !!steamid && (String(env.ADMIN_STEAM_IDS || "").split(",").map(s => s.trim()).includes(steamid) || !!(env.__admins && env.__admins.has(steamid)));
+
+async function getSetting(env, key) {
+  const r = await env.DB.prepare(`SELECT value FROM settings WHERE key = ?1`).bind(key).first();
+  return r ? r.value : null;
+}
+
+async function setSetting(env, key, value) {
+  await env.DB.prepare(`INSERT INTO settings (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO UPDATE SET value = ?2`).bind(key, value).run();
+}
+
+async function paymentInfo(env) {
+  const v = await getSetting(env, "payment_info");
+  return v !== null ? v : String(env.PAYMENT_INFO || "");
+}
+
+async function adminClaimable(env) {
+  return !!env.ADMIN_CLAIM_CODE && (await getSetting(env, "admin_claimed")) === null;
+}
+
+async function claimAdmin(env, steamid, code) {
+  if (!(await adminClaimable(env))) fail(409, "Код администратора уже использован");
+  const good = String(env.ADMIN_CLAIM_CODE);
+  if (!safeEqual(String(code || "").trim(), good)) fail(403, "Неверный код");
+  await env.DB.batch([
+    env.DB.prepare(`INSERT OR IGNORE INTO admins (steamid, ts) VALUES (?1, ?2)`).bind(steamid, Date.now()),
+    env.DB.prepare(`INSERT INTO settings (key, value) VALUES ('admin_claimed', ?1) ON CONFLICT(key) DO UPDATE SET value = ?1`).bind(steamid)
+  ]);
+  return { ok: true };
+}
 
 function randomCode(prefix, len) {
   const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -245,7 +276,8 @@ async function me(env, steamid) {
     banned: !!banned,
     balance: await balanceOf(env, steamid),
     server: await serverOf(env, steamid),
-    autoCheck: !!env.STEAM_API_KEY
+    autoCheck: !!env.STEAM_API_KEY,
+    adminClaimable: !isAdmin(env, steamid) && (await adminClaimable(env))
   };
 }
 
@@ -357,13 +389,13 @@ async function createTopup(env, steamid, amount) {
   if (open && open.n >= 3) fail(429, "У тебя уже есть 3 заявки на проверке");
   const code = randomCode("TOP-", 5);
   const r = await env.DB.prepare(`INSERT INTO topups (steamid, amount, code, status, ts) VALUES (?1, ?2, ?3, 'pending', ?4)`).bind(steamid, amount, code, Date.now()).run();
-  return { id: r.meta.last_row_id, code, amount, info: String(env.PAYMENT_INFO || "") };
+  return { id: r.meta.last_row_id, code, amount, info: await paymentInfo(env) };
 }
 
 async function myMoney(env, steamid) {
   const tx = await env.DB.prepare(`SELECT amount, kind, note, ts FROM transactions WHERE steamid = ?1 ORDER BY ts DESC LIMIT 50`).bind(steamid).all();
   const tp = await env.DB.prepare(`SELECT id, amount, code, status, ts FROM topups WHERE steamid = ?1 ORDER BY ts DESC LIMIT 20`).bind(steamid).all();
-  return { balance: await balanceOf(env, steamid), transactions: tx.results, topups: tp.results, info: String(env.PAYMENT_INFO || "") };
+  return { balance: await balanceOf(env, steamid), transactions: tx.results, topups: tp.results, info: await paymentInfo(env) };
 }
 
 async function credit(env, steamid, amount, kind, note) {
@@ -478,7 +510,7 @@ async function adminOverview(env) {
     env.DB.prepare(`SELECT COUNT(*) AS n FROM users`)
   ]);
   const del = await env.DB.prepare(`SELECT mod, url, note FROM delivery`).all();
-  return { servers: servers.results, topups: topups.results, sales: sales.results, users: users.results[0].n, delivery: del.results };
+  return { servers: servers.results, topups: topups.results, sales: sales.results, users: users.results[0].n, delivery: del.results, paymentInfo: await paymentInfo(env) };
 }
 
 async function adminServer(env, b) {
@@ -561,6 +593,7 @@ async function route(request, env) {
   if (path === "/auth/steam/callback" && M === "GET") return finishLogin(request, env);
 
   await ensureSchema(env.DB);
+  env.__admins = new Set((await env.DB.prepare(`SELECT steamid FROM admins`).all()).results.map(r => r.steamid));
   const uid = await readToken(env, request);
   const need = () => { if (!uid) fail(401, "Нужно войти через Steam"); return uid; };
 
@@ -597,6 +630,8 @@ async function route(request, env) {
   if (path === "/money" && M === "GET") return json(await myMoney(env, need()));
   if (path === "/topup" && M === "POST") return json(await createTopup(env, need(), (await body(request)).amount), 201);
 
+  if (path === "/admin/claim" && M === "POST") return json(await claimAdmin(env, need(), (await body(request)).code));
+
   if (path.startsWith("/admin/") || path === "/ban") {
     needAdmin(env, need());
     if (path === "/admin/overview" && M === "GET") return json(await adminOverview(env));
@@ -607,22 +642,72 @@ async function route(request, env) {
     if (path === "/admin/balance" && M === "POST") return json(await adminBalance(env, b));
     if (path === "/admin/refund" && M === "POST") return json(await adminRefund(env, b));
     if (path === "/admin/delivery" && M === "POST") return json(await adminDelivery(env, b));
+    if (path === "/admin/settings" && M === "POST") {
+      await setSetting(env, "payment_info", String(b.paymentInfo || "").slice(0, 1000));
+      return json({ ok: true });
+    }
     if (path === "/ban" && M === "POST") return json(await ban(env, String(b.steamid || ""), !!b.removeAll));
   }
 
   fail(404, "Не найдено");
 }
 
+/* ---------- хранилище: SQLite внутри Durable Object ---------- */
+
+// Небольшая прослойка с тем же интерфейсом, что у Cloudflare D1: prepare().bind().first()/all()/run() и batch().
+function sqliteDb(storage) {
+  const sql = storage.sql;
+  class Statement {
+    constructor(query, args) { this.query = query; this.args = args || []; }
+    bind(...args) { return new Statement(this.query, args); }
+    exec() {
+      const results = sql.exec(this.query, ...this.args).toArray();
+      const meta = { changes: 0, last_row_id: null };
+      if (/^\s*(INSERT|UPDATE|DELETE|REPLACE)/i.test(this.query)) {
+        meta.changes = sql.exec("SELECT changes() AS n").one().n;
+        meta.last_row_id = sql.exec("SELECT last_insert_rowid() AS id").one().id;
+      }
+      return { results, meta };
+    }
+    async first() { return this.exec().results[0] || null; }
+    async all() { return this.exec(); }
+    async run() { return this.exec(); }
+  }
+  return {
+    prepare: query => new Statement(query),
+    // Все запросы пачки выполняются в одной транзакции: либо все, либо ни одного
+    batch: async statements => storage.transactionSync(() => statements.map(st => st.exec()))
+  };
+}
+
+async function handle(request, env) {
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+  if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 24) return json({ error: "Не задан SESSION_SECRET (не короче 24 символов)" }, 500);
+  try {
+    return await route(request, env);
+  } catch (e) {
+    if (e instanceof HttpError) return json({ error: e.message }, e.status);
+    return json({ error: "Ошибка сервера" }, 500);
+  }
+}
+
+// Все данные магазина живут в одном объекте: запросы к нему идут по очереди,
+// поэтому баланс и покупки не могут «разъехаться».
+export class Shop {
+  constructor(ctx, env) {
+    this.env = { ...env, DB: sqliteDb(ctx.storage) };
+  }
+
+  fetch(request) {
+    return handle(request, this.env);
+  }
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
-    if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 24) return json({ error: "Не задан SESSION_SECRET (не короче 24 символов)" }, 500);
-    if (!env.DB) return json({ error: "Не подключена база D1 (переменная DB)" }, 500);
-    try {
-      return await route(request, env);
-    } catch (e) {
-      if (e instanceof HttpError) return json({ error: e.message }, e.status);
-      return json({ error: "Ошибка сервера" }, 500);
-    }
+    if (!env.SHOP) return json({ error: "Не подключено хранилище SHOP (Durable Object)" }, 500);
+    const stub = env.SHOP.get(env.SHOP.idFromName("main"));
+    return stub.fetch(request);
   }
 };

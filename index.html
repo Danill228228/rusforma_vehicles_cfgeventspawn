@@ -1045,6 +1045,7 @@
   .delivery { padding: 10px 0; border-top: 1px solid rgba(234, 88, 12, 0.14); }
   .delivery .field { margin: 8px 0; }
   .owner-link { text-align: center; margin-top: 6px; }
+  .claim summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: 14px; }
   .login-card .steam-btn { margin-top: 4px; }
 
   .bal-chip {
@@ -2916,6 +2917,13 @@ function adminCard() {
           <button class="btn small" type="submit">Сохранить</button>
         </form>`).join("") : `<p class="pc-empty">Нет модов в продаже. Чтобы выставить мод, войди как владелец сайта (🔒), включи ✏️ и укажи у мода цену и статус «Готово».</p>`}
 
+      <h3 class="sub-title">Реквизиты для пополнения</h3>
+      <form data-form="adm-settings">
+        <label class="field"><span>Этот текст игрок видит, когда создаёт заявку на пополнение</span>
+        <textarea name="paymentInfo" placeholder="Например: перевод по номеру +7… (банк …). В комментарии к переводу укажи код заявки.">${esc(a.paymentInfo || "")}</textarea></label>
+        <button class="btn small" type="submit">Сохранить</button>
+      </form>
+
       <h3 class="sub-title">Последние продажи</h3>
       ${a.sales.length ? `<ul class="rows">${a.sales.map(s => `<li><span>${who(s)}<br>${esc(modName(s.mod))}</span><span>${esc(rub(s.price))}<br><span class="muted">${esc(fmtDate(s.ts))}</span></span></li>`).join("")}</ul>` : `<p class="pc-empty">Продаж пока нет.</p>`}
     </section>`;
@@ -2959,6 +2967,15 @@ function renderCabinet() {
     ${serverCard(u)}
     ${purchasesCard()}
     ${u.admin ? adminCard() : ""}
+    ${u.adminClaimable ? `
+      <details class="card cab-card claim">
+        <summary>Я владелец магазина</summary>
+        <form data-form="adm-claim" class="set-row" style="margin-top:10px">
+          <label class="field" style="flex:1;margin:0"><input name="code" autocomplete="off" placeholder="Код администратора" required aria-label="Код администратора"></label>
+          <button class="btn small primary" type="submit">Стать администратором</button>
+        </form>
+        <p class="pc-hint">Код одноразовый: после ввода он перестаёт работать.</p>
+      </details>` : ""}
     ${owner}`;
 }
 
@@ -3063,6 +3080,16 @@ async function shopForm(form) {
         Steam.adminUser = await Steam.api(`/admin/user?steamid=${f.steamid}`);
         if (Steam.user && f.steamid === Steam.user.steamid) await Steam.refresh(false);
         renderCabinet();
+        break;
+      case "adm-claim":
+        await Steam.post("/admin/claim", { code: f.code });
+        toast("Теперь ты администратор магазина");
+        await Steam.refresh(false);
+        break;
+      case "adm-settings":
+        await Steam.post("/admin/settings", { paymentInfo: f.paymentInfo });
+        toast("Реквизиты сохранены");
+        Steam.loadAdmin();
         break;
       case "adm-delivery":
         await Steam.post("/admin/delivery", { mod: form.dataset.mod, url: f.url, note: f.note });

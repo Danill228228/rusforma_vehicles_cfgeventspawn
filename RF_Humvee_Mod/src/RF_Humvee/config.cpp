@@ -1,6 +1,6 @@
-// RF_Humvee — ванильный HMMWV M1025 (Offroad_02) с открываемым люком стрелка на крыше.
-// Модель, двери, капот, багажник, колёса, физика, звук и повреждения — из игры (наследование, файлы не копируются).
-// Мод добавляет деталь люка RF_HumveeHatch: клиент прикрепляет её к машине поверх ванильной крышки кольца турели.
+// RF_Humvee — свой HMMWV M1025 с открываемым люком стрелка. Модель своя (RF_Humvee/source/m1025.py, по образцу
+// ванильного M1025), а двигатель, коробка, подвеска, звуки, места экипажа и колёса — от ванильного Offroad_02
+// (наследование, файлы игры не копируются). Окраска — ванильные текстура и материалы крыши M1025.
 // Действия «Открыть/Закрыть люк» — в отдельном аддоне RF_Humvee_Hatch.
 
 class CfgPatches
@@ -10,7 +10,7 @@ class CfgPatches
 		units[] = {"RF_Humvee", "RF_Humvee_Desert"};
 		weapons[] = {};
 		requiredVersion = 0.1;
-		requiredAddons[] = {"DZ_Data", "DZ_Scripts", "DZ_Vehicles_Wheeled"};
+		requiredAddons[] = {"DZ_Data", "DZ_Scripts", "DZ_Vehicles_Wheeled", "DZ_Vehicles_Parts"};
 	};
 };
 
@@ -37,54 +37,173 @@ class CfgMods
 class CfgVehicles
 {
 	class Offroad_02;
-	class Offroad_02_Beige;
-	class HouseNoDestruct;
-
-	// Окраска, материалы, детали и повреждения — ванильные (Offroad_02 и Offroad_02_Beige), кроме верхней части
-	// кузова: наружная camo_roof (крыша с крышкой кольца турели и задние наплывы) и потолок camo_interior_roof
-	// скрыты прозрачной текстурой с ванильным glass_hidden.rvmat. Вместо них — своя верхняя часть с люком
-	// (деталь RF_HumveeHatch). Коллизия ванильной крыши остаётся.
 	class RF_Humvee: Offroad_02
 	{
 		scope = 2;
 		displayName = "Humvee M1114";
 		descriptionShort = "Армейский HMMWV с открываемым люком стрелка на крыше.";
-		hiddenSelectionsTextures[] = {"","","","","","","","","","","dz\vehicles\wheeled\offroad_02\data\offroad_02_base_co.paa","#(argb,8,8,3)color(0,0,0,0,ca)","#(argb,8,8,3)color(0,0,0,0,ca)"};
-		hiddenSelectionsMaterials[] = {"dz\vehicles\wheeled\offroad_02\data\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_gauges_e_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_base_multi.rvmat","dz\vehicles\wheeled\offroad_02\data\offroad_02_base.rvmat","dz\vehicles\wheeled\offroad_02\data\glass_hidden.rvmat","dz\vehicles\wheeled\offroad_02\data\glass_hidden.rvmat"};
-	};
+		model = "\RF_Humvee\data\rf_humvee.p3d";
 
-	class RF_Humvee_Desert: Offroad_02_Beige
-	{
-		scope = 2;
-		displayName = "Humvee M1114 (пустынный)";
-		descriptionShort = "Армейский HMMWV с открываемым люком стрелка на крыше.";
-		hiddenSelectionsTextures[] = {"","","","","","","","","","","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_base_co.paa","#(argb,8,8,3)color(0,0,0,0,ca)","#(argb,8,8,3)color(0,0,0,0,ca)"};
-		hiddenSelectionsMaterials[] = {"dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_lights_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_gauges_e_nolight.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_base_multi.rvmat","dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_base.rvmat","dz\vehicles\wheeled\offroad_02\data\glass_hidden.rvmat","dz\vehicles\wheeled\offroad_02\data\glass_hidden.rvmat"};
-	};
+		// Двери, капот и багажник — части модели (не аттачменты). Колёса — ванильные колёса M1025 в своих слотах.
+		doors[] = {};
+		attachments[] = {"CarBattery", "Reflector_1_1", "Reflector_2_1", "GlowPlug",
+			"Offroad_02_Wheel_1_1", "Offroad_02_Wheel_1_2", "Offroad_02_Wheel_2_1", "Offroad_02_Wheel_2_2"};
 
-	// Верхняя часть кузова с люком: только картинка (без геометрии и коллизии), создаётся у клиента локально
-	// (ECE_LOCAL). Снаружи — многослойный материал крыши M1025, потолок — материал её внутренней стороны.
-	class RF_HumveeHatch: HouseNoDestruct
-	{
-		scope = 1;
-		model = "\RF_Humvee\data\rf_humvee_hatch.p3d";
-		hiddenSelections[] = {"camo", "camo_interior"};
-		hiddenSelectionsTextures[] = {"", "dz\vehicles\wheeled\offroad_02\data\offroad_02_roof_co.paa"};
-		hiddenSelectionsMaterials[] = {"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof_multi.rvmat", "dz\vehicles\wheeled\offroad_02\data\offroad_02_roof.rvmat"};
+		// CarScript меняет материалы фар по номерам 0…8, поэтому, как у ванили, сначала фары, затем окраска:
+		// camo — снаружи (многослойный материал крыши M1025), camo_interior — изнутри
+		hiddenSelections[] = {"light_1_1", "light_2_1", "light_brake_1_2", "light_brake_2_2", "light_reverse_1_2",
+			"light_reverse_2_2", "light_1_2", "light_2_2", "light_dashboard", "camo", "camo_interior"};
+		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "",
+			"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof_co.paa"};
+		hiddenSelectionsMaterials[] = {"", "", "", "", "", "", "", "", "",
+			"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof_multi.rvmat",
+			"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof.rvmat"};
+
+		class GUIInventoryAttachmentsProps
+		{
+			class Engine
+			{
+				name = "$STR_attachment_Engine0";
+				description = "";
+				icon = "cat_vehicle_engine";
+				attachmentSlots[] = {"CarBattery", "GlowPlug"};
+			};
+			class Body
+			{
+				name = "$STR_attachment_Body0";
+				description = "";
+				icon = "cat_vehicle_body";
+				attachmentSlots[] = {"Reflector_1_1", "Reflector_2_1"};
+			};
+			class Chassis
+			{
+				name = "$STR_attachment_Chassis0";
+				description = "";
+				icon = "cat_vehicle_chassis";
+				attachmentSlots[] = {"Offroad_02_Wheel_1_1", "Offroad_02_Wheel_1_2", "Offroad_02_Wheel_2_1", "Offroad_02_Wheel_2_2"};
+			};
+		};
+
+		// Источники анимаций целиком (на вложенные классы ванили без полной цепочки классов не сослаться):
+		// двери, капот, багажник, люк — «user», амортизаторы — покой 0.5, как у ванильного M1025
 		class AnimationSources
 		{
+			class DoorsDriver
+			{
+				source = "user";
+				animPeriod = 0.5;
+				initPhase = 0;
+			};
+			class DoorsCoDriver: DoorsDriver {};
+			class DoorsCargo1: DoorsDriver {};
+			class DoorsCargo2: DoorsDriver {};
+			class DoorsHood
+			{
+				source = "user";
+				animPeriod = 1.0;
+				initPhase = 0;
+			};
+			class DoorsTrunk: DoorsHood {};
 			class HatchRoof
 			{
 				source = "user";
 				animPeriod = 1.2;
 				initPhase = 0;
 			};
+			class damper_1_1
+			{
+				source = "user";
+				animPeriod = 1;
+				initPhase = 0.5;
+			};
+			class damper_2_1: damper_1_1 {};
+			class damper_1_2: damper_1_1 {};
+			class damper_2_2: damper_1_1 {};
+		};
+
+		// Свои зоны повреждений по компонентам и точкам своей модели (у ванили они названы под её модель)
+		class DamageSystem
+		{
+			class GlobalHealth
+			{
+				class Health
+				{
+					hitpoints = 4000;
+					healthLevels[] = {{1.0, {}}, {0.7, {}}, {0.5, {}}, {0.3, {}}, {0.0, {}}};
+				};
+			};
+			class DamageZones
+			{
+				class Chassis
+				{
+					class Health
+					{
+						hitpoints = 4000;
+						transferToGlobalCoef = 0;
+						healthLevels[] = {{1.0, {}}, {0.7, {}}, {0.5, {}}, {0.3, {}}, {0.0, {}}};
+					};
+					componentNames[] = {"dmgZone_chassis"};
+					memoryPoints[] = {"dmgZone_chassis"};
+					fatalInjuryCoef = -1;
+					inventorySlots[] = {};
+				};
+				class Engine
+				{
+					class Health
+					{
+						hitpoints = 1200;
+						transferToGlobalCoef = 1;
+						healthLevels[] = {{1.0, {}}, {0.7, {}}, {0.5, {}}, {0.3, {}}, {0.0, {}}};
+					};
+					componentNames[] = {"dmgZone_engine"};
+					memoryPoints[] = {"dmgZone_engine"};
+					fatalInjuryCoef = 0.001;
+					inventorySlots[] = {"CarBattery", "GlowPlug"};
+					inventorySlotsCoefs[] = {0.3, 0.3};
+				};
+				// CarScript.EEItemAttached ищет зону с именем слота фары: без неё "Could not find zone Reflector_1_1"
+				class Reflector_1_1
+				{
+					class Health
+					{
+						hitpoints = 10;
+						transferToGlobalCoef = 0;
+						healthLevels[] = {{1.0, {}}, {0.7, {}}, {0.5, {}}, {0.3, {}}, {0.0, {}}};
+					};
+					componentNames[] = {};
+					memoryPoints[] = {"light_1_1"};
+					fatalInjuryCoef = -1;
+					inventorySlots[] = {"Reflector_1_1"};
+				};
+				class Reflector_2_1: Reflector_1_1
+				{
+					memoryPoints[] = {"light_2_1"};
+					inventorySlots[] = {"Reflector_2_1"};
+				};
+				class FuelTank
+				{
+					class Health
+					{
+						hitpoints = 700;
+						transferToGlobalCoef = 0;
+						healthLevels[] = {{1.0, {}}, {0.7, {}}, {0.5, {}}, {0.3, {}}, {0.0, {}}};
+					};
+					componentNames[] = {"dmgZone_fuelTank"};
+					memoryPoints[] = {"dmgZone_fuelTank"};
+					fatalInjuryCoef = -1;
+					inventorySlots[] = {};
+				};
+			};
 		};
 	};
 
-	class RF_HumveeHatch_Desert: RF_HumveeHatch
+	class RF_Humvee_Desert: RF_Humvee
 	{
-		hiddenSelectionsTextures[] = {"", "dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof_co.paa"};
-		hiddenSelectionsMaterials[] = {"dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof_multi.rvmat", "dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof.rvmat"};
+		displayName = "Humvee M1114 (пустынный)";
+		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "",
+			"dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof_co.paa"};
+		hiddenSelectionsMaterials[] = {"", "", "", "", "", "", "", "", "",
+			"dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof_multi.rvmat",
+			"dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof.rvmat"};
 	};
 };

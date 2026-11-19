@@ -1,7 +1,7 @@
 // Действия «Открыть люк» / «Закрыть люк».
 //  * InVehicle — из салона (любое место), без цели, как переключение фар.
-//  * Outside   — снаружи, когда игрок стоит на крыше рядом с люком и смотрит на машину
-//                (деталь люка — картинка у клиента, своей цели у неё нет).
+//  * Outside   — снаружи, когда игрок смотрит на крышку люка (селекция "hatch_roof"
+//                должна быть в View Geometry / Fire Geometry как отдельный компонент).
 
 RF_Humvee RF_GetHumveeFromVehicle(PlayerBase player)
 {
@@ -115,7 +115,10 @@ class ActionRFHatchOutsideBase: ActionInteractBase
 		if (!car)
 			return false;
 
-		if (!car.RF_IsAtHatch(player))
+		// у компонента люка несколько имён (ComponentNN и hatch_roof), смотрим весь список
+		TStringArray selections = new TStringArray;
+		car.GetActionComponentNameList(target.GetComponentIndex(), selections);
+		if (selections.Find(RF_Humvee.HATCH_SELECTION) == -1)
 			return false;
 
 		return car.RF_IsHatchOpen() != m_RF_WantOpen;

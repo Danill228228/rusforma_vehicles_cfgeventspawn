@@ -1,0 +1,52 @@
+{
+  "v": 1,
+  "updatedAt": "2026-11-19T06:11:32.426Z",
+  "categories": [
+    {
+      "id": "transport",
+      "icon": "🚙",
+      "title": "Транспорт"
+    },
+    {
+      "id": "clothes",
+      "icon": "🧥",
+      "title": "Одежда"
+    },
+    {
+      "id": "gear",
+      "icon": "🎒",
+      "title": "Снаряжение"
+    }
+  ],
+  "mods": [
+    {
+      "id": "hummer-hatch",
+      "category": "transport",
+      "icon": "🚙",
+      "name": "Хаммер с открывающимся люком",
+      "status": "wip",
+      "description": "Свой Хаммер для сервера с люком, который открывается.",
+      "features": [
+        "Открывающийся люк",
+        "Сейчас: текстура, покраска под стиль игры, проверка езды и анимаций",
+        "Дальше: стрельба из Хаммера"
+      ],
+      "images": [],
+      "video": ""
+    }
+  ],
+  "news": [
+    {
+      "id": "n-site",
+      "date": "2026-11-19",
+      "text": "Открыт сайт сервера DawnLine: моды, новости и карта спавна техники."
+    }
+  ],
+  "private": {
+    "v": 1,
+    "iter": 200000,
+    "salt": "SMk4x4UIaWtPHhZVoCgbIw==",
+    "iv": "uOLt0l3da9Ii+Wd0",
+    "ct": "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"
+  }
+}

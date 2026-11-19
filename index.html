@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Дорожная карта сервера DawnLine</title>
+<title>DawnLine · DayZ-сервер</title>
+<meta name="description" content="DayZ-сервер DawnLine: моды, новости и карта спавна техники.">
 <meta name="theme-color" content="#120804">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -41,11 +42,19 @@
     min-height: 100vh;
     font-family: "Rubik", "Segoe UI", Arial, sans-serif;
     color: var(--text);
-    background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
     background-color: var(--bg-1);
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+  }
+
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--accent-soft); }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 2px;
   }
 
   /* ---------- Фон: «рассвет» ---------- */
@@ -60,7 +69,6 @@
       linear-gradient(180deg, #0c0502 0%, #150804 45%, #241005 100%);
   }
 
-  /* восход у нижнего края */
   .bg-sun {
     position: absolute;
     left: 50%;
@@ -83,7 +91,6 @@
     to   { opacity: 1;    transform: translateX(-50%) scale(1.06); }
   }
 
-  /* мягкие облака света, медленно плывут */
   .bg-glow {
     position: absolute;
     border-radius: 50%;
@@ -92,32 +99,14 @@
     animation: drift 26s ease-in-out infinite alternate;
   }
 
-  .bg-glow.g1 {
-    top: -12vh;
-    left: -10vw;
-    width: 55vw;
-    height: 45vh;
-    min-width: 320px;
-    background: rgba(234, 88, 12, 0.35);
-  }
-
-  .bg-glow.g2 {
-    top: 30vh;
-    right: -15vw;
-    width: 45vw;
-    height: 40vh;
-    min-width: 280px;
-    background: rgba(153, 27, 27, 0.32);
-    animation-duration: 32s;
-    animation-direction: alternate-reverse;
-  }
+  .bg-glow.g1 { top: -12vh; left: -10vw; width: 55vw; height: 45vh; min-width: 320px; background: rgba(234, 88, 12, 0.35); }
+  .bg-glow.g2 { top: 30vh; right: -15vw; width: 45vw; height: 40vh; min-width: 280px; background: rgba(153, 27, 27, 0.32); animation-duration: 32s; animation-direction: alternate-reverse; }
 
   @keyframes drift {
     from { transform: translate(0, 0) scale(1); }
     to   { transform: translate(6vw, 4vh) scale(1.15); }
   }
 
-  /* тактическая сетка, как на карте, тает к краям */
   .bg-grid {
     position: absolute;
     inset: 0;
@@ -130,7 +119,6 @@
             mask-image: radial-gradient(ellipse 80% 70% at 50% 35%, #000 20%, transparent 80%);
   }
 
-  /* лёгкое плёночное зерно */
   .bg-noise {
     position: absolute;
     inset: 0;
@@ -139,14 +127,12 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* затемнение по краям */
   .bg-vignette {
     position: absolute;
     inset: 0;
     background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(5, 2, 1, 0.65) 100%);
   }
 
-  /* искры, поднимающиеся от «костра» */
   .ember {
     position: absolute;
     bottom: -10px;
@@ -166,8 +152,6 @@
     80%  { opacity: 0.5; }
     100% { opacity: 0;   transform: translate(calc(var(--x, 30px) * -0.5), -100vh); }
   }
-
-  button, textarea { font: inherit; color: inherit; }
 
   .wrap {
     position: relative;
@@ -192,8 +176,7 @@
   .topnav-inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     max-width: 760px;
     margin: 0 auto;
     padding: 8px 16px;
@@ -205,6 +188,7 @@
     color: var(--accent-soft);
     text-shadow: 0 0 18px rgba(234, 88, 12, 0.6);
     white-space: nowrap;
+    margin-right: auto;
   }
 
   .seg {
@@ -221,7 +205,7 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 7px 12px;
+    padding: 7px 11px;
     border-radius: 9px;
     color: var(--muted);
     font-size: 14px;
@@ -232,6 +216,7 @@
   }
 
   .seg a:hover { color: var(--text); }
+  .seg a[hidden] { display: none; }
 
   .seg a[aria-current="page"] {
     background: var(--accent);
@@ -239,12 +224,58 @@
     box-shadow: 0 0 14px rgba(234, 88, 12, 0.6);
   }
 
+  .seg .short { display: none; }
+
+  .icon-btn {
+    position: relative;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: rgba(42, 20, 8, 0.7);
+    font-size: 17px;
+    line-height: 1;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .icon-btn:hover { border-color: var(--border-strong); }
+  .icon-btn[hidden] { display: none; }
+  .icon-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+
+  .sync-dot {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #78716c;
+    box-shadow: 0 0 0 2px var(--bg-1);
+  }
+
+  .sync-dot[data-state="ok"]     { background: #22c55e; }
+  .sync-dot[data-state="saving"] { background: #eab308; }
+  .sync-dot[data-state="error"]  { background: #ef4444; }
+  .sync-dot[data-state="local"]  { background: #a8a29e; }
+
+  @media (max-width: 560px) {
+    .brand { display: none; }
+    .topnav-inner { gap: 6px; padding: 6px 10px; }
+    .seg { flex: 1; }
+    .seg a { flex: 1; flex-direction: column; gap: 1px; padding: 5px 2px; font-size: 11.5px; }
+    .seg a .ico { font-size: 17px; line-height: 1.1; }
+    .seg .full { display: none; }
+    .seg .short { display: inline; }
+    .icon-btn { width: 36px; height: 36px; }
+  }
+
   .view[hidden] { display: none; }
 
-  /* ---------- Шапка ---------- */
-  .head {
-    padding: 22px 0 16px;
-  }
+  /* ---------- Шапка раздела ---------- */
+  .head { padding: 22px 0 14px; }
 
   h1 {
     font-size: clamp(22px, 5vw, 30px);
@@ -298,7 +329,7 @@
     white-space: nowrap;
   }
 
-  /* ---------- Меню-кнопки (этапы и категории) ---------- */
+  /* ---------- Меню-кнопки ---------- */
   .chips {
     display: flex;
     flex-wrap: wrap;
@@ -316,7 +347,6 @@
     background: var(--card);
     font-size: 14.5px;
     font-weight: 600;
-    cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   }
 
@@ -327,6 +357,9 @@
     background: linear-gradient(160deg, rgba(234, 88, 12, 0.38), var(--card));
     box-shadow: var(--glow);
   }
+
+  .chip.add { border-style: dashed; color: var(--accent-soft); }
+  .chip.paused { opacity: 0.6; }
 
   .chip-icon { font-size: 16px; line-height: 1; }
 
@@ -343,17 +376,8 @@
   .chip[aria-selected="true"] .chip-count { color: var(--accent-soft); }
   .chip.done[aria-selected="true"] .chip-count { color: #fff; }
 
-  :focus-visible {
-    outline: 2px solid var(--accent-soft);
-    outline-offset: 2px;
-  }
-
   /* ---------- Карточки ---------- */
-  .stack {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
 
   .card {
     padding: 14px 16px;
@@ -363,20 +387,14 @@
     transition: box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
-  .card:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--glow);
-  }
+  .card:hover { border-color: var(--border-strong); box-shadow: var(--glow); }
 
   .card.complete {
     border-color: rgba(253, 186, 116, 0.55);
     background: linear-gradient(160deg, var(--card-2), var(--card));
   }
 
-  .reveal {
-    opacity: 0;
-    transform: translateY(16px);
-  }
+  .reveal { opacity: 0; transform: translateY(16px); }
 
   .reveal.visible {
     opacity: 1;
@@ -384,18 +402,7 @@
     transition: opacity 0.45s ease, transform 0.45s cubic-bezier(.2, .8, .2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .bg-sun, .bg-glow { animation: none; }
-    .ember { display: none; }
-    .reveal { opacity: 1; transform: none; }
-    .bar-fill, .mini-fill { transition: none; }
-  }
-
-  .card-head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  .card-head { display: flex; align-items: center; gap: 12px; }
 
   .icon {
     flex: 0 0 auto;
@@ -443,11 +450,7 @@
 
   .card.complete .counter { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-  .note {
-    margin-top: 10px;
-    color: var(--muted);
-    font-size: 14.5px;
-  }
+  .note { margin-top: 10px; color: var(--muted); font-size: 14.5px; }
 
   .mini-bar {
     margin: 12px 0 4px;
@@ -457,23 +460,13 @@
     overflow: hidden;
   }
 
-  .mini-fill {
-    height: 100%;
-    width: 0;
-    background: var(--accent);
-    transition: width 0.5s ease;
-  }
+  .mini-fill { height: 100%; width: 0; background: var(--accent); transition: width 0.5s ease; }
 
   /* ---------- Подпункты ---------- */
   .tasks { list-style: none; }
-
   .task + .task { border-top: 1px solid rgba(234, 88, 12, 0.14); }
 
-  .task-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-  }
+  .task-row { display: flex; align-items: flex-start; gap: 4px; }
 
   .task-row label {
     flex: 1;
@@ -485,12 +478,7 @@
     cursor: pointer;
   }
 
-  .task-row input {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-  }
+  .task-row input[type="checkbox"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
 
   .check {
     flex: 0 0 auto;
@@ -516,40 +504,54 @@
     transition: stroke-dashoffset 0.25s ease;
   }
 
-  .task-row input:checked + .check {
-    background: var(--accent);
-    border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(234, 88, 12, 0.7);
-  }
-
+  .task-row input:checked + .check { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(234, 88, 12, 0.7); }
   .task-row input:checked + .check svg { stroke-dashoffset: 0; }
+  .task-row input:focus-visible + .check { outline: 2px solid var(--accent-soft); outline-offset: 2px; }
 
-  .task-row input:focus-visible + .check {
-    outline: 2px solid var(--accent-soft);
-    outline-offset: 2px;
-  }
+  .task-text { font-size: 15px; overflow-wrap: anywhere; }
 
-  .task-text { font-size: 15px; }
-
-  .task-row input:checked ~ .task-text {
+  .task-row input:checked ~ .task-text .txt {
     color: var(--muted);
     text-decoration: line-through;
     text-decoration-color: rgba(253, 186, 116, 0.5);
   }
 
-  /* ---------- План: этапы по очереди ---------- */
+  .src { margin-right: 4px; }
+
+  .tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.6;
+    vertical-align: 1px;
+    white-space: nowrap;
+  }
+
+  .when { border: 1px solid var(--ph); color: var(--ph); }
+  .done-date { background: rgba(22, 163, 74, 0.18); color: #86efac; }
+  .next-label { display: none; background: var(--accent); color: #fff; }
+  .task.is-next .next-label { display: inline-block; }
+
+  .task.is-next {
+    margin: 0 -10px;
+    padding: 0 10px;
+    border-radius: 10px;
+    background: rgba(234, 88, 12, 0.1);
+  }
+
+  /* ---------- План ---------- */
   .phase-now    { --ph: #f97316; }
   .phase-next   { --ph: #eab308; }
   .phase-later  { --ph: #dc2626; }
-  .phase-paused { --ph: #78716c; }
+  .phase-paused { --ph: #a8a29e; }
 
   .phase { border-left: 3px solid var(--ph); }
+  .phase.phase-paused { opacity: 0.75; }
 
-  .phase-head {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-  }
+  .phase-head { display: flex; align-items: flex-start; gap: 10px; }
 
   .phase-dot {
     flex: 0 0 auto;
@@ -561,65 +563,8 @@
     box-shadow: 0 0 10px var(--ph);
   }
 
-  .phase-title {
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--ph);
-  }
-
-  .phase-paused .phase-title { color: #a8a29e; }
-
-  .phase-hint {
-    color: var(--muted);
-    font-size: 13.5px;
-  }
-
-  .phase-paused { opacity: 0.75; }
-
-  .src {
-    margin-right: 4px;
-  }
-
-  .when {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 0 7px;
-    border-radius: 999px;
-    border: 1px solid var(--ph);
-    color: var(--ph);
-    font-size: 11.5px;
-    font-weight: 700;
-    line-height: 1.6;
-    vertical-align: 1px;
-    white-space: nowrap;
-  }
-
-  .phase-paused.when, .when.phase-paused { color: #a8a29e; }
-
-  .next-label {
-    display: none;
-    margin-left: 6px;
-    padding: 0 7px;
-    border-radius: 999px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 11.5px;
-    font-weight: 700;
-    line-height: 1.6;
-    vertical-align: 1px;
-    white-space: nowrap;
-  }
-
-  .task.is-next .next-label { display: inline-block; }
-
-  .task.is-next {
-    margin: 0 -10px;
-    padding: 0 10px;
-    border-radius: 10px;
-    background: rgba(234, 88, 12, 0.1);
-  }
-
-  .chip.paused { opacity: 0.6; }
+  .phase-title { font-size: 17px; font-weight: 800; color: var(--ph); }
+  .phase-hint { color: var(--muted); font-size: 13.5px; }
 
   .badge-paused {
     display: inline-block;
@@ -632,12 +577,14 @@
     font-weight: 700;
   }
 
-  /* ---------- Кнопка комментариев ---------- */
-  .cbtn {
+  /* ---------- Мелкие кнопки ---------- */
+  .mini {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 5px;
+    min-width: 32px;
     min-height: 32px;
     margin-top: 4px;
     padding: 4px 8px;
@@ -647,36 +594,66 @@
     color: var(--muted);
     font-size: 13px;
     font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
   }
 
-  .cbtn svg {
-    width: 16px;
-    height: 16px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linejoin: round;
+  .mini svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .mini:hover, .mini[aria-expanded="true"] { background: rgba(234, 88, 12, 0.14); color: var(--accent-soft); }
+  .mini.has { color: var(--accent-soft); }
+  .mini .n:empty { display: none; }
+
+  .row-tools { gap: 2px; }
+
+  @media (max-width: 560px) {
+    body.editing .task-row { flex-wrap: wrap; }
+    body.editing .task-row label { flex-basis: calc(100% - 40px); }
+    body.editing .row-tools { order: 3; width: 100%; padding-left: 26px; margin-top: -6px; margin-bottom: 4px; }
+    body.editing .row-tools .mini { margin-top: 0; }
   }
 
-  .cbtn:hover, .cbtn[aria-expanded="true"] {
-    background: rgba(234, 88, 12, 0.14);
+  .edit-only { display: none !important; }
+  body.editing .edit-only { display: inline-flex !important; }
+  body.editing .edit-only.block { display: flex !important; }
+
+  .add-row { margin-top: 8px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 15px;
+    border: 1px solid var(--border-strong);
+    border-radius: 11px;
+    background: transparent;
     color: var(--accent-soft);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
   }
 
-  .cbtn.has { color: var(--accent-soft); }
-  .cbtn .n:empty { display: none; }
+  .btn:hover { background: rgba(234, 88, 12, 0.14); color: var(--text); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { box-shadow: 0 6px 22px -6px rgba(234, 88, 12, 0.9); }
+  .btn.danger { border-color: rgba(239, 68, 68, 0.6); color: #fca5a5; }
+  .btn.danger:hover { background: rgba(239, 68, 68, 0.14); }
+  .btn.small { padding: 6px 11px; font-size: 13.5px; border-radius: 9px; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
 
-  .mod-foot {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 10px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(234, 88, 12, 0.14);
+  .link-btn {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 600;
   }
 
-  .mod-foot .cbtn { margin: 0 0 0 -8px; }
+  .link-btn:hover { color: var(--text); border-color: var(--border-strong); background: rgba(234, 88, 12, 0.12); }
+
+  .actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 16px 0 0; }
 
   /* ---------- Комментарии ---------- */
   .thread {
@@ -688,28 +665,11 @@
   }
 
   .thread[hidden] { display: none; }
-
   .mod-foot + .thread { margin: 4px 0 0; }
 
-  .comments {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-
-  .comment {
-    padding: 8px 10px;
-    border-radius: 10px;
-    background: rgba(234, 88, 12, 0.1);
-  }
-
-  .comment p {
-    font-size: 14.5px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
+  .comments { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .comment { padding: 8px 10px; border-radius: 10px; background: rgba(234, 88, 12, 0.1); }
+  .comment p { font-size: 14.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
 
   .comment-meta {
     display: flex;
@@ -728,33 +688,31 @@
     background: transparent;
     color: var(--muted);
     font-size: 12px;
-    cursor: pointer;
   }
 
   .del:hover { color: #fca5a5; background: rgba(239, 68, 68, 0.12); }
 
-  .comment-form {
-    display: flex;
-    align-items: flex-end;
-    gap: 8px;
-  }
+  .comment-form { display: flex; align-items: flex-end; gap: 8px; }
 
-  .comment-form textarea {
-    flex: 1;
+  .comment-form textarea, .field input, .field textarea, .field select {
+    width: 100%;
     min-width: 0;
-    min-height: 38px;
-    max-height: 160px;
     padding: 8px 11px;
     border: 1px solid var(--border);
     border-radius: 10px;
     background: rgba(42, 20, 8, 0.9);
     font-size: 16px; /* 16px — чтобы iPhone не увеличивал страницу */
     line-height: 1.35;
-    resize: none;
   }
 
-  .comment-form textarea::placeholder { color: var(--muted); opacity: 0.8; }
-  .comment-form textarea:focus { outline: none; border-color: var(--accent); }
+  .comment-form textarea { flex: 1; min-height: 38px; max-height: 160px; resize: none; }
+
+  .comment-form textarea:focus, .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  ::placeholder { color: var(--muted); opacity: 0.8; }
 
   .send {
     flex: 0 0 auto;
@@ -766,13 +724,9 @@
     border-radius: 10px;
     background: var(--accent);
     color: #fff;
-    cursor: pointer;
-    transition: box-shadow 0.2s ease, opacity 0.2s ease;
   }
 
-  .send:hover { box-shadow: 0 0 14px rgba(234, 88, 12, 0.8); }
-  .send:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
-
+  .send:disabled { opacity: 0.4; cursor: default; }
   .send svg { width: 17px; height: 17px; fill: currentColor; }
 
   /* ---------- Моды ---------- */
@@ -791,35 +745,39 @@
   .status-wip   { background: var(--wip);  border-color: #fb923c; color: #fff; box-shadow: 0 0 10px rgba(249, 115, 22, 0.45); }
   .status-plan  { background: var(--plan); border-color: #ef4444; color: #fff; box-shadow: 0 0 10px rgba(239, 68, 68, 0.45); }
 
-  .mod-img {
+  .gallery { margin: -14px -16px 12px; }
+
+  .gallery-main {
     display: block;
-    width: calc(100% + 32px);
-    margin: -14px -16px 12px;
+    width: 100%;
     aspect-ratio: 16 / 9;
     object-fit: cover;
+    border: 0;
     border-radius: var(--radius) var(--radius) 0 0;
     border-bottom: 1px solid var(--border);
+    background: var(--inset);
+    cursor: zoom-in;
   }
 
-  .mod-desc {
-    margin-top: 10px;
-    font-size: 15px;
+  .thumbs { display: flex; gap: 6px; padding: 8px 16px 0; overflow-x: auto; }
+
+  .thumbs button {
+    flex: 0 0 auto;
+    width: 64px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--inset);
   }
 
-  .mod-features {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-top: 8px;
-  }
+  .thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  .mod-features li {
-    position: relative;
-    padding-left: 18px;
-    color: var(--muted);
-    font-size: 14.5px;
-  }
+  .mod-desc { margin-top: 10px; font-size: 15px; white-space: pre-wrap; }
+
+  .mod-features { list-style: none; display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+  .mod-features li { position: relative; padding-left: 18px; color: var(--muted); font-size: 14.5px; }
 
   .mod-features li::before {
     content: "";
@@ -833,6 +791,18 @@
     transform: rotate(45deg);
   }
 
+  .mod-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(234, 88, 12, 0.14);
+  }
+
+  .mod-foot .mini { margin: 0; }
+
   .empty {
     padding: 28px 16px;
     border: 1px dashed var(--border-strong);
@@ -842,38 +812,167 @@
     font-size: 14.5px;
   }
 
-  .empty strong {
-    display: block;
-    color: var(--text);
-    font-size: 16px;
-    margin-bottom: 2px;
-  }
+  .empty strong { display: block; color: var(--text); font-size: 16px; margin-bottom: 2px; }
 
-  /* ---------- Низ ---------- */
-  .actions {
-    display: flex;
-    justify-content: center;
-    padding: 16px 0 0;
-  }
+  /* ---------- Новости ---------- */
+  .news-item { display: flex; gap: 12px; align-items: flex-start; }
 
-  .link-btn {
-    padding: 8px 14px;
-    border: 1px solid var(--border);
+  .news-date {
+    flex: 0 0 auto;
+    min-width: 58px;
+    padding: 4px 8px;
     border-radius: 10px;
+    background: rgba(234, 88, 12, 0.14);
+    border: 1px solid var(--border);
+    color: var(--accent-soft);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.25;
+  }
+
+  .news-date b { display: block; font-size: 18px; color: var(--text); }
+  .news-text { flex: 1; min-width: 0; padding-top: 2px; font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  /* ---------- Карта ---------- */
+  .map-tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .map-tools input { flex: 1; }
+
+  .map-box {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #170a04;
+    aspect-ratio: 1 / 1;
+    max-height: 72vh;
+    margin: 0 auto;
+  }
+
+  .map-box svg { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; }
+  .map-box svg.dragging { cursor: grabbing; }
+
+  .map-zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
+
+  .map-zoom button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    background: rgba(18, 8, 4, 0.85);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .marker { cursor: pointer; }
+  .marker circle { fill: #f97316; stroke: #fff1e6; transition: opacity 0.2s ease; }
+  .marker.multi circle { fill: #fdba74; }
+  .marker.dim { opacity: 0.18; }
+  .marker.sel circle { fill: #22c55e; }
+
+  .map-info { margin-top: 12px; }
+  .map-info .coords { font-variant-numeric: tabular-nums; color: var(--accent-soft); font-weight: 700; }
+  .map-info ul { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .map-info li { padding: 3px 9px; border-radius: 999px; background: rgba(234, 88, 12, 0.14); border: 1px solid var(--border); font-size: 13.5px; }
+
+  .map-note { margin-top: 10px; color: var(--muted); font-size: 13px; }
+
+  /* ---------- Диалоги ---------- */
+  dialog {
+    width: min(520px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 18px;
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), var(--glow);
+  }
+
+  dialog::backdrop { background: rgba(8, 3, 1, 0.7); backdrop-filter: blur(3px); }
+
+  .dlg-body { padding: 18px; overflow: auto; max-height: calc(100dvh - 26px); }
+  .dlg-title { font-size: 18px; font-weight: 800; margin-bottom: 12px; padding-right: 30px; }
+
+  .dlg-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 9px;
     background: transparent;
     color: var(--muted);
-    font-size: 13.5px;
+    font-size: 20px;
+  }
+
+  .dlg-close:hover { background: rgba(234, 88, 12, 0.14); color: var(--text); }
+
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .field > span { font-size: 13.5px; font-weight: 600; color: var(--muted); }
+  .field textarea { min-height: 84px; resize: vertical; }
+  .field small { color: var(--muted); font-size: 12.5px; }
+  .field.row { flex-direction: row; align-items: center; gap: 10px; }
+  .field.row input { width: auto; }
+
+  .img-edit { display: flex; flex-wrap: wrap; gap: 8px; }
+  .img-edit .im { position: relative; width: 84px; height: 58px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .img-edit img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .img-edit .im button {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .dlg-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+  .dlg-actions .spacer { flex: 1; }
+
+  .set-section { padding: 14px 0; border-top: 1px solid var(--border); }
+  .set-section:first-of-type { border-top: 0; padding-top: 0; }
+  .set-section h3 { font-size: 15px; margin-bottom: 6px; }
+  .set-section p { color: var(--muted); font-size: 13.5px; margin-bottom: 10px; }
+  .set-section ol { color: var(--muted); font-size: 13.5px; margin: 0 0 10px 18px; }
+  .set-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .err { color: #fca5a5; font-size: 13.5px; min-height: 1.2em; margin-bottom: 6px; }
+
+  #lightbox { width: min(1100px, calc(100vw - 16px)); background: #000; }
+  #lightbox img { display: block; width: 100%; max-height: calc(100dvh - 90px); object-fit: contain; }
+  .lb-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px; }
+
+  /* ---------- Уведомление ---------- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    z-index: 50;
+    max-width: calc(100vw - 32px);
+    padding: 10px 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: rgba(42, 20, 8, 0.96);
+    font-size: 14px;
     font-weight: 600;
-    cursor: pointer;
-    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    transform: translate(-50%, 20px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
   }
 
-  .link-btn:hover {
-    color: var(--text);
-    border-color: var(--border-strong);
-    background: rgba(234, 88, 12, 0.12);
-  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+  /* ---------- Подвал ---------- */
   footer {
     margin-top: 28px;
     padding: 20px 0 calc(28px + env(safe-area-inset-bottom));
@@ -895,20 +994,23 @@
     font-weight: 600;
     font-size: 14.5px;
     text-decoration: none;
-    transition: box-shadow 0.2s ease;
   }
-
-  .discord:hover { box-shadow: 0 8px 26px -6px rgba(234, 88, 12, 0.9); }
 
   .discord svg { width: 18px; height: 18px; fill: currentColor; }
 
-  .footnote { margin-top: 4px; font-size: 12px; opacity: 0.8; }
+  .locked { text-align: center; padding: 40px 16px; }
+  .locked .big { font-size: 40px; margin-bottom: 8px; }
+  .locked p { color: var(--muted); margin: 4px 0 14px; }
 
   @media (max-width: 400px) {
-    .brand { display: none; }
-    .seg { flex: 1; }
-    .seg a { flex: 1; }
     .thread { margin-left: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-sun, .bg-glow { animation: none; }
+    .ember { display: none; }
+    .reveal { opacity: 1; transform: none; }
+    .bar-fill, .mini-fill { transition: none; }
   }
 </style>
 </head>
@@ -926,45 +1028,89 @@
 
 <nav class="topnav" aria-label="Разделы">
   <div class="topnav-inner">
-    <span class="brand" id="brandName"></span>
+    <span class="brand" id="brandName">DawnLine</span>
     <div class="seg">
-      <a href="#roadmap" data-view="roadmap"><span aria-hidden="true">🗺️</span>Дорожная карта</a>
-      <a href="#server" data-view="server"><span aria-hidden="true">🎮</span>DayZ Server</a>
+      <a href="#mods" data-view="mods"><span class="ico" aria-hidden="true">🎮</span><span class="full">DayZ Server</span><span class="short">Моды</span></a>
+      <a href="#news" data-view="news"><span class="ico" aria-hidden="true">📰</span><span class="full">Что нового</span><span class="short">Новое</span></a>
+      <a href="#map" data-view="map"><span class="ico" aria-hidden="true">🗺️</span><span class="full">Карта</span><span class="short">Карта</span></a>
+      <a href="#plan" data-view="plan" hidden><span class="ico" aria-hidden="true">📋</span><span class="full">Дорожная карта</span><span class="short">План</span></a>
     </div>
+    <button class="icon-btn" type="button" id="editBtn" aria-pressed="false" title="Режим правки" aria-label="Режим правки" hidden>✏️</button>
+    <button class="icon-btn" type="button" id="accountBtn" title="Вход для администратора" aria-label="Вход для администратора">🔒<span class="sync-dot" id="syncDot" hidden></span></button>
   </div>
 </nav>
 
 <div class="wrap">
 
-  <!-- ===== Дорожная карта ===== -->
-  <div class="view" id="view-roadmap">
+  <!-- ===== DayZ Server: моды ===== -->
+  <div class="view" id="view-mods" hidden>
     <div class="head">
-      <h1>Дорожная карта сервера <span class="name" id="serverName"></span></h1>
-      <div class="progress">
-        <div class="bar" role="progressbar" aria-label="Общий прогресс" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="overallBar">
-          <div class="bar-fill" id="overallFill"></div>
-        </div>
-        <span class="progress-text" id="overallCount">0/0</span>
-      </div>
-    </div>
-
-    <div class="chips" role="tablist" aria-label="Этапы" id="stageTabs"></div>
-    <main id="roadmap" role="tabpanel"></main>
-
-    <div class="actions">
-      <button class="link-btn" type="button" id="resetBtn">Сбросить галочки</button>
-    </div>
-  </div>
-
-  <!-- ===== DayZ Server ===== -->
-  <div class="view" id="view-server" hidden>
-    <div class="head">
-      <h1>DayZ Server</h1>
+      <h1>DayZ Server <span class="name" id="serverName">DawnLine</span></h1>
       <p class="lead">Мои моды для сервера: транспорт, одежда и снаряжение.</p>
     </div>
-
     <div class="chips" role="tablist" aria-label="Категории модов" id="catTabs"></div>
+    <div class="edit-only block" style="margin-bottom:12px"><button class="btn small" type="button" data-act="add-mod">＋ Добавить мод</button></div>
     <section class="stack" role="tabpanel" id="modList"></section>
+  </div>
+
+  <!-- ===== Что нового ===== -->
+  <div class="view" id="view-news" hidden>
+    <div class="head">
+      <h1>Что нового</h1>
+      <p class="lead">Обновления сервера и сайта.</p>
+    </div>
+    <div class="edit-only block" style="margin-bottom:12px"><button class="btn small" type="button" data-act="add-news">＋ Добавить новость</button></div>
+    <section class="stack" id="newsList"></section>
+  </div>
+
+  <!-- ===== Карта ===== -->
+  <div class="view" id="view-map" hidden>
+    <div class="head">
+      <h1>Карта спавна техники</h1>
+      <p class="lead" id="mapLead"></p>
+    </div>
+    <div class="map-tools">
+      <div class="field" style="margin:0;flex:1">
+        <input type="search" id="mapSearch" list="vehicleList" placeholder="Найти технику: УАЗ, Нива, ЗИЛ…" aria-label="Поиск техники">
+      </div>
+      <datalist id="vehicleList"></datalist>
+    </div>
+    <div class="map-box" id="mapBox">
+      <svg id="mapSvg" viewBox="0 0 15360 15360" role="img" aria-label="Схема карты с точками спавна техники"></svg>
+      <div class="map-zoom">
+        <button type="button" id="zoomIn" aria-label="Приблизить">＋</button>
+        <button type="button" id="zoomOut" aria-label="Отдалить">−</button>
+        <button type="button" id="zoomReset" aria-label="Показать всю карту">⟲</button>
+      </div>
+    </div>
+    <div class="card map-info" id="mapInfo">Нажми на точку, чтобы увидеть, какая техника там появляется.</div>
+    <p class="map-note">Схема без рельефа: сетка по 1 км, координаты как в игре (X — восток, Z — север). Координаты можно проверить на интерактивной карте DayZ. Ивенты и спавн игроков добавим, когда будут файлы.</p>
+  </div>
+
+  <!-- ===== Дорожная карта (только админ) ===== -->
+  <div class="view" id="view-plan" hidden>
+    <div id="planLocked" class="locked">
+      <div class="big">🔒</div>
+      <h1>Дорожная карта</h1>
+      <p>Этот раздел видит только администратор.</p>
+      <button class="btn primary" type="button" data-act="login">Войти</button>
+    </div>
+    <div id="planOpen" hidden>
+      <div class="head">
+        <h1>Дорожная карта сервера <span class="name">DawnLine</span></h1>
+        <div class="progress">
+          <div class="bar" role="progressbar" aria-label="Общий прогресс" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="overallBar">
+            <div class="bar-fill" id="overallFill"></div>
+          </div>
+          <span class="progress-text" id="overallCount">0/0</span>
+        </div>
+      </div>
+      <div class="chips" role="tablist" aria-label="Этапы" id="stageTabs"></div>
+      <main id="roadmap" role="tabpanel"></main>
+      <div class="actions">
+        <button class="link-btn" type="button" data-act="reset-checks">Сбросить галочки</button>
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -973,262 +1119,463 @@
       Наш Discord
     </a>
     <div id="footerText"></div>
-    <div class="footnote">Галочки и комментарии сохраняются в этом браузере.</div>
   </footer>
 </div>
 
+<dialog id="modal"><button class="dlg-close" type="button" data-close aria-label="Закрыть">✕</button><div class="dlg-body" id="modalBody"></div></dialog>
+<dialog id="lightbox"><img id="lbImg" alt=""><div class="lb-bar"><button class="btn small" type="button" id="lbPrev">← Назад</button><span id="lbCount" class="lead"></span><button class="btn small" type="button" id="lbNext">Дальше →</button><button class="btn small" type="button" data-close>Закрыть</button></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Опубликованные данные сайта (копия data.json). Обновляется скриптом tools/embed-data.mjs -->
+<script id="embedded-data" type="application/json">{"v":1,"updatedAt":"2026-11-19T06:11:32.426Z","categories":[{"id":"transport","icon":"🚙","title":"Транспорт"},{"id":"clothes","icon":"🧥","title":"Одежда"},{"id":"gear","icon":"🎒","title":"Снаряжение"}],"mods":[{"id":"hummer-hatch","category":"transport","icon":"🚙","name":"Хаммер с открывающимся люком","status":"wip","description":"Свой Хаммер для сервера с люком, который открывается.","features":["Открывающийся люк","Сейчас: текстура, покраска под стиль игры, проверка езды и анимаций","Дальше: стрельба из Хаммера"],"images":[],"video":""}],"news":[{"id":"n-site","date":"2026-11-19","text":"Открыт сайт сервера DawnLine: моды, новости и карта спавна техники."}],"private":{"v":1,"iter":200000,"salt":"SMk4x4UIaWtPHhZVoCgbIw==","iv":"uOLt0l3da9Ii+Wd0","ct":"BnIUJ/f6DIYY0Tk/P693Q40sdrH7MxA3gpKfCIRZD3yG+eZK/sLpfrlO2nxs+6as5vu780Gh4QfDSisRt9Q6fmJ+lfA2glYf94s2bkc6QhEa5Bncj+taXcxd+NePyXb3pUVGmuEMoOqt/2sGTse9OINOGUyzTeISxW8e3pMNFo0Cu6HG2NOMg35/XnZzGGNjyi/o6xIOytjXWgD+T7MAtsFTk8LgjrawYDYC4Ea49JYlSfb4zeWlR7GJpIJxWL0z1/Yg8S9e8vWD9TpXWNwn+jgTMrHhEfNF0pBU52/sgRKsF/RsgzFA6QJqeu5JQK6PJSHnNbvuR0LdRU34a+K758BqnNlD/+fCP3xnBbkLut+zqsAeXerGfxASAYJLVq/sT2R6Sg+XD6AnndmntVPinURjPKZssdJZa5nJeXOXn52zcX05ozeTRPjUXH48wJSreEmndJ74P0Bf2jFiCUPHmKx7FDggw0t9eztizFPcw2ApoXQlulL7XGdHlfnlXnR5FVFLbJDHUz7EYu3uCDaG5TrCjPRhhi0LymiUwU4+ebdXa6epNwpkQ/rB5ZqHtzok3dWHiDBpTXgnyiWp5TRA3anU4fAHHURx4dOAs0x4Cc9dPj1/zBsVqlG3Un6x/TUeXpyg07qvQJ6d2PdUk0iyRejSGusiSpvFBPz2FrFre4a/3/0+UpRRbVSrIy7YCY3b8lAHi7854Y444z6zLjwFD25Kkh0czewV5qy/t9fdB/vzgno2W4TXAhniki7J1tfb9rbTz4GB7lqTwUdRrrCRncU4tcwnlwCq2DcQdgKeII0M6PWtf/JJ/xC9V34Qkhjf9bu7msaprPQRxHsTdvtkDn+KiUq/w1KQP1e75rbKIeHu/NHZS9VSXya1sYipxT4miJ5w/brt4qIe7eydyvcaZowAFQyk4pJiw8WZOhPCit6PkSpZ9sUcQ8K0bGSoZc4MfqaPX0z0dtCm9sNrmjL68tY8O9KOm8r3YWNGmIW89VWC1kp0mZ/8UXLWZSkzvzQOFD88plQvzejhibRe9MvqbHcSlAeYyHPiFsn9KXOecSeUeIXRceRPXoFsPKssdRBdgvWRJpFDmGR5XiEbVdz7NFi1TqH51ahenEBRDTYbOzYWeFk3rVq7VCjbb2C0q/50buf9VZrsttV2JuA4a+Hjr7OhhL9hekEjhTlSP14rtqVcwvFPLMkkWR11YPiGoRE9byXI6RxrAgBenT0BphStQpjCWnUr34HBfxlKk6m5M4M/8RsWikZ+UGvz2XQ5VMEglpla0JVPPG1OKAM27suraKBrcVoFzyDE9gfUNMa4FL4OdNKs0I4WTpffRn/uP1VeYaMgpN+JuztbtW3MtOQjQWPK9z4Jkiutfg4bSrsiXhGxe+gp8YSR4LmSPE0dtjhw0/A0TMSZdRPawgn2Q4l7hdh68p9iFOrApzHZ1LAgdKMam2MJDQT0wB3BQMTOsObrTw2Es8mverK4SDxcEPkzn9h1ANFFO5VzHLfyeDCo77Lbs3YZfeXS1TTRhYqzpsX6e4fIWBG66haZds61MjUZtl7qYgq98V5YCrOz/e/tHmcgcBfJBp06Y+YfVrPS3D70DmcWYYr5OyH+vcMVBHNYg0WGV4OGAj5vUEGiPxPQdwDQv+i/Z9hk8sBmv5NA4FEdr9kQc2ADONVL2F6OnLTIXQaZTPSFGnr7s6zLOY3NN/hEzbE++shYv7K/FHsUEmRtRYoSceoaINTuwb2MvK3Zip7b3279DXLFF4bUioh0ckOsisjXWyJH4dlYub26C8G5MuRjjgm/JAHvEbflXHdk6gBzZ25bRqYzSWxPYid6gw19PBMG4MR3UaNXwCBEpFZbJyOnskuih5/9bu50poE8TSNHtqa5Tt32qAqsDOI6L6/OsPz7OVcnXAqyi2LStD6m5xzhW3caDdCUqnx0yoC34CZGvfzMdYMoxdhFbff9vpab/9vrCe/AM3ESKZXiSxm2VtolAnsKIXIKxJ1OrKrVi4sJBIWU4nd23sQ597LmvBUgdBnLLRJwhdwqoMN76+5Tf9JQT7TkvEC1Z3dr04T94eNZ8iYmVn9YsUExcxrc8Ut9LELKIRhAkRrL0ltMx0hR3lybe46R3g20FeE+UbGR8yKmvjKfNlSXQ39QNq5BucmqtKGtL7PjOBi/vdj572uMz/hOr0Bf1mkJWP2tVq/KXdaZiwgo0moD/BJAKkdxxeHzmXUq/jwnyVUjZ5JfbdC3z5Q1svZm8LO8mNsSMX0emkvzttI3Wky5EkAh8481nSe3gD/pnyjJCDy46viHu3E9TeBQ2BVIkWqcg9JH4fNSrtjf0Ov0ReJvYKrUOw4WK1JSAC2bpWs743Q1484HxKLS7zL7FQfI2/5Y9bVJRvOaykQc5aBUzJBs1KjxrKo+zpzR14btQoRq0Nnqd3afPvyy0dF8pDYH5Tts96cfPdxaxoV3aac2JCXRrt3zzohftU8bTJnJpIYrE9I+zRGHL/eY8WkZpkKocgNVy+MpI/gf8tUwn4+rMcnqusL7GnoO9Xcwly08np/g9k4tbjnOkWlo/qu5+DPuaMwkm5FM8l/rlZU6yUHNC9MmwlDRMvgr69ZhoeNYE4OItshP2kh8fuoClQ2HTtIS08xlmJ/5romDAsZcVRs/JuqHNDV5JNb10qxTKiyP8eO1vkT8awSzbRw+IkueEiQA10uqfPvl3dxWH/19V7kQbo38015Ruzps8FudyoUQX70VcZCw7Wov4qboJz6tbXiXcMUd3IKzsWCGYmLYkdLYH9KGoq7gE+1cJY4jZY/3EtF9ChqUvSFz97PrYbKLAuBzVcXUwxSoyV6tkigNIXXGc6oEzhbGHKrKu9gE+cxqTXEq2c5Myt0ekhV/8nF9RaciIgwRHLHYYoFDT5+EelKEabthtCp6GZE/lD9dxbMdz7J5+m6/fuOScdIF07bQ3KUZKeCuqCP0bDFxNRmF/fZfvMzvlr5/7axZb5lFW/26v7rLNTo27m/F3JDaWbhmvwIVMehqFZTVusJtnLI0zBs91dAymEwGT6pW7ZcxxLHIQe4cg9LD5if89BCXdSRyiTg32iJuncR5Td+VN01PiUul3LzeP2qbE4SZQ/q+L6Aay5yklZK4w16V4wdOiWnuAAVFYncTdNCdbwRCwo5WxZaezdjEzSYwGe507P3IQuYIRH+MGUnE77k2eVQdRuMy5Hv56YhbWF8Uz97vAMCUYoI5uUvYmktpbws8FDgATdwQgOCkoiUTPFh+S9oBTBOKMmv9HEibVzz+1dK+jaW6Qsm8sqOgOv1928rn6GIguGKBws0OSBs/xGZgcL6MLR/tw/M60zAeUuBIAqB5pP07bkOY7OoUu8S+4dzBfL9bsO6zETAgHOctka9D4eHkH0pTU5uVuc4aeM04ftUIS6vhgAaFGB81cKgXKo8DYJldxfccu+7WCjIlukxmpkaGWlaZGOIIpeZ4eqj51jSiAmqBEyiH9qSgevISr6/dOCVZ8XaE/fppu6J/jYWoFerQqYKxjGjCZmf5GLXlSlZfjZhRkbcCjOZbUqkkLSACsNtoJoFV19BeWI4o6GJmcYCSFk02midQ6cN5O6BeyzAKIFhZcdgR/6vWdxNQZhJoWrd2uQD19AtqU2X7WG1nOvcvW3dsGJuP8ueBhqUQlcIUoHqo6WBhEnNRMQMsZYkSPAP8UsDbIYrJUfa1Do100gvSw6n5MEtBQknO5m0NLUXQHKAYVTp893t9Eo+1viSbg20AwV3yA74hds8hBtiRhB/N8Hk058M96htMQwPjgf6PKyVmN4Rp0siVpnmO5bf3QgcO9DTH0EGaSXFwYXx7ILHwTV8vr9p6UzTVFUk0QCyGwgEyqSNCLVLzOrWQ0ABkzAEq/Ib/OwNHIaz0Vy+4w3sPt2Vyr+DEk3icuaxkwG2OGn4SFXIC4XW4XpPfznmbkpfoh0xARpYyZxZHSDJ374Klh2WfnXFEY24bGMUp0E8DXwev4Lu2QiC9EQZev2aMGPfY8Wts3V4qCbiPxq7rZar+fZ1Cekt7AtwQLBqDbAtTbruQF/M2Mw0ODROQtGw2eGLkmmTS1qp5NuJxS6ClA02/hqPASsP3+0sMKJwMZM1DqET5XaviumRjCWG+HvT7V83LQEkVRc7ovnlAUEdLQyXJWBPLYYKbJEMJu3XYwjXPsTIWCXRj5EcyF3nx8G5Rwos/0fk+kAs75535K+S/nJiHHvsopxHKf6kFmMvGuPzAfR/xPxBz5ho2QwZb2F/qXyIi0G2kLaHipvJyOVl/5TW1DvJFWOAwhiTOBKzwLdPWPnSCZCNqGWwn4S/MAggA1XZVSWQDVdynMdb1L3MXWI5Cbce9O2aip3IHjlPkUIj9tYPB+x/vCmXqsw5ltOa+8BnGWafDIEQnkFNNPvzR1vF6XrdlfYmvyAGBEjZ/K/hLiMiBYt49GvjAXqq6Ad7N7LZ5ZzG61XwtJRMk0+i4R2khK5w4NNQIlo7iJc/ETA1bQd2e1euhJOWbEV9LZibAsQ/tJWsdx0KuxMeBzmFKOSpD/31cBYgttuivZ10cALI2bhE9Kvb+buFW+54JEvUbXtU="}}</script>
+<!-- Точки спавна техники из файла rusforma_vehicles_cfgeventspawn -->
+<script id="map-data" type="application/json">[{"name":"Niva2329","x":965.7,"z":2074.2},{"name":"UAZ 3163","x":4526.3,"z":2400.9},{"name":"AEC Matador","x":5864.4,"z":2206.8},{"name":"ZiS5 Benzovoz","x":6464.8,"z":2711.2},{"name":"M3A1 Scout Ca","x":6497.2,"z":3667.4},{"name":"ZAZ 968M","x":10424.9,"z":2464.7},{"name":"UAZ 469 milicia","x":13255.6,"z":3981.8},{"name":"GAZ 51","x":13376.6,"z":6617.3},{"name":"GAZ 33081","x":12607.9,"z":8741.2},{"name":"UAZ 31519 Police","x":13076.2,"z":10348.6},{"name":"Mercedes G4 W31","x":11673.5,"z":14661.7},{"name":"UAZ 27722","x":7931.8,"z":12582.4},{"name":"IJ 2125 Kombi","x":3283.1,"z":13050.8},{"name":"GAZ M20","x":2206.4,"z":11111.6},{"name":"GAZ 3110 volga","x":1206.8,"z":8693.8},{"name":"Willys MB","x":1987.8,"z":7336.3},{"name":"ZIL 131","x":3803.9,"z":8831.2},{"name":"UAZ 3962","x":5322.7,"z":8623},{"name":"GAZ 66","x":4902.8,"z":5682.8},{"name":"PAZ 672","x":10133.7,"z":5481.5},{"name":"BTR 80","x":10661.5,"z":7994.6},{"name":"LUAZ 969","x":6464.8,"z":2711.2},{"name":"LUAZ 969","x":6497.2,"z":3667.4},{"name":"LUAZ 969","x":10424.9,"z":2464.7},{"name":"URAL 375 1964","x":13255.6,"z":3981.8},{"name":"URAL 375 1964","x":13376.6,"z":6617.3},{"name":"URAL 375 1964","x":12607.9,"z":8741.2},{"name":"UAZ 469 Hunter","x":13076.2,"z":10348.6},{"name":"UAZ 469 Hunter","x":11673.5,"z":14661.7},{"name":"UAZ 469 Hunter","x":7931.8,"z":12582.4},{"name":"kraz 255B","x":3283.1,"z":13050.8},{"name":"kraz 255B","x":2206.4,"z":11111.6},{"name":"kraz 255B","x":1206.8,"z":8693.8},{"name":"VBL","x":1987.8,"z":7336.3},{"name":"VBL","x":3803.9,"z":8831.2},{"name":"VBL","x":5322.7,"z":8623},{"name":"KAVZ685 RF","x":4902.8,"z":5682.8},{"name":"KAVZ685 RF","x":10133.7,"z":5481.5},{"name":"KAVZ685 RF","x":10661.5,"z":7994.6},{"name":"ij 2715 RF","x":965.7,"z":2074.2},{"name":"ij 2715 RF","x":4526.3,"z":2400.9},{"name":"ij 2715 RF","x":5864.4,"z":2206.8},{"name":"LIAZ 677RF","x":6464.8,"z":2711.2},{"name":"LIAZ 677RF","x":6497.2,"z":3667.4},{"name":"LIAZ 677RF","x":10424.9,"z":2464.7},{"name":"vaz 2106 RF","x":13255.6,"z":3981.8},{"name":"vaz 2106 RF","x":13376.6,"z":6617.3},{"name":"vaz 2106 RF","x":12607.9,"z":8741.2},{"name":"VAZ 2109 RF","x":13076.2,"z":10348.6},{"name":"VAZ 2109 RF","x":11673.5,"z":14661.7},{"name":"VAZ 2109 RF","x":7931.8,"z":12582.4},{"name":"UAZ 3172","x":3283.1,"z":13050.8},{"name":"UAZ 3172","x":2206.4,"z":11111.6},{"name":"UAZ 3172","x":1206.8,"z":8693.8},{"name":"azlk 400","x":1987.8,"z":7336.3},{"name":"azlk 400","x":3803.9,"z":8831.2},{"name":"azlk 400","x":5322.7,"z":8623},{"name":"BRDM2 RF","x":4902.8,"z":5682.8},{"name":"BRDM2 RF","x":10133.7,"z":5481.5},{"name":"BRDM2 RF","x":10661.5,"z":7994.6},{"name":"Moskvich 407","x":965.7,"z":2074.2},{"name":"Moskvich 407","x":4526.3,"z":2400.9},{"name":"Moskvich 407","x":5864.4,"z":2206.8},{"name":"UAZ 33094","x":6464.8,"z":2711.2},{"name":"UAZ 33094","x":6497.2,"z":3667.4},{"name":"UAZ 33094","x":10424.9,"z":2464.7},{"name":"Kuban G1","x":13255.6,"z":3981.8},{"name":"Kuban G1","x":13376.6,"z":6617.3},{"name":"Kuban G1","x":12607.9,"z":8741.2},{"name":"GAZ 21 Volga","x":13076.2,"z":10348.6},{"name":"GAZ 21 Volga","x":11673.5,"z":14661.7},{"name":"GAZ 21 Volga","x":7931.8,"z":12582.4},{"name":"Opel Blitz","x":3283.1,"z":13050.8},{"name":"Opel Blitz","x":2206.4,"z":11111.6},{"name":"Opel Blitz","x":1206.8,"z":8693.8},{"name":"M4 Tractor","x":1987.8,"z":7336.3},{"name":"M4 Tractor","x":3803.9,"z":8831.2},{"name":"M4 Tractor","x":5322.7,"z":8623},{"name":"Artillery Tractor","x":4902.8,"z":5682.8},{"name":"Artillery Tractor","x":10133.7,"z":5481.5},{"name":"Artillery Tractor","x":10661.5,"z":7994.6},{"name":"GAZ 13 Chaika","x":965.7,"z":2074.2},{"name":"GAZ 13 Chaika","x":4526.3,"z":2400.9},{"name":"GAZ 13 Chaika","x":5864.4,"z":2206.8},{"name":"Gaz 53 RF","x":6464.8,"z":2711.2},{"name":"Gaz 53 RF","x":6497.2,"z":3667.4},{"name":"Gaz 53 RF","x":10424.9,"z":2464.7},{"name":"ZAZ 968","x":13255.6,"z":3981.8},{"name":"ZAZ 968","x":13376.6,"z":6617.3},{"name":"ZAZ 968","x":12607.9,"z":8741.2},{"name":"ZIL 130","x":13076.2,"z":10348.6},{"name":"ZIL 130","x":11673.5,"z":14661.7},{"name":"ZIL 130","x":7931.8,"z":12582.4},{"name":"ZIL 130 ac40","x":3283.1,"z":13050.8},{"name":"ZIL 130 ac40","x":2206.4,"z":11111.6},{"name":"ZIL 130 ac40","x":1206.8,"z":8693.8},{"name":"GAZ 12","x":1987.8,"z":7336.3},{"name":"GAZ 12","x":3803.9,"z":8831.2},{"name":"GAZ 12","x":5322.7,"z":8623},{"name":"kamaz 4310RUS","x":4902.8,"z":5682.8},{"name":"kamaz 4310RUS","x":10133.7,"z":5481.5},{"name":"kamaz 4310RUS","x":10661.5,"z":7994.6},{"name":"T 34 76","x":965.7,"z":2074.2},{"name":"T 34 76","x":4526.3,"z":2400.9},{"name":"T 34 76","x":5864.4,"z":2206.8},{"name":"VAZ 21099R","x":6464.8,"z":2711.2},{"name":"VAZ 21099R","x":6497.2,"z":3667.4},{"name":"VAZ 21099R","x":10424.9,"z":2464.7},{"name":"F1 Pickup","x":13255.6,"z":3981.8},{"name":"F1 Pickup","x":13376.6,"z":6617.3},{"name":"F1 Pickup","x":12607.9,"z":8741.2},{"name":"ZAZ 965","x":13076.2,"z":10348.6},{"name":"ZAZ 965","x":11673.5,"z":14661.7},{"name":"ZAZ 965","x":7931.8,"z":12582.4},{"name":"VAZ 2104RF","x":3283.1,"z":13050.8},{"name":"VAZ 2104RF","x":2206.4,"z":11111.6},{"name":"VAZ 2104RF","x":1206.8,"z":8693.8},{"name":"GAZ 69 rus","x":1987.8,"z":7336.3},{"name":"GAZ 69 rus","x":3803.9,"z":8831.2},{"name":"GAZ 69 rus","x":5322.7,"z":8623},{"name":"IJ 2140 SL","x":4902.8,"z":5682.8},{"name":"IJ 2140 SL","x":10133.7,"z":5481.5},{"name":"IJ 2140 SL","x":10661.5,"z":7994.6},{"name":"ZIL133 double","x":965.7,"z":2074.2},{"name":"ZIL133 double","x":4526.3,"z":2400.9},{"name":"ZIL133 double","x":5864.4,"z":2206.8},{"name":"UAZ 469 army","x":6464.8,"z":2711.2},{"name":"UAZ 469 army","x":6497.2,"z":3667.4},{"name":"UAZ 469 army","x":10424.9,"z":2464.7},{"name":"Gaz 233002 Tiger","x":13255.6,"z":3981.8},{"name":"Gaz 233002 Tiger","x":13376.6,"z":6617.3},{"name":"Gaz 233002 Tiger","x":12607.9,"z":8741.2},{"name":"AZLK 2141RF","x":13076.2,"z":10348.6},{"name":"AZLK 2141RF","x":11673.5,"z":14661.7},{"name":"AZLK 2141RF","x":7931.8,"z":12582.4},{"name":"VAZ 2105 RUS","x":3283.1,"z":13050.8},{"name":"VAZ 2105 RUS","x":2206.4,"z":11111.6},{"name":"VAZ 2105 RUS","x":1206.8,"z":8693.8},{"name":"UAZ Patrot Pikap","x":1987.8,"z":7336.3},{"name":"UAZ Patrot Pikap","x":3803.9,"z":8831.2},{"name":"UAZ Patrot Pikap","x":5322.7,"z":8623},{"name":"ZIL 157 rus","x":4902.8,"z":5682.8},{"name":"ZIL 157 rus","x":10133.7,"z":5481.5},{"name":"ZIL 157 rus","x":10661.5,"z":7994.6}]</script>
+
 <script>
 /* =====================================================================
-   НАСТРОЙКИ — меняй здесь
+   НАСТРОЙКИ
    ===================================================================== */
-
-// Название сервера
-const SERVER_NAME = "DawnLine";
-
-// Ссылка на Discord (пока заглушка)
-const DISCORD_URL = "#";
-
-/*
-  ДОРОЖНАЯ КАРТА. Каждый этап — своё меню:
-    id     — уникальный ключ (латиницей), по нему сохраняется прогресс
-    menu   — короткое название кнопки в меню
-    icon   — emoji
-    title  — заголовок
-    note   — (необязательно) пояснение под заголовком
-    paused — (необязательно) true, если этап временно отложен
-    tasks  — подпункты: { id: "уникальный-ключ", text: "текст" }
-
-  Если поменять id подпункта, его галочка и комментарии пропадут.
-*/
-const ROADMAP = [
-  {
-    id: "hummer",
-    menu: "Хаммер",
-    icon: "🚙",
-    title: "Свой Хаммер с открывающимся люком",
-    note: "Создаём свой Хаммер с люком, который открывается. Что осталось доделать:",
-    tasks: [
-      { id: "hummer-texture",  text: "Доделать текстуру Хаммера" },
-      { id: "hummer-paint",    text: "Переделать покраску: сейчас она слишком выделяется на фоне игры" },
-      { id: "hummer-polish",   text: "Немного доработать сам Хаммер" },
-      { id: "hummer-test",     text: "Проверить в работе: как ездит и как работают анимации" },
-      { id: "hummer-shooting", text: "Если всё работает хорошо — сделать стрельбу из Хаммера" }
-    ]
-  },
-  {
-    id: "mods",
-    menu: "Моды",
-    icon: "🛠️",
-    title: "Написать свои моды для DayZ-сервера",
-    tasks: [
-      { id: "mods-nobuild",      text: "Зоны запрета строительства на карте" },
-      { id: "mods-car-shooting", text: "Стрельба из автомобилей" },
-      { id: "mods-player-map",   text: "Интерактивная веб-карта для игроков: все ивенты и спавн игроков" },
-      { id: "mods-admin-map",    text: "Такая же карта для админов, но обновляющаяся в реальном времени" }
-    ]
-  },
-  {
-    id: "discord",
-    menu: "Discord",
-    icon: "💬",
-    title: "Сделать Discord-сервер",
-    tasks: [
-      { id: "discord-info", text: "Расписать, что на данный момент есть на сервере" }
-    ]
-  },
-  {
-    id: "promo",
-    menu: "Реклама",
-    icon: "🎬",
-    title: "Пиар сервера и Discord",
-    tasks: [
-      { id: "promo-video", text: "Снять видео для TikTok и YouTube Shorts: что умеет сервер, что на нём уже есть и что будет" }
-    ]
-  },
-  {
-    id: "donate",
-    menu: "Сайт",
-    icon: "💳",
-    title: "Сайт сервера с автодонатом",
-    tasks: [
-      { id: "donate-gpay",  text: "Оплата через Google Pay" },
-      { id: "donate-cards", text: "Приём карт РФ, Украины и Беларуси" }
-    ]
-  },
-  {
-    id: "minipc",
-    menu: "Мини-ПК",
-    icon: "🖥️",
-    title: "Купить мини-ПК для DayZ-сервера",
-    paused: true,
-    tasks: [
-      { id: "minipc-setup", text: "Дать Claude полный доступ к мини-ПК, пробросить порты и настроить всё, чтобы на сервер могли заходить все игроки" }
-    ]
+const CONFIG = {
+  serverName: "DawnLine",
+  discordUrl: "#",            // ссылка на Discord (пока заглушка)
+  mapSize: 15360,             // размер карты в метрах
+  repo: {                     // куда сайт сохраняет данные (файл data.json)
+    owner: "Danill228228",
+    name: "rusforma_vehicles_cfgeventspawn",
+    branch: "ccr-14fd1600-ii46bf",
+    path: "data.json"
   }
-];
-
-/*
-  ПОРЯДОК РАБОТЫ — меню «План».
-  В tasks перечислены id подпунктов из ROADMAP в том порядке, в котором их делать.
-  Чтобы перенести пункт в другой этап — перенеси его id в другой список.
-*/
-const PLAN = [
-  {
-    id: "now",
-    title: "Сейчас",
-    hint: "Мини-ПК для этого не нужен — можно делать уже сегодня.",
-    tasks: ["hummer-texture", "hummer-paint", "hummer-polish", "hummer-test", "mods-nobuild", "discord-info"]
-  },
-  {
-    id: "next",
-    title: "Дальше",
-    hint: "Когда Хаммер проверен и работает.",
-    tasks: ["hummer-shooting", "mods-car-shooting", "mods-player-map"]
-  },
-  {
-    id: "later",
-    title: "Потом",
-    hint: "Когда сервер постоянно доступен игрокам.",
-    tasks: ["promo-video", "mods-admin-map", "donate-gpay", "donate-cards"]
-  },
-  {
-    id: "paused",
-    title: "Отложено",
-    hint: "Покупка мини-ПК временно отложена.",
-    tasks: ["minipc-setup"]
-  }
-];
-
-/* ---------------------------------------------------------------------
-   РАЗДЕЛ «DayZ Server» — мои моды
-   --------------------------------------------------------------------- */
-
-// Меню раздела
-const MOD_CATEGORIES = [
-  { id: "transport", icon: "🚙", title: "Транспорт" },
-  { id: "clothes",   icon: "🧥", title: "Одежда" },
-  { id: "gear",      icon: "🎒", title: "Снаряжение" }
-];
-
-/*
-  Мои моды. Каждый мод — карточка:
-    id          — уникальный ключ (латиницей), по нему сохраняются комментарии
-    category    — меню: "transport", "clothes" или "gear"
-    icon        — emoji
-    name        — название
-    status      — "ready" (Готово), "wip" (В разработке) или "plan" (В планах)
-    description — описание
-    features    — (необязательно) список особенностей
-    image       — (необязательно) картинка, например "images/hummer.jpg"
-*/
-const MODS = [
-  {
-    id: "hummer-hatch",
-    category: "transport",
-    icon: "🚙",
-    name: "Хаммер с открывающимся люком",
-    status: "wip",
-    description: "Свой Хаммер для сервера с люком, который открывается.",
-    features: [
-      "Открывающийся люк",
-      "Сейчас: текстура, покраска под стиль игры, проверка езды и анимаций",
-      "Дальше: стрельба из Хаммера"
-    ]
-  }
-];
-
-/* =====================================================================
-   Дальше — логика страницы, менять не обязательно
-   ===================================================================== */
-
-const KEYS = {
-  progress: "dayz-roadmap-progress-v1",
-  stage: "dayz-roadmap-stage-v1",
-  category: "dayz-mods-category-v1",
-  comments: "dayz-comments-v1"
 };
 
-function load(key, fallback) {
+/*
+  Всё содержимое сайта (моды, новости, дорожная карта) хранится в data.json
+  и меняется прямо на сайте: войди как администратор и нажми ✏️.
+  Дорожная карта, галочки и комментарии зашифрованы паролем администратора.
+*/
+
+const STATUS_LABELS = { ready: "Готово", wip: "В разработке", plan: "В планах" };
+const LS = {
+  draft: "dl-draft-v1",
+  token: "dl-gh-token",
+  pass: "dl-pass",
+  stage: "dayz-roadmap-stage-v1",
+  cat: "dayz-mods-category-v1",
+  edit: "dl-edit-mode",
+  migrated: "dl-migrated-v1",
+  oldProgress: "dayz-roadmap-progress-v1",
+  oldComments: "dayz-comments-v1"
+};
+const PLAN_TAB = "plan";
+
+/* ---------- Утилиты ---------- */
+
+const $ = id => document.getElementById(id);
+
+function lsGet(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
-    if (raw === null) return fallback;
-    const value = JSON.parse(raw);
-    return value === null || value === undefined ? fallback : value;
-  } catch (e) {
-    return fallback;
-  }
+    return raw === null ? fallback : JSON.parse(raw);
+  } catch (e) { return fallback; }
 }
 
-function save(key, value) {
+function lsSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+}
+
+function lsDel(key) {
+  try { localStorage.removeItem(key); } catch (e) { /* ничего */ }
+}
+
+function esc(str) {
+  return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function uid(prefix) {
+  return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function plural(n, one, few, many) {
+  const n10 = n % 10, n100 = n % 100;
+  const word = n10 === 1 && n100 !== 11 ? one : n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14) ? few : many;
+  return `${n} ${word}`;
+}
+
+function fmtDate(ts, withTime) {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (e) {
-    /* хранилище недоступно — просто не сохранится */
+    const opts = withTime ? { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" } : { day: "numeric", month: "short" };
+    return new Date(ts).toLocaleString("ru-RU", opts);
+  } catch (e) { return ""; }
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+}
+
+function safeUrl(url) {
+  const u = String(url || "").trim();
+  if (!u) return "";
+  if (/^https?:\/\//i.test(u) || /^data:image\//i.test(u) || /^images\/[\w.-]+$/.test(u)) return u;
+  return "";
+}
+
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+function bytesToB64(bytes) {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+function b64ToBytes(b64) {
+  const bin = atob(String(b64).replace(/\s/g, ""));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/* ---------- Шифрование закрытой части ---------- */
+
+const Crypto = {
+  available() { return !!(window.crypto && crypto.subtle); },
+
+  async deriveKey(password, saltB64, iter) {
+    const base = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64ToBytes(saltB64), iterations: iter, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  },
+
+  async encrypt(obj, key, saltB64, iter) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj))));
+    return { v: 1, iter, salt: saltB64, iv: bytesToB64(iv), ct: bytesToB64(ct) };
+  },
+
+  async decrypt(blob, key) {
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(blob.iv) }, key, b64ToBytes(blob.ct));
+    return JSON.parse(dec.decode(pt));
+  }
+};
+
+/* ---------- Состояние ---------- */
+
+let DATA = null;          // опубликованная структура: categories, mods, news, private(зашифровано)
+let PRIV = null;          // расшифрованная дорожная карта (только у админа)
+let KEY = null;           // ключ шифрования
+let KEY_SALT = null;
+let KEY_ITER = 200000;
+let baseUpdatedAt = null; // версия data.json, от которой идут правки
+let remoteSha = null;     // версия файла на GitHub
+let dirty = false;
+let changeVersion = 0;
+let syncState = "local";
+const sessionImages = {}; // только что загруженные фото, пока GitHub Pages обновляется
+
+const isAdmin = () => !!PRIV;
+
+/* ---------- GitHub: чтение и запись data.json ---------- */
+
+const GH = {
+  token() { return lsGet(LS.token, ""); },
+
+  url(path) {
+    const r = CONFIG.repo;
+    return `https://api.github.com/repos/${r.owner}/${r.name}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+  },
+
+  headers() {
+    return { "Authorization": `Bearer ${this.token()}`, "Accept": "application/vnd.github+json" };
+  },
+
+  async get(path) {
+    const res = await fetch(`${this.url(path)}?ref=${encodeURIComponent(CONFIG.repo.branch)}&t=${Date.now()}`, { headers: this.headers(), cache: "no-store" });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`GitHub ответил ${res.status}`);
+    const json = await res.json();
+    return { sha: json.sha, text: dec.decode(b64ToBytes(json.content || "")) };
+  },
+
+  async put(path, base64, sha, message) {
+    const body = { message, content: base64, branch: CONFIG.repo.branch };
+    if (sha) body.sha = sha;
+    const res = await fetch(this.url(path), { method: "PUT", headers: { ...this.headers(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (res.status === 409 || res.status === 422) { const e = new Error("conflict"); e.conflict = true; throw e; }
+    if (res.status === 401 || res.status === 403) throw new Error("Токен GitHub не подходит или у него нет прав на запись");
+    if (!res.ok) throw new Error(`GitHub ответил ${res.status}`);
+    const json = await res.json();
+    return json.content && json.content.sha;
+  }
+};
+
+/* ---------- Загрузка данных ---------- */
+
+function normalize(data) {
+  const d = data && typeof data === "object" ? data : {};
+  d.categories = Array.isArray(d.categories) ? d.categories : [];
+  d.mods = Array.isArray(d.mods) ? d.mods : [];
+  d.news = Array.isArray(d.news) ? d.news : [];
+  return d;
+}
+
+async function loadData() {
+  let data = null;
+  try { data = JSON.parse($("embedded-data").textContent); } catch (e) { data = {}; }
+
+  if (location.protocol.startsWith("http")) {
+    try {
+      const res = await fetch(`data.json?t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) data = await res.json();
+    } catch (e) { /* без сети — останется встроенная копия */ }
+  }
+
+  if (GH.token()) {
+    try {
+      const r = await GH.get(CONFIG.repo.path);
+      if (r) { data = JSON.parse(r.text); remoteSha = r.sha; }
+    } catch (e) { /* не страшно */ }
+  }
+
+  data = normalize(data);
+  baseUpdatedAt = data.updatedAt || null;
+
+  const draft = lsGet(LS.draft, null);
+  if (draft && draft.dirty && draft.data) {
+    const remoteNewer = data.updatedAt && draft.base !== data.updatedAt;
+    if (!remoteNewer || confirm("На сайте есть более новая версия (изменения с другого устройства), а на этом устройстве есть неопубликованные правки.\n\nОК — оставить правки с этого устройства.\nОтмена — загрузить новую версию с сайта.")) {
+      data = normalize(draft.data);
+      dirty = true;
+      baseUpdatedAt = draft.base || baseUpdatedAt;
+    } else {
+      lsDel(LS.draft);
+    }
+  }
+  DATA = data;
+}
+
+/* ---------- Вход администратора ---------- */
+
+async function unlock(password, remember) {
+  if (!Crypto.available()) throw new Error("Браузер не поддерживает шифрование. Открой сайт по ссылке https://…");
+  const blob = DATA.private;
+  if (!blob || !blob.ct) throw new Error("В данных нет закрытой части");
+  const key = await Crypto.deriveKey(password, blob.salt, blob.iter || 200000);
+  let priv;
+  try { priv = await Crypto.decrypt(blob, key); } catch (e) { throw new Error("Неверный пароль"); }
+  KEY = key; KEY_SALT = blob.salt; KEY_ITER = blob.iter || 200000;
+  PRIV = normalizePriv(priv);
+  if (remember) lsSet(LS.pass, password);
+  const migrated = migrateOldLocalData();
+  applyAdminUI();
+  renderAll();
+  if (migrated) change("Перенёс галочки и комментарии с этого устройства");
+}
+
+function normalizePriv(p) {
+  p = p && typeof p === "object" ? p : {};
+  p.stages = Array.isArray(p.stages) ? p.stages : [];
+  p.plan = Array.isArray(p.plan) ? p.plan : [];
+  p.progress = p.progress && typeof p.progress === "object" ? p.progress : {};
+  p.comments = p.comments && typeof p.comments === "object" ? p.comments : {};
+  return p;
+}
+
+// Галочки и комментарии из старой версии сайта (хранились только в браузере)
+function migrateOldLocalData() {
+  if (lsGet(LS.migrated, false)) return false;
+  let changed = false;
+  const known = new Set(PRIV.stages.flatMap(s => s.tasks.map(t => t.id)));
+  const oldProgress = lsGet(LS.oldProgress, {});
+  if (oldProgress && typeof oldProgress === "object") {
+    Object.keys(oldProgress).forEach(id => {
+      if (oldProgress[id] && known.has(id) && !PRIV.progress[id]) { PRIV.progress[id] = 1; changed = true; }
+    });
+  }
+  const oldComments = lsGet(LS.oldComments, {});
+  if (oldComments && typeof oldComments === "object") {
+    Object.keys(oldComments).forEach(key => {
+      const list = Array.isArray(oldComments[key]) ? oldComments[key] : [];
+      const have = new Set((PRIV.comments[key] || []).map(c => c.id));
+      list.forEach(c => {
+        if (c && c.id && c.text && !have.has(c.id)) {
+          (PRIV.comments[key] = PRIV.comments[key] || []).push(c);
+          changed = true;
+        }
+      });
+    });
+  }
+  lsSet(LS.migrated, true);
+  return changed;
+}
+
+function logout() {
+  PRIV = null; KEY = null;
+  lsDel(LS.pass);
+  document.body.classList.remove("editing");
+  lsSet(LS.edit, false);
+  applyAdminUI();
+  renderAll();
+  toast("Ты вышел из режима администратора");
+}
+
+/* ---------- Сохранение и публикация ---------- */
+
+async function saveDraft() {
+  if (PRIV && KEY) DATA.private = await Crypto.encrypt(PRIV, KEY, KEY_SALT, KEY_ITER);
+  lsSet(LS.draft, { dirty: true, base: baseUpdatedAt, data: DATA, savedAt: Date.now() });
+}
+
+let publishTimer = null;
+
+// Вызывается после любого изменения данных
+async function change(message) {
+  dirty = true;
+  changeVersion++;
+  renderAll();
+  try { await saveDraft(); } catch (e) { /* ничего */ }
+  if (message) toast(message);
+  if (GH.token()) {
+    setSync("saving");
+    clearTimeout(publishTimer);
+    publishTimer = setTimeout(() => publish(false), 2500);
+  } else {
+    setSync("local");
   }
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let publishing = false;
+
+async function publish(manual) {
+  if (!GH.token()) { setSync("local"); if (manual) toast("Сначала добавь токен GitHub в настройках"); return; }
+  if (publishing) { clearTimeout(publishTimer); publishTimer = setTimeout(() => publish(manual), 1500); return; }
+  publishing = true;
+  const version = changeVersion;
+  setSync("saving");
+  try {
+    await uploadPendingImages();
+    await saveDraft();
+    const payload = { ...DATA, updatedAt: new Date().toISOString() };
+    const text = JSON.stringify(payload, null, 2) + "\n";
+    const b64 = bytesToB64(enc.encode(text));
+    if (!remoteSha) {
+      const r = await GH.get(CONFIG.repo.path);
+      if (r) remoteSha = r.sha;
+    }
+    let sha;
+    try {
+      sha = await GH.put(CONFIG.repo.path, b64, remoteSha, "Обновление сайта: " + fmtDate(Date.now(), true));
+    } catch (e) {
+      if (!e.conflict) throw e;
+      const r = await GH.get(CONFIG.repo.path);
+      const theirs = r ? JSON.parse(r.text) : null;
+      if (theirs && theirs.updatedAt !== baseUpdatedAt &&
+          !confirm("Пока ты редактировал, данные изменились с другого устройства.\n\nОК — заменить их твоими правками.\nОтмена — загрузить версию с другого устройства.")) {
+        await adoptRemote(theirs, r.sha);
+        publishing = false;
+        return;
+      }
+      remoteSha = r ? r.sha : null;
+      sha = await GH.put(CONFIG.repo.path, b64, remoteSha, "Обновление сайта: " + fmtDate(Date.now(), true));
+    }
+    remoteSha = sha;
+    DATA.updatedAt = payload.updatedAt;
+    baseUpdatedAt = payload.updatedAt;
+    if (version === changeVersion) {
+      dirty = false;
+      lsDel(LS.draft);
+      setSync("ok");
+      if (manual) toast("Опубликовано");
+    } else {
+      await saveDraft();
+    }
+  } catch (e) {
+    setSync("error");
+    toast("Не удалось опубликовать: " + e.message);
+  }
+  publishing = false;
+  if (dirty && version !== changeVersion) publish(false);
 }
+
+async function adoptRemote(theirs, sha) {
+  DATA = normalize(theirs);
+  remoteSha = sha;
+  baseUpdatedAt = DATA.updatedAt || null;
+  dirty = false;
+  lsDel(LS.draft);
+  if (KEY && DATA.private) {
+    try { PRIV = normalizePriv(await Crypto.decrypt(DATA.private, KEY)); } catch (e) { PRIV = null; KEY = null; }
+  }
+  applyAdminUI();
+  renderAll();
+  setSync("ok");
+  toast("Загружена версия с другого устройства");
+}
+
+// Фото, выбранные с устройства, отправляются в папку images/ репозитория
+async function uploadPendingImages() {
+  for (const mod of DATA.mods) {
+    if (!Array.isArray(mod.images)) continue;
+    for (let i = 0; i < mod.images.length; i++) {
+      const src = mod.images[i];
+      if (!/^data:image\//.test(src)) continue;
+      const path = `images/${uid("img-")}.jpg`;
+      await GH.put(path, src.split(",")[1], null, "Фото для мода: " + (mod.name || ""));
+      sessionImages[path] = src;
+      mod.images[i] = path;
+    }
+  }
+}
+
+function setSync(state) {
+  syncState = state;
+  const dot = $("syncDot");
+  dot.dataset.state = state;
+  const titles = {
+    ok: "Все изменения опубликованы",
+    saving: "Публикую изменения…",
+    error: "Ошибка публикации — открой настройки",
+    local: "Изменения сохранены только на этом устройстве"
+  };
+  $("accountBtn").title = isAdmin() ? `Настройки · ${titles[state] || ""}` : "Вход для администратора";
+}
+
+/* ---------- Комментарии (заметки администратора) ---------- */
 
 const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5 12.5 10 17 19 7"/></svg>';
 const CHAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/></svg>';
+const EDIT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg>';
+const UP_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14l6-6 6 6"/></svg>';
+const DOWN_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10l6 6 6-6"/></svg>';
 const SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>';
-
-let progress = load(KEYS.progress, {});
-if (typeof progress !== "object" || Array.isArray(progress)) progress = {};
-
-let comments = load(KEYS.comments, {});
-if (typeof comments !== "object" || Array.isArray(comments)) comments = {};
-
-const PLAN_TAB = "plan";
-
-// Быстрый поиск: подпункт → этап и очередь
-const TASK_INFO = {};
-ROADMAP.forEach(stage => stage.tasks.forEach(task => { TASK_INFO[task.id] = { task, stage }; }));
-const PHASE_OF = {};
-PLAN.forEach(phase => phase.tasks.forEach(id => { PHASE_OF[id] = phase; }));
-
-let currentStage = load(KEYS.stage, null);
-if (currentStage !== PLAN_TAB && !ROADMAP.some(s => s.id === currentStage)) currentStage = PLAN_TAB;
-
-let currentCategory = load(KEYS.category, null);
-if (!MOD_CATEGORIES.some(c => c.id === currentCategory)) currentCategory = MOD_CATEGORIES[0].id;
 
 const openThreads = new Set();
 
-/* ---------- Комментарии ---------- */
-
 function commentList(key) {
-  return Array.isArray(comments[key]) ? comments[key] : [];
-}
-
-function formatDate(ts) {
-  try {
-    return new Date(ts).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-  } catch (e) {
-    return "";
-  }
+  return PRIV && Array.isArray(PRIV.comments[key]) ? PRIV.comments[key] : [];
 }
 
 function commentButton(key, label) {
+  if (!isAdmin()) return "";
   const n = commentList(key).length;
-  const open = openThreads.has(key);
   return `
-    <button class="cbtn${n ? " has" : ""}" type="button" data-toggle="${escapeHtml(key)}"
-            aria-expanded="${open}" aria-label="Комментарии${n ? ": " + n : ""}">
+    <button class="mini${n ? " has" : ""}" type="button" data-toggle="${esc(key)}"
+            aria-expanded="${openThreads.has(key)}" aria-label="Комментарии${n ? ": " + n : ""}">
       ${CHAT_SVG}${label ? `<span>${label}</span>` : ""}<span class="n">${n || ""}</span>
     </button>`;
 }
 
 function threadInner(key) {
-  const list = commentList(key);
-  const items = list.map(c => `
+  const items = commentList(key).map(c => `
     <li class="comment">
-      <p>${escapeHtml(c.text)}</p>
+      <p>${esc(c.text)}</p>
       <div class="comment-meta">
-        <time>${escapeHtml(formatDate(c.ts))}</time>
-        <button class="del" type="button" data-del="${escapeHtml(c.id)}">Удалить</button>
+        <time>${esc(fmtDate(c.ts, true))}</time>
+        <button class="del" type="button" data-del="${esc(c.id)}">Удалить</button>
       </div>
     </li>`).join("");
   return `
@@ -1240,64 +1587,869 @@ function threadInner(key) {
 }
 
 function threadHtml(key) {
+  if (!isAdmin()) return "";
   const open = openThreads.has(key);
-  return `<div class="thread" data-thread="${escapeHtml(key)}"${open ? "" : " hidden"}>${open ? threadInner(key) : ""}</div>`;
+  return `<div class="thread" data-thread="${esc(key)}"${open ? "" : " hidden"}>${open ? threadInner(key) : ""}</div>`;
 }
 
-function findThread(key) {
-  return document.querySelector(`[data-thread="${CSS.escape(key)}"]`);
-}
-
-function refreshCommentUI(key) {
+function refreshThread(key) {
   const n = commentList(key).length;
   document.querySelectorAll(`[data-toggle="${CSS.escape(key)}"]`).forEach(btn => {
     btn.classList.toggle("has", n > 0);
     btn.querySelector(".n").textContent = n || "";
-    btn.setAttribute("aria-label", `Комментарии${n ? ": " + n : ""}`);
     btn.setAttribute("aria-expanded", String(openThreads.has(key)));
   });
-  const thread = findThread(key);
+  const thread = document.querySelector(`[data-thread="${CSS.escape(key)}"]`);
   if (!thread) return;
   thread.hidden = !openThreads.has(key);
   if (!thread.hidden) thread.innerHTML = threadInner(key);
 }
 
-function toggleThread(key) {
-  if (openThreads.has(key)) openThreads.delete(key);
-  else openThreads.add(key);
-  refreshCommentUI(key);
-  if (openThreads.has(key)) {
-    const ta = findThread(key).querySelector("textarea");
-    if (ta && !commentList(key).length) ta.focus();
+/* ---------- Дорожная карта ---------- */
+
+function taskIndex() {
+  const info = {};
+  PRIV.stages.forEach(stage => stage.tasks.forEach(task => { info[task.id] = { task, stage }; }));
+  return info;
+}
+
+function phaseOf(taskId) {
+  return PRIV.plan.find(p => p.tasks.includes(taskId)) || null;
+}
+
+function stageStats(stage) {
+  return { done: stage.tasks.filter(t => PRIV.progress[t.id]).length, total: stage.tasks.length };
+}
+
+function nextStepId() {
+  const info = taskIndex();
+  for (const phase of PRIV.plan) {
+    if (phase.id === "paused") continue;
+    for (const id of phase.tasks) if (info[id] && !PRIV.progress[id]) return id;
   }
+  return null;
 }
 
-function addComment(key, text) {
-  const list = commentList(key).slice();
-  list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, ts: Date.now() });
-  comments[key] = list;
-  save(KEYS.comments, comments);
-  refreshCommentUI(key);
-  findThread(key).querySelector("textarea").focus();
+function taskRow(task, opts) {
+  const key = "task:" + task.id;
+  const phase = phaseOf(task.id);
+  const ts = PRIV.progress[task.id];
+  const src = opts.stage ? `<span class="src" title="${esc(opts.stage.menu)}">${esc(opts.stage.icon || "")}</span>` : "";
+  const when = opts.showWhen && phase && phase.id !== "paused" ? `<span class="tag when phase-${esc(phase.id)}">${esc(phase.title)}</span>` : "";
+  const date = typeof ts === "number" && ts > 1e12 ? `<span class="tag done-date">✓ ${esc(fmtDate(ts))}</span>` : "";
+  const reorder = opts.phase ? `
+          <button class="mini" type="button" data-act="task-up" data-id="${esc(task.id)}" aria-label="Выше">${UP_SVG}</button>
+          <button class="mini" type="button" data-act="task-down" data-id="${esc(task.id)}" aria-label="Ниже">${DOWN_SVG}</button>` : "";
+  return `
+    <li class="task" data-row="${esc(task.id)}">
+      <div class="task-row">
+        <label>
+          <input type="checkbox" data-task="${esc(task.id)}" ${ts ? "checked" : ""}>
+          <span class="check">${CHECK_SVG}</span>
+          <span class="task-text">${src}<span class="txt">${esc(task.text)}</span>${when}${date}<span class="tag next-label">Следующий шаг</span></span>
+        </label>
+        <span class="row-tools edit-only">${reorder}
+          <button class="mini" type="button" data-act="edit-task" data-id="${esc(task.id)}" aria-label="Изменить пункт">${EDIT_SVG}</button>
+        </span>
+        ${commentButton(key)}
+      </div>
+      ${threadHtml(key)}
+    </li>`;
 }
 
-function deleteComment(key, id) {
-  if (!confirm("Удалить комментарий?")) return;
-  comments[key] = commentList(key).filter(c => c.id !== id);
-  if (!comments[key].length) delete comments[key];
-  save(KEYS.comments, comments);
-  refreshCommentUI(key);
+function renderStageTabs() {
+  let allDone = 0, allTotal = 0;
+  PRIV.stages.forEach(s => { const st = stageStats(s); allDone += st.done; allTotal += st.total; });
+  const tab = (id, icon, label, count, extra) => {
+    const selected = currentStage === id;
+    return `
+      <button class="chip${extra || ""}" type="button" role="tab" id="stage-${esc(id)}" aria-controls="roadmap"
+              aria-selected="${selected}" tabindex="${selected ? 0 : -1}" data-stage="${esc(id)}">
+        <span class="chip-icon" aria-hidden="true">${esc(icon)}</span>${esc(label)}
+        <span class="chip-count">${esc(count)}</span>
+      </button>`;
+  };
+  $("stageTabs").innerHTML = tab(PLAN_TAB, "📋", "План", `${allDone}/${allTotal}`, "") +
+    PRIV.stages.map(s => {
+      const { done, total } = stageStats(s);
+      const complete = total > 0 && done === total;
+      return tab(s.id, s.icon || "⭐", s.menu || s.title, complete ? "✓" : s.paused ? "пауза" : `${done}/${total}`,
+        (complete ? " done" : "") + (s.paused ? " paused" : ""));
+    }).join("") +
+    `<button class="chip add edit-only" type="button" data-act="add-stage">＋ Этап</button>`;
 }
 
-// Общие обработчики для обоих разделов
-document.addEventListener("click", e => {
-  const toggle = e.target.closest("[data-toggle]");
-  if (toggle) { toggleThread(toggle.dataset.toggle); return; }
-  const del = e.target.closest("[data-del]");
+let currentStage = lsGet(LS.stage, PLAN_TAB);
+
+function renderRoadmap() {
+  $("planLocked").hidden = isAdmin();
+  $("planOpen").hidden = !isAdmin();
+  if (!isAdmin()) return;
+  if (currentStage !== PLAN_TAB && !PRIV.stages.some(s => s.id === currentStage)) currentStage = PLAN_TAB;
+  const root = $("roadmap");
+  root.setAttribute("aria-labelledby", `stage-${currentStage}`);
+
+  if (currentStage === PLAN_TAB) {
+    const info = taskIndex();
+    root.innerHTML = `<div class="stack">${PRIV.plan.map(phase => {
+      const ids = phase.tasks.filter(id => info[id]);
+      return `
+        <section class="card phase phase-${esc(phase.id)} reveal" data-phase="${esc(phase.id)}">
+          <div class="phase-head">
+            <span class="phase-dot" aria-hidden="true"></span>
+            <div class="head-text">
+              <h2 class="phase-title">${esc(phase.title)}</h2>
+              ${phase.hint ? `<p class="phase-hint">${esc(phase.hint)}</p>` : ""}
+            </div>
+            <span class="counter" data-phase-counter></span>
+          </div>
+          <ul class="tasks" style="margin-top:6px">
+            ${ids.length ? ids.map(id => taskRow(info[id].task, { stage: info[id].stage, phase })).join("") : `<li class="phase-hint" style="padding:8px 0">Пусто</li>`}
+          </ul>
+        </section>`;
+    }).join("")}</div>`;
+  } else {
+    const index = PRIV.stages.findIndex(s => s.id === currentStage);
+    const s = PRIV.stages[index];
+    root.innerHTML = `
+      <section class="card reveal" data-card="${esc(s.id)}">
+        <div class="card-head">
+          <div class="icon" aria-hidden="true">${esc(s.icon || "⭐")}</div>
+          <div class="head-text">
+            ${s.paused ? `<span class="badge-paused">Отложено</span>` : `<span class="kicker">Этап ${index + 1} из ${PRIV.stages.length}</span>`}
+            <h2 class="card-title">${esc(s.title)}</h2>
+          </div>
+          <button class="mini edit-only" type="button" data-act="edit-stage" data-id="${esc(s.id)}" aria-label="Изменить этап">${EDIT_SVG}</button>
+          <span class="counter" data-counter></span>
+        </div>
+        ${s.note ? `<p class="note">${esc(s.note)}</p>` : ""}
+        <div class="mini-bar"><div class="mini-fill" data-mini></div></div>
+        <ul class="tasks">${s.tasks.map(t => taskRow(t, { showWhen: true })).join("")}</ul>
+        <div class="add-row edit-only block"><button class="btn small" type="button" data-act="add-task" data-stage="${esc(s.id)}">＋ Добавить пункт</button></div>
+      </section>`;
+  }
+  updateCounters();
+  observeReveal();
+}
+
+function updateCounters() {
+  if (!isAdmin()) return;
+  let total = 0, done = 0;
+  PRIV.stages.forEach(s => {
+    const st = stageStats(s);
+    total += st.total; done += st.done;
+    const card = document.querySelector(`[data-card="${CSS.escape(s.id)}"]`);
+    if (!card) return;
+    card.querySelector("[data-counter]").textContent = `${st.done}/${st.total}`;
+    card.querySelector("[data-mini]").style.width = st.total ? `${(st.done / st.total) * 100}%` : "0";
+    card.classList.toggle("complete", st.total > 0 && st.done === st.total);
+  });
+  const info = taskIndex();
+  PRIV.plan.forEach(phase => {
+    const el = document.querySelector(`[data-phase="${CSS.escape(phase.id)}"] [data-phase-counter]`);
+    if (!el) return;
+    const ids = phase.tasks.filter(id => info[id]);
+    el.textContent = `${ids.filter(id => PRIV.progress[id]).length}/${ids.length}`;
+  });
+  const next = nextStepId();
+  document.querySelectorAll("[data-row]").forEach(row => row.classList.toggle("is-next", row.dataset.row === next));
+  renderStageTabs();
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  $("overallCount").textContent = `${done}/${total} · ${pct}%`;
+  $("overallFill").style.width = `${pct}%`;
+  $("overallBar").setAttribute("aria-valuenow", String(pct));
+}
+
+/* ---------- Моды ---------- */
+
+let currentCategory = lsGet(LS.cat, null);
+
+function imgSrc(src) { return sessionImages[src] || safeUrl(src); }
+
+function renderCategoryTabs() {
+  if (!DATA.categories.some(c => c.id === currentCategory)) currentCategory = DATA.categories[0] && DATA.categories[0].id;
+  $("catTabs").innerHTML = DATA.categories.map(cat => {
+    const count = DATA.mods.filter(m => m.category === cat.id).length;
+    const selected = cat.id === currentCategory;
+    return `
+      <button class="chip" type="button" role="tab" id="tab-${esc(cat.id)}" aria-controls="modList"
+              aria-selected="${selected}" tabindex="${selected ? 0 : -1}" data-cat="${esc(cat.id)}">
+        <span class="chip-icon" aria-hidden="true">${esc(cat.icon)}</span>${esc(cat.title)}
+        <span class="chip-count">${count}</span>
+      </button>`;
+  }).join("");
+}
+
+function renderMods() {
+  renderCategoryTabs();
+  const list = $("modList");
+  list.setAttribute("aria-labelledby", `tab-${currentCategory}`);
+  const mods = DATA.mods.filter(m => m.category === currentCategory);
+  if (!mods.length) {
+    list.innerHTML = `<div class="empty"><strong>Пока пусто</strong>Скоро здесь появятся мои моды для этого раздела.</div>`;
+    return;
+  }
+  list.innerHTML = mods.map(mod => {
+    const status = STATUS_LABELS[mod.status] ? mod.status : "plan";
+    const key = "mod:" + mod.id;
+    const images = (mod.images || []).map(imgSrc).filter(Boolean);
+    const features = (mod.features || []).filter(Boolean).map(f => `<li>${esc(f)}</li>`).join("");
+    const video = safeUrl(mod.video);
+    const gallery = images.length ? `
+      <div class="gallery">
+        <img class="gallery-main" src="${esc(images[0])}" alt="${esc(mod.name)}" loading="lazy" data-lightbox="${esc(mod.id)}" data-i="0">
+        ${images.length > 1 ? `<div class="thumbs">${images.slice(1).map((src, i) => `
+          <button type="button" data-lightbox="${esc(mod.id)}" data-i="${i + 1}" aria-label="Фото ${i + 2}"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join("")}</div>` : ""}
+      </div>` : "";
+    return `
+      <article class="card reveal">
+        ${gallery}
+        <div class="card-head">
+          <div class="icon" aria-hidden="true">${esc(mod.icon || "📦")}</div>
+          <div class="head-text">
+            <span class="status status-${status}">${STATUS_LABELS[status]}</span>
+            <h2 class="card-title">${esc(mod.name)}</h2>
+          </div>
+          <button class="mini edit-only" type="button" data-act="edit-mod" data-id="${esc(mod.id)}" aria-label="Изменить мод">${EDIT_SVG}</button>
+        </div>
+        ${mod.description ? `<p class="mod-desc">${esc(mod.description)}</p>` : ""}
+        ${features ? `<ul class="mod-features">${features}</ul>` : ""}
+        ${video || isAdmin() ? `<div class="mod-foot">
+          ${video ? `<a class="btn small" href="${esc(video)}" target="_blank" rel="noopener">▶ Смотреть видео</a>` : ""}
+          ${commentButton(key, "Комментарии")}
+        </div>` : ""}
+        ${threadHtml(key)}
+      </article>`;
+  }).join("");
+  observeReveal();
+}
+
+/* ---------- Новости ---------- */
+
+function renderNews() {
+  const items = DATA.news.slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  $("newsList").innerHTML = items.length ? items.map(n => {
+    const d = new Date(n.date + "T12:00:00");
+    const valid = !isNaN(d);
+    return `
+      <article class="card reveal news-item">
+        <div class="news-date">${valid ? `<b>${d.getDate()}</b>${esc(d.toLocaleString("ru-RU", { month: "short" }))}` : esc(n.date)}</div>
+        <p class="news-text">${esc(n.text)}</p>
+        <button class="mini edit-only" type="button" data-act="edit-news" data-id="${esc(n.id)}" aria-label="Изменить новость">${EDIT_SVG}</button>
+      </article>`;
+  }).join("") : `<div class="empty"><strong>Пока нет новостей</strong>Здесь будут обновления сервера.</div>`;
+  observeReveal();
+}
+
+/* ---------- Карта ---------- */
+
+const MapView = {
+  points: [],
+  locations: [],
+  vb: null,
+  selected: null,
+
+  init() {
+    try { this.points = JSON.parse($("map-data").textContent); } catch (e) { this.points = []; }
+    const byPos = new Map();
+    this.points.forEach(p => {
+      const k = `${Math.round(p.x)}:${Math.round(p.z)}`;
+      if (!byPos.has(k)) byPos.set(k, { x: p.x, z: p.z, names: [] });
+      const loc = byPos.get(k);
+      if (!loc.names.includes(p.name)) loc.names.push(p.name);
+    });
+    this.locations = [...byPos.values()];
+    const kinds = [...new Set(this.points.map(p => p.name))].sort((a, b) => a.localeCompare(b, "ru"));
+    $("vehicleList").innerHTML = kinds.map(k => `<option value="${esc(k)}">`).join("");
+    $("mapLead").textContent = `${plural(this.locations.length, "точка", "точки", "точек")} спавна · ${plural(kinds.length, "вид", "вида", "видов")} техники`;
+    this.reset();
+    this.bind();
+  },
+
+  reset() { const S = CONFIG.mapSize; this.vb = { x: 0, y: 0, w: S, h: S }; this.draw(); },
+
+  draw() {
+    const S = CONFIG.mapSize, vb = this.vb;
+    const unit = vb.w / ($("mapSvg").clientWidth || 600); // метров в одном пикселе
+    const step = 1000;
+    let grid = "";
+    for (let i = 0; i <= S; i += step) {
+      grid += `<line x1="${i}" y1="0" x2="${i}" y2="${S}"/><line x1="0" y1="${i}" x2="${S}" y2="${i}"/>`;
+    }
+    let labels = "";
+    const fs = 11 * unit;
+    for (let i = step; i < S - step / 2; i += step) {
+      const n = String(i / 1000);
+      labels += `<text x="${i + 4 * unit}" y="${vb.y + fs + 4 * unit}" font-size="${fs}">${n}</text>`;
+      labels += `<text x="${vb.x + 4 * unit}" y="${S - i - 4 * unit}" font-size="${fs}">${n}</text>`;
+    }
+    labels += `<text x="${vb.x + 4 * unit}" y="${vb.y + vb.h - 4 * unit}" font-size="${fs}">0 км</text>`;
+    const q = ($("mapSearch").value || "").trim().toLowerCase();
+    const r = Math.max(5 * unit, 18);
+    const markers = this.locations.map((loc, i) => {
+      const match = !q || loc.names.some(n => n.toLowerCase().includes(q));
+      const cls = ["marker", loc.names.length > 1 ? "multi" : "", match ? "" : "dim", this.selected === i ? "sel" : ""].join(" ");
+      return `<g class="${cls}" data-loc="${i}"><circle cx="${loc.x}" cy="${S - loc.z}" r="${r}" stroke-width="${1.5 * unit}"/></g>`;
+    }).join("");
+    const svg = $("mapSvg");
+    svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    svg.innerHTML = `
+      <rect x="0" y="0" width="${S}" height="${S}" fill="#1b0c05"/>
+      <g stroke="rgba(253,186,116,0.13)" stroke-width="${unit}">${grid}</g>
+      <rect x="0" y="0" width="${S}" height="${S}" fill="none" stroke="rgba(234,88,12,0.6)" stroke-width="${2 * unit}"/>
+      <g fill="rgba(253,186,116,0.55)" font-family="Rubik, sans-serif">${labels}</g>
+      ${markers}`;
+  },
+
+  zoom(factor, cx, cy) {
+    const S = CONFIG.mapSize, vb = this.vb;
+    const w = Math.min(S, Math.max(400, vb.w * factor));
+    const k = w / vb.w;
+    cx = cx ?? vb.x + vb.w / 2; cy = cy ?? vb.y + vb.h / 2;
+    vb.x = cx - (cx - vb.x) * k; vb.y = cy - (cy - vb.y) * k; vb.w = w; vb.h = w;
+    this.clamp(); this.draw();
+  },
+
+  clamp() {
+    const S = CONFIG.mapSize, vb = this.vb;
+    vb.x = Math.min(Math.max(vb.x, 0), S - vb.w);
+    vb.y = Math.min(Math.max(vb.y, 0), S - vb.h);
+  },
+
+  toMap(evt) {
+    const rect = $("mapSvg").getBoundingClientRect();
+    return { x: this.vb.x + (evt.clientX - rect.left) / rect.width * this.vb.w, y: this.vb.y + (evt.clientY - rect.top) / rect.height * this.vb.h };
+  },
+
+  select(i) {
+    this.selected = i;
+    const loc = this.locations[i];
+    const coords = `${Math.round(loc.x)} / ${Math.round(loc.z)}`;
+    $("mapInfo").innerHTML = `
+      <div>Точка спавна · <span class="coords">X ${Math.round(loc.x)} · Z ${Math.round(loc.z)}</span></div>
+      <ul>${loc.names.map(n => `<li>${esc(n)}</li>`).join("")}</ul>
+      <button class="btn small" type="button" data-copy="${esc(coords)}">Скопировать координаты</button>`;
+    this.draw();
+  },
+
+  bind() {
+    const svg = $("mapSvg");
+    const pointers = new Map();
+    let start = null, moved = false, pinch = null;
+
+    svg.addEventListener("pointerdown", e => {
+      svg.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      moved = false;
+      if (pointers.size === 1) start = { x: e.clientX, y: e.clientY, vb: { ...this.vb } };
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), w: this.vb.w };
+      }
+    });
+
+    svg.addEventListener("pointermove", e => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const rect = svg.getBoundingClientRect();
+      if (pointers.size === 2 && pinch) {
+        const [a, b] = [...pointers.values()];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        const mid = this.toMap({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 });
+        this.zoom((pinch.w * pinch.d / d) / this.vb.w, mid.x, mid.y);
+        moved = true;
+      } else if (pointers.size === 1 && start) {
+        const dx = (e.clientX - start.x) / rect.width * start.vb.w;
+        const dy = (e.clientY - start.y) / rect.height * start.vb.h;
+        if (Math.abs(e.clientX - start.x) + Math.abs(e.clientY - start.y) > 4) moved = true;
+        if (moved) {
+          svg.classList.add("dragging");
+          this.vb.x = start.vb.x - dx; this.vb.y = start.vb.y - dy;
+          this.clamp(); this.draw();
+        }
+      }
+    });
+
+    const end = e => {
+      const wasTap = pointers.size === 1 && !moved;
+      pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinch = null;
+      if (pointers.size === 0) { start = null; svg.classList.remove("dragging"); }
+      if (wasTap && e.type === "pointerup") {
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        const g = hit && hit.closest && hit.closest("[data-loc]");
+        if (g) this.select(Number(g.dataset.loc));
+      }
+    };
+    svg.addEventListener("pointerup", end);
+    svg.addEventListener("pointercancel", end);
+
+    svg.addEventListener("wheel", e => {
+      e.preventDefault();
+      const p = this.toMap(e);
+      this.zoom(e.deltaY > 0 ? 1.2 : 1 / 1.2, p.x, p.y);
+    }, { passive: false });
+
+    $("zoomIn").addEventListener("click", () => this.zoom(1 / 1.5));
+    $("zoomOut").addEventListener("click", () => this.zoom(1.5));
+    $("zoomReset").addEventListener("click", () => this.reset());
+    $("mapSearch").addEventListener("input", () => this.draw());
+    window.addEventListener("resize", () => { if (!$("view-map").hidden) this.draw(); });
+  }
+};
+
+/* ---------- Формы (окно редактирования) ---------- */
+
+let formState = null;
+
+function openForm(cfg) {
+  formState = cfg;
+  const fieldHtml = f => {
+    const id = "f-" + f.name;
+    if (f.type === "textarea") return `<label class="field"><span>${esc(f.label)}</span><textarea id="${id}" name="${esc(f.name)}" placeholder="${esc(f.placeholder || "")}">${esc(f.value || "")}</textarea>${f.help ? `<small>${esc(f.help)}</small>` : ""}</label>`;
+    if (f.type === "select") return `<label class="field"><span>${esc(f.label)}</span><select id="${id}" name="${esc(f.name)}">${f.options.map(o => `<option value="${esc(o.value)}"${o.value === f.value ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</select></label>`;
+    if (f.type === "checkbox") return `<label class="field row"><input type="checkbox" id="${id}" name="${esc(f.name)}"${f.value ? " checked" : ""}><span>${esc(f.label)}</span></label>`;
+    if (f.type === "images") return `<div class="field"><span>${esc(f.label)}</span><div class="img-edit" id="imgEdit"></div>
+        <div class="set-row" style="margin-top:6px"><label class="btn small">📷 Добавить фото<input type="file" accept="image/*" multiple hidden id="imgFile"></label>
+        <input type="url" id="imgUrl" placeholder="или вставь ссылку на картинку" style="flex:1;min-width:160px"><button class="btn small" type="button" id="imgUrlAdd">Добавить</button></div>
+        <small>Фото с устройства сжимаются и сохраняются в репозиторий при публикации.</small></div>`;
+    return `<label class="field"><span>${esc(f.label)}</span><input id="${id}" name="${esc(f.name)}" type="${f.type || "text"}" value="${esc(f.value || "")}" placeholder="${esc(f.placeholder || "")}"${f.required ? " required" : ""}>${f.help ? `<small>${esc(f.help)}</small>` : ""}</label>`;
+  };
+  $("modalBody").innerHTML = `
+    <h2 class="dlg-title">${esc(cfg.title)}</h2>
+    <form id="modalForm" novalidate>
+      ${cfg.fields.map(fieldHtml).join("")}
+      <div class="err" id="formErr"></div>
+      <div class="dlg-actions">
+        ${cfg.onDelete ? `<button class="btn danger small" type="button" id="formDelete">Удалить</button><span class="spacer"></span>` : ""}
+        <button class="btn small" type="button" data-close>Отмена</button>
+        <button class="btn primary small" type="submit">${esc(cfg.submit || "Сохранить")}</button>
+      </div>
+    </form>`;
+  const imgField = cfg.fields.find(f => f.type === "images");
+  if (imgField) {
+    formState.images = (imgField.value || []).slice();
+    const drawImgs = () => {
+      $("imgEdit").innerHTML = formState.images.map((src, i) => `<div class="im"><img src="${esc(imgSrc(src))}" alt=""><button type="button" data-rm="${i}" aria-label="Убрать фото">✕</button></div>`).join("");
+    };
+    drawImgs();
+    $("imgEdit").addEventListener("click", e => { const b = e.target.closest("[data-rm]"); if (b) { formState.images.splice(Number(b.dataset.rm), 1); drawImgs(); } });
+    $("imgFile").addEventListener("change", async e => {
+      for (const file of e.target.files) {
+        try { formState.images.push(await resizeImage(file, 1280, 0.82)); } catch (err) { toast("Не удалось открыть фото"); }
+      }
+      e.target.value = "";
+      drawImgs();
+    });
+    $("imgUrlAdd").addEventListener("click", () => {
+      const url = $("imgUrl").value.trim();
+      if (!/^https?:\/\//i.test(url)) { toast("Нужна ссылка, начинающаяся с https://"); return; }
+      formState.images.push(url); $("imgUrl").value = ""; drawImgs();
+    });
+  }
+  if (cfg.onDelete) $("formDelete").addEventListener("click", () => {
+    if (!confirm(cfg.deleteConfirm || "Удалить?")) return;
+    cfg.onDelete(); $("modal").close();
+  });
+  $("modalForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const values = {};
+    cfg.fields.forEach(f => {
+      if (f.type === "images") { values[f.name] = formState.images.slice(); return; }
+      const el = $("f-" + f.name);
+      values[f.name] = f.type === "checkbox" ? el.checked : el.value.trim();
+    });
+    const missing = cfg.fields.find(f => f.required && !values[f.name]);
+    if (missing) { $("formErr").textContent = `Заполни поле «${missing.label}»`; return; }
+    const err = cfg.onSubmit(values);
+    if (err) { $("formErr").textContent = err; return; }
+    $("modal").close();
+  });
+  $("modal").showModal();
+  const first = $("modalForm").querySelector("input:not([type=checkbox]):not([type=file]), textarea");
+  if (first && !("ontouchstart" in window)) first.focus();
+}
+
+function resizeImage(file, max, quality) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * k);
+      canvas.height = Math.round(img.height * k);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("bad image")); };
+    img.src = url;
+  });
+}
+
+const PHASE_OPTIONS = () => PRIV.plan.map(p => ({ value: p.id, label: p.title }));
+
+function setTaskPhase(taskId, phaseId) {
+  const current = phaseOf(taskId);
+  if (current && current.id === phaseId) return;
+  PRIV.plan.forEach(p => { p.tasks = p.tasks.filter(id => id !== taskId); });
+  const target = PRIV.plan.find(p => p.id === phaseId);
+  if (target) target.tasks.push(taskId);
+}
+
+function removeTask(taskId) {
+  PRIV.stages.forEach(s => { s.tasks = s.tasks.filter(t => t.id !== taskId); });
+  PRIV.plan.forEach(p => { p.tasks = p.tasks.filter(id => id !== taskId); });
+  delete PRIV.progress[taskId];
+  delete PRIV.comments["task:" + taskId];
+}
+
+function taskForm(stageId, taskId) {
+  const info = taskId ? taskIndex()[taskId] : null;
+  const phase = taskId ? phaseOf(taskId) : null;
+  openForm({
+    title: info ? "Изменить пункт" : "Новый пункт",
+    fields: [
+      { name: "text", label: "Что сделать", type: "textarea", value: info ? info.task.text : "", required: true },
+      { name: "stage", label: "Этап (меню)", type: "select", value: info ? info.stage.id : stageId, options: PRIV.stages.map(s => ({ value: s.id, label: `${s.icon || ""} ${s.menu}` })) },
+      { name: "phase", label: "Когда делать", type: "select", value: phase ? phase.id : (PRIV.plan[0] && PRIV.plan[0].id), options: PHASE_OPTIONS() }
+    ],
+    onSubmit(v) {
+      let task;
+      if (info) {
+        task = info.task;
+        task.text = v.text;
+        if (info.stage.id !== v.stage) {
+          info.stage.tasks = info.stage.tasks.filter(t => t.id !== task.id);
+          PRIV.stages.find(s => s.id === v.stage).tasks.push(task);
+        }
+      } else {
+        task = { id: uid("t-"), text: v.text };
+        PRIV.stages.find(s => s.id === v.stage).tasks.push(task);
+      }
+      setTaskPhase(task.id, v.phase);
+      change(info ? "Пункт изменён" : "Пункт добавлен");
+    },
+    onDelete: info ? () => { removeTask(taskId); change("Пункт удалён"); } : null,
+    deleteConfirm: "Удалить этот пункт вместе с его комментариями?"
+  });
+}
+
+function stageForm(stageId) {
+  const s = stageId ? PRIV.stages.find(x => x.id === stageId) : null;
+  openForm({
+    title: s ? "Изменить этап" : "Новый этап",
+    fields: [
+      { name: "menu", label: "Название в меню", value: s ? s.menu : "", required: true, placeholder: "Например: Ивенты" },
+      { name: "icon", label: "Значок (emoji)", value: s ? s.icon : "⭐" },
+      { name: "title", label: "Заголовок", value: s ? s.title : "", required: true },
+      { name: "note", label: "Пояснение (необязательно)", type: "textarea", value: s ? s.note : "" },
+      { name: "paused", label: "Этап отложен", type: "checkbox", value: s ? !!s.paused : false }
+    ],
+    onSubmit(v) {
+      if (s) Object.assign(s, v);
+      else { const ns = { id: uid("s-"), ...v, tasks: [] }; PRIV.stages.push(ns); currentStage = ns.id; lsSet(LS.stage, ns.id); }
+      change(s ? "Этап изменён" : "Этап добавлен");
+    },
+    onDelete: s ? () => { s.tasks.slice().forEach(t => removeTask(t.id)); PRIV.stages = PRIV.stages.filter(x => x.id !== s.id); currentStage = PLAN_TAB; change("Этап удалён"); } : null,
+    deleteConfirm: "Удалить этап вместе со всеми его пунктами?"
+  });
+}
+
+function modForm(modId) {
+  const m = modId ? DATA.mods.find(x => x.id === modId) : null;
+  openForm({
+    title: m ? "Изменить мод" : "Новый мод",
+    fields: [
+      { name: "name", label: "Название", value: m ? m.name : "", required: true },
+      { name: "category", label: "Меню", type: "select", value: m ? m.category : currentCategory, options: DATA.categories.map(c => ({ value: c.id, label: `${c.icon} ${c.title}` })) },
+      { name: "status", label: "Статус", type: "select", value: m ? m.status : "wip", options: [
+        { value: "ready", label: "🟢 Готово" }, { value: "wip", label: "🟠 В разработке" }, { value: "plan", label: "🔴 В планах" }] },
+      { name: "icon", label: "Значок (emoji)", value: m ? m.icon : "📦" },
+      { name: "description", label: "Описание", type: "textarea", value: m ? m.description : "" },
+      { name: "features", label: "Особенности — каждая с новой строки", type: "textarea", value: m ? (m.features || []).join("\n") : "" },
+      { name: "images", label: "Фото", type: "images", value: m ? m.images || [] : [] },
+      { name: "video", label: "Ссылка на видео (YouTube, TikTok)", type: "url", value: m ? m.video : "", placeholder: "https://…" }
+    ],
+    onSubmit(v) {
+      if (v.video && !/^https?:\/\//i.test(v.video)) return "Ссылка на видео должна начинаться с https://";
+      const data = { ...v, features: v.features.split("\n").map(x => x.trim()).filter(Boolean) };
+      if (m) Object.assign(m, data);
+      else { DATA.mods.push({ id: uid("m-"), ...data }); currentCategory = data.category; }
+      change(m ? "Мод изменён" : "Мод добавлен");
+    },
+    onDelete: m ? () => { DATA.mods = DATA.mods.filter(x => x.id !== m.id); if (PRIV) delete PRIV.comments["mod:" + m.id]; change("Мод удалён"); } : null,
+    deleteConfirm: "Удалить этот мод?"
+  });
+}
+
+function newsForm(newsId) {
+  const n = newsId ? DATA.news.find(x => x.id === newsId) : null;
+  const today = new Date();
+  const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  openForm({
+    title: n ? "Изменить новость" : "Новая новость",
+    fields: [
+      { name: "date", label: "Дата", type: "date", value: n ? n.date : iso, required: true },
+      { name: "text", label: "Текст", type: "textarea", value: n ? n.text : "", required: true, placeholder: "Например: Хаммер получил новую покраску" }
+    ],
+    onSubmit(v) {
+      if (n) Object.assign(n, v); else DATA.news.push({ id: uid("n-"), ...v });
+      change(n ? "Новость изменена" : "Новость добавлена");
+    },
+    onDelete: n ? () => { DATA.news = DATA.news.filter(x => x.id !== n.id); change("Новость удалена"); } : null,
+    deleteConfirm: "Удалить новость?"
+  });
+}
+
+/* ---------- Вход и настройки ---------- */
+
+function loginForm() {
+  $("modalBody").innerHTML = `
+    <h2 class="dlg-title">Вход для администратора</h2>
+    <form id="loginForm">
+      <label class="field"><span>Пароль</span><input type="password" id="loginPass" autocomplete="current-password" required></label>
+      <label class="field row"><input type="checkbox" id="loginRemember" checked><span>Запомнить на этом устройстве</span></label>
+      <div class="err" id="loginErr"></div>
+      <div class="dlg-actions"><button class="btn small" type="button" data-close>Отмена</button><button class="btn primary small" type="submit">Войти</button></div>
+    </form>`;
+  $("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    $("loginErr").textContent = "Проверяю…";
+    try {
+      await unlock($("loginPass").value, $("loginRemember").checked);
+      $("modal").close();
+      toast("Добро пожаловать, администратор");
+    } catch (err) {
+      $("loginErr").textContent = err.message;
+    }
+  });
+  $("modal").showModal();
+  $("loginPass").focus();
+}
+
+function settingsForm() {
+  const token = GH.token();
+  const stateText = {
+    ok: "✅ Все изменения опубликованы и видны на всех устройствах.",
+    saving: "⏳ Публикую изменения…",
+    error: "⚠️ Последняя публикация не удалась. Проверь токен и нажми «Опубликовать сейчас».",
+    local: token ? "💾 Изменения сохранены на этом устройстве." : "💾 Токена нет: изменения сохраняются только на этом устройстве."
+  }[syncState] + (dirty ? " Есть неопубликованные правки." : "");
+  const r = CONFIG.repo;
+  $("modalBody").innerHTML = `
+    <h2 class="dlg-title">Настройки администратора</h2>
+    <section class="set-section">
+      <h3>Публикация и синхронизация</h3>
+      <p>${esc(stateText)}</p>
+      <p>Чтобы правки сразу появлялись на сайте и на других устройствах, добавь токен GitHub (один раз на каждом устройстве):</p>
+      <ol>
+        <li>Открой github.com → Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token.</li>
+        <li>Repository access: <b>Only select repositories</b> → ${esc(r.name)}.</li>
+        <li>Permissions → Repository → <b>Contents: Read and write</b>. Сохрани и скопируй токен.</li>
+      </ol>
+      <label class="field"><span>Токен GitHub</span><input type="password" id="tokenInput" value="${esc(token)}" placeholder="github_pat_…" autocomplete="off"><small>Хранится только в этом браузере.</small></label>
+      <div class="set-row">
+        <button class="btn small" type="button" id="tokenSave">Сохранить токен</button>
+        <button class="btn primary small" type="button" id="publishNow"${token ? "" : " disabled"}>Опубликовать сейчас</button>
+      </div>
+    </section>
+    <section class="set-section">
+      <h3>Резервная копия</h3>
+      <p>Файл со всем содержимым сайта, включая дорожную карту, галочки и комментарии. Храни его в надёжном месте.</p>
+      <div class="set-row">
+        <button class="btn small" type="button" id="exportBtn">⬇ Скачать копию</button>
+        <label class="btn small">⬆ Загрузить копию<input type="file" accept="application/json,.json" hidden id="importFile"></label>
+      </div>
+    </section>
+    <section class="set-section">
+      <h3>Пароль администратора</h3>
+      <label class="field"><span>Новый пароль (не короче 8 символов)</span><input type="password" id="newPass" autocomplete="new-password"></label>
+      <label class="field"><span>Повтори пароль</span><input type="password" id="newPass2" autocomplete="new-password"></label>
+      <div class="err" id="passErr"></div>
+      <button class="btn small" type="button" id="passSave">Сменить пароль</button>
+    </section>
+    <section class="set-section">
+      <div class="set-row"><button class="btn danger small" type="button" id="logoutBtn">Выйти на этом устройстве</button><button class="btn small" type="button" data-close>Закрыть</button></div>
+    </section>`;
+
+  $("tokenSave").addEventListener("click", async () => {
+    const v = $("tokenInput").value.trim();
+    if (v) lsSet(LS.token, v); else lsDel(LS.token);
+    remoteSha = null;
+    if (!v) { setSync("local"); toast("Токен удалён"); settingsForm(); return; }
+    try {
+      const res = await GH.get(CONFIG.repo.path);
+      remoteSha = res ? res.sha : null;
+      toast("Токен работает");
+      if (dirty) publish(true); else setSync("ok");
+    } catch (e) {
+      setSync("error");
+      toast("Токен не подошёл: " + e.message);
+    }
+    settingsForm();
+  });
+  $("publishNow").addEventListener("click", () => publish(true));
+  $("exportBtn").addEventListener("click", exportBackup);
+  $("importFile").addEventListener("change", e => importBackup(e.target.files[0]));
+  $("passSave").addEventListener("click", async () => {
+    const a = $("newPass").value, b = $("newPass2").value;
+    if (a.length < 8) { $("passErr").textContent = "Пароль должен быть не короче 8 символов"; return; }
+    if (a !== b) { $("passErr").textContent = "Пароли не совпадают"; return; }
+    const salt = bytesToB64(crypto.getRandomValues(new Uint8Array(16)));
+    KEY = await Crypto.deriveKey(a, salt, KEY_ITER);
+    KEY_SALT = salt;
+    if (lsGet(LS.pass, null)) lsSet(LS.pass, a);
+    $("newPass").value = $("newPass2").value = "";
+    $("passErr").textContent = "";
+    await change(GH.token() ? "Пароль сменён — публикую" : "Пароль сменён. Опубликуй, чтобы он заработал на других устройствах");
+  });
+  $("logoutBtn").addEventListener("click", () => { $("modal").close(); logout(); });
+  if (!$("modal").open) $("modal").showModal();
+}
+
+function exportBackup() {
+  const backup = { kind: "dawnline-backup", v: 1, exportedAt: new Date().toISOString(), public: { categories: DATA.categories, mods: DATA.mods, news: DATA.news }, private: PRIV };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `dawnline-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast("Копия скачана");
+}
+
+function importBackup(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const b = JSON.parse(reader.result);
+      if (b.kind !== "dawnline-backup" || !b.public || !b.private) throw new Error("bad");
+      if (!confirm("Заменить всё содержимое сайта данными из копии?")) return;
+      DATA.categories = b.public.categories || DATA.categories;
+      DATA.mods = b.public.mods || [];
+      DATA.news = b.public.news || [];
+      PRIV = normalizePriv(b.private);
+      $("modal").close();
+      change("Копия загружена");
+    } catch (e) { toast("Это не файл копии сайта DawnLine"); }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- Лайтбокс ---------- */
+
+const LB = { list: [], i: 0 };
+
+function openLightbox(modId, i) {
+  const mod = DATA.mods.find(m => m.id === modId);
+  if (!mod) return;
+  LB.list = (mod.images || []).map(imgSrc).filter(Boolean);
+  LB.i = i;
+  showLb();
+  $("lightbox").showModal();
+}
+
+function showLb() {
+  $("lbImg").src = LB.list[LB.i] || "";
+  $("lbCount").textContent = LB.list.length > 1 ? `${LB.i + 1} из ${LB.list.length}` : "";
+  $("lbPrev").hidden = $("lbNext").hidden = LB.list.length < 2;
+}
+
+$("lbPrev").addEventListener("click", () => { LB.i = (LB.i - 1 + LB.list.length) % LB.list.length; showLb(); });
+$("lbNext").addEventListener("click", () => { LB.i = (LB.i + 1) % LB.list.length; showLb(); });
+
+/* ---------- Общие обработчики ---------- */
+
+document.addEventListener("click", async e => {
+  const t = e.target;
+
+  if (t.closest("[data-close]")) { t.closest("dialog").close(); return; }
+  if (t.tagName === "DIALOG") { t.close(); return; } // клик по фону
+
+  const lb = t.closest("[data-lightbox]");
+  if (lb) { openLightbox(lb.dataset.lightbox, Number(lb.dataset.i)); return; }
+
+  const copy = t.closest("[data-copy]");
+  if (copy) {
+    try { await navigator.clipboard.writeText(copy.dataset.copy); toast("Скопировано: " + copy.dataset.copy); }
+    catch (err) { prompt("Скопируй координаты:", copy.dataset.copy); }
+    return;
+  }
+
+  const toggle = t.closest("[data-toggle]");
+  if (toggle) {
+    const key = toggle.dataset.toggle;
+    if (openThreads.has(key)) openThreads.delete(key); else openThreads.add(key);
+    refreshThread(key);
+    const ta = document.querySelector(`[data-thread="${CSS.escape(key)}"] textarea`);
+    if (ta && openThreads.has(key) && !commentList(key).length) ta.focus();
+    return;
+  }
+
+  const del = t.closest("[data-del]");
   if (del) {
-    const thread = del.closest("[data-thread]");
-    deleteComment(thread.dataset.thread, del.dataset.del);
+    const key = del.closest("[data-thread]").dataset.thread;
+    if (!confirm("Удалить комментарий?")) return;
+    PRIV.comments[key] = commentList(key).filter(c => c.id !== del.dataset.del);
+    if (!PRIV.comments[key].length) delete PRIV.comments[key];
+    change();
+    return;
   }
+
+  const stageTab = t.closest("[data-stage]:not([data-act])");
+  if (stageTab && stageTab.closest("#stageTabs")) { currentStage = stageTab.dataset.stage; lsSet(LS.stage, currentStage); renderRoadmap(); return; }
+
+  const catTab = t.closest("[data-cat]");
+  if (catTab) { currentCategory = catTab.dataset.cat; lsSet(LS.cat, currentCategory); renderMods(); return; }
+
+  const act = t.closest("[data-act]");
+  if (!act) return;
+  const id = act.dataset.id;
+  switch (act.dataset.act) {
+    case "login": loginForm(); break;
+    case "add-task": taskForm(act.dataset.stage, null); break;
+    case "edit-task": e.preventDefault(); taskForm(null, id); break;
+    case "add-stage": stageForm(null); break;
+    case "edit-stage": stageForm(id); break;
+    case "add-mod": modForm(null); break;
+    case "edit-mod": modForm(id); break;
+    case "add-news": newsForm(null); break;
+    case "edit-news": newsForm(id); break;
+    case "task-up":
+    case "task-down": {
+      e.preventDefault();
+      const phase = phaseOf(id);
+      if (!phase) break;
+      const i = phase.tasks.indexOf(id);
+      const j = act.dataset.act === "task-up" ? i - 1 : i + 1;
+      if (j < 0 || j >= phase.tasks.length) break;
+      [phase.tasks[i], phase.tasks[j]] = [phase.tasks[j], phase.tasks[i]];
+      change();
+      break;
+    }
+    case "reset-checks":
+      if (!confirm("Снять все галочки? Комментарии останутся.")) break;
+      PRIV.progress = {};
+      change("Галочки сняты");
+      break;
+  }
+});
+
+document.addEventListener("change", e => {
+  const id = e.target.dataset && e.target.dataset.task;
+  if (!id || !isAdmin()) return;
+  if (e.target.checked) PRIV.progress[id] = Date.now(); else delete PRIV.progress[id];
+  updateCounters();
+  // точечно обновляем дату у пункта, не перерисовывая всё
+  document.querySelectorAll(`[data-row="${CSS.escape(id)}"] .done-date`).forEach(el => el.remove());
+  if (e.target.checked) document.querySelectorAll(`[data-row="${CSS.escape(id)}"] .txt`).forEach(el => el.insertAdjacentHTML("afterend", `<span class="tag done-date">✓ ${esc(fmtDate(Date.now()))}</span>`));
+  dirty = true; changeVersion++;
+  saveDraft().catch(() => {});
+  if (GH.token()) { setSync("saving"); clearTimeout(publishTimer); publishTimer = setTimeout(() => publish(false), 2500); } else setSync("local");
 });
 
 document.addEventListener("submit", e => {
@@ -1307,7 +2459,10 @@ document.addEventListener("submit", e => {
   const ta = form.querySelector("textarea");
   const text = ta.value.trim();
   if (!text) return;
-  addComment(form.closest("[data-thread]").dataset.thread, text);
+  const key = form.closest("[data-thread]").dataset.thread;
+  (PRIV.comments[key] = commentList(key).slice()).push({ id: uid("c-"), text, ts: Date.now() });
+  change();
+  setTimeout(() => { const n = document.querySelector(`[data-thread="${CSS.escape(key)}"] textarea`); if (n) n.focus(); }, 0);
 });
 
 document.addEventListener("input", e => {
@@ -1319,281 +2474,37 @@ document.addEventListener("input", e => {
 });
 
 document.addEventListener("keydown", e => {
-  // Ctrl+Enter / Cmd+Enter — отправить
   if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target.matches(".comment-form textarea")) {
     e.preventDefault();
     e.target.form.requestSubmit();
   }
 });
 
-/* ---------- Дорожная карта ---------- */
+$("accountBtn").addEventListener("click", () => isAdmin() ? settingsForm() : loginForm());
 
-function taskRow(task, opts) {
-  const key = "task:" + task.id;
-  const phase = PHASE_OF[task.id];
-  const src = opts.stage ? `<span class="src" title="${escapeHtml(opts.stage.menu || opts.stage.title)}">${opts.stage.icon || ""}</span>` : "";
-  const when = opts.showWhen && phase && phase.id !== "paused" ? `<span class="when phase-${escapeHtml(phase.id)}">${escapeHtml(phase.title)}</span>` : "";
-  return `
-    <li class="task" data-row="${escapeHtml(task.id)}">
-      <div class="task-row">
-        <label>
-          <input type="checkbox" data-task="${escapeHtml(task.id)}" ${progress[task.id] ? "checked" : ""}>
-          <span class="check">${CHECK_SVG}</span>
-          <span class="task-text">${src}${escapeHtml(task.text)}${when}<span class="next-label">Следующий шаг</span></span>
-        </label>
-        ${commentButton(key)}
-      </div>
-      ${threadHtml(key)}
-    </li>`;
-}
-
-// Первый невыполненный пункт по плану (кроме отложенных)
-function nextStepId() {
-  for (const phase of PLAN) {
-    if (phase.id === "paused") continue;
-    for (const id of phase.tasks) {
-      if (TASK_INFO[id] && !progress[id]) return id;
-    }
-  }
-  return null;
-}
-
-function renderPlan() {
-  const root = document.getElementById("roadmap");
-  root.setAttribute("aria-labelledby", `stage-${PLAN_TAB}`);
-  root.innerHTML = `<div class="stack">${PLAN.map(phase => {
-    const tasks = phase.tasks.filter(id => TASK_INFO[id]);
-    return `
-      <section class="card phase phase-${escapeHtml(phase.id)} reveal" data-phase="${escapeHtml(phase.id)}">
-        <div class="phase-head">
-          <span class="phase-dot" aria-hidden="true"></span>
-          <div class="head-text">
-            <h2 class="phase-title">${escapeHtml(phase.title)}</h2>
-            ${phase.hint ? `<p class="phase-hint">${escapeHtml(phase.hint)}</p>` : ""}
-          </div>
-          <span class="counter" data-phase-counter></span>
-        </div>
-        <ul class="tasks" style="margin-top:6px">
-          ${tasks.map(id => taskRow(TASK_INFO[id].task, { stage: TASK_INFO[id].stage })).join("")}
-        </ul>
-      </section>`;
-  }).join("")}</div>`;
-  updateCounters();
-  observeReveal();
-}
-
-function stageStats(item) {
-  return { done: item.tasks.filter(t => progress[t.id]).length, total: item.tasks.length };
-}
-
-function renderStageTabs() {
-  let allDone = 0, allTotal = 0;
-  ROADMAP.forEach(item => { const st = stageStats(item); allDone += st.done; allTotal += st.total; });
-  const planSelected = currentStage === PLAN_TAB;
-  const planChip = `
-      <button class="chip" type="button" role="tab" id="stage-${PLAN_TAB}"
-              aria-controls="roadmap" aria-selected="${planSelected}" tabindex="${planSelected ? 0 : -1}"
-              data-stage="${PLAN_TAB}">
-        <span class="chip-icon" aria-hidden="true">📋</span>План
-        <span class="chip-count">${allDone}/${allTotal}</span>
-      </button>`;
-  document.getElementById("stageTabs").innerHTML = planChip + ROADMAP.map(item => {
-    const { done, total } = stageStats(item);
-    const complete = total > 0 && done === total;
-    const selected = item.id === currentStage;
-    return `
-      <button class="chip${complete ? " done" : ""}${item.paused ? " paused" : ""}" type="button" role="tab" id="stage-${escapeHtml(item.id)}"
-              aria-controls="roadmap" aria-selected="${selected}" tabindex="${selected ? 0 : -1}"
-              data-stage="${escapeHtml(item.id)}">
-        <span class="chip-icon" aria-hidden="true">${item.icon || "⭐"}</span>${escapeHtml(item.menu || item.title)}
-        <span class="chip-count">${complete ? "✓" : item.paused ? "пауза" : `${done}/${total}`}</span>
-      </button>`;
-  }).join("");
-}
-
-function renderStage() {
-  if (currentStage === PLAN_TAB) { renderPlan(); return; }
-  const root = document.getElementById("roadmap");
-  const index = Math.max(0, ROADMAP.findIndex(item => item.id === currentStage));
-  const item = ROADMAP[index];
-  root.setAttribute("aria-labelledby", `stage-${item.id}`);
-  root.innerHTML = `
-    <section class="card reveal" data-card="${escapeHtml(item.id)}">
-      <div class="card-head">
-        <div class="icon" aria-hidden="true">${item.icon || "⭐"}</div>
-        <div class="head-text">
-          ${item.paused ? `<span class="badge-paused">Отложено</span>` : `<span class="kicker">Этап ${index + 1} из ${ROADMAP.length}</span>`}
-          <h2 class="card-title">${escapeHtml(item.title)}</h2>
-        </div>
-        <span class="counter" data-counter></span>
-      </div>
-      ${item.note ? `<p class="note">${escapeHtml(item.note)}</p>` : ""}
-      <div class="mini-bar"><div class="mini-fill" data-mini></div></div>
-      <ul class="tasks">
-        ${item.tasks.map(task => taskRow(task, { showWhen: true })).join("")}
-      </ul>
-    </section>`;
-  updateCounters();
-  observeReveal();
-}
-
-function updateCounters() {
-  let total = 0;
-  let done = 0;
-  ROADMAP.forEach(item => {
-    const stats = stageStats(item);
-    total += stats.total;
-    done += stats.done;
-    const card = document.querySelector(`[data-card="${CSS.escape(item.id)}"]`);
-    if (!card) return;
-    card.querySelector("[data-counter]").textContent = `${stats.done}/${stats.total}`;
-    card.querySelector("[data-mini]").style.width = stats.total ? `${(stats.done / stats.total) * 100}%` : "0";
-    card.classList.toggle("complete", stats.total > 0 && stats.done === stats.total);
-  });
-  PLAN.forEach(phase => {
-    const el = document.querySelector(`[data-phase="${CSS.escape(phase.id)}"] [data-phase-counter]`);
-    if (!el) return;
-    const ids = phase.tasks.filter(id => TASK_INFO[id]);
-    el.textContent = `${ids.filter(id => progress[id]).length}/${ids.length}`;
-  });
-  const next = nextStepId();
-  document.querySelectorAll("[data-row]").forEach(row => {
-    row.classList.toggle("is-next", row.dataset.row === next);
-  });
-
-  renderStageTabs();
-  const pct = total ? Math.round((done / total) * 100) : 0;
-  document.getElementById("overallCount").textContent = `${done}/${total} · ${pct}%`;
-  document.getElementById("overallFill").style.width = `${pct}%`;
-  document.getElementById("overallBar").setAttribute("aria-valuenow", String(pct));
-}
-
-function selectStage(id, focus) {
-  currentStage = id;
-  save(KEYS.stage, id);
-  renderStage();
-  if (focus) document.getElementById(`stage-${id}`).focus();
-}
-
-document.getElementById("roadmap").addEventListener("change", e => {
-  const id = e.target.dataset && e.target.dataset.task;
-  if (!id) return;
-  if (e.target.checked) progress[id] = true;
-  else delete progress[id];
-  save(KEYS.progress, progress);
-  updateCounters();
+$("editBtn").addEventListener("click", () => {
+  const on = !document.body.classList.contains("editing");
+  document.body.classList.toggle("editing", on);
+  $("editBtn").setAttribute("aria-pressed", String(on));
+  lsSet(LS.edit, on);
+  toast(on ? "Режим правки включён" : "Режим правки выключен");
 });
 
-document.getElementById("resetBtn").addEventListener("click", () => {
-  if (!confirm("Снять все галочки? Комментарии останутся.")) return;
-  progress = {};
-  save(KEYS.progress, progress);
-  document.querySelectorAll("[data-task]").forEach(cb => { cb.checked = false; });
-  updateCounters();
+window.addEventListener("beforeunload", e => {
+  if (dirty && GH.token() && syncState !== "ok") { e.preventDefault(); e.returnValue = ""; }
 });
-
-/* ---------- DayZ Server ---------- */
-
-const STATUS_LABELS = { ready: "Готово", wip: "В разработке", plan: "В планах" };
-
-function renderCategoryTabs() {
-  document.getElementById("catTabs").innerHTML = MOD_CATEGORIES.map(cat => {
-    const count = MODS.filter(m => m.category === cat.id).length;
-    const selected = cat.id === currentCategory;
-    return `
-      <button class="chip" type="button" role="tab" id="tab-${escapeHtml(cat.id)}"
-              aria-controls="modList" aria-selected="${selected}" tabindex="${selected ? 0 : -1}"
-              data-cat="${escapeHtml(cat.id)}">
-        <span class="chip-icon" aria-hidden="true">${cat.icon}</span>${escapeHtml(cat.title)}
-        <span class="chip-count">${count}</span>
-      </button>`;
-  }).join("");
-}
-
-function renderMods() {
-  const list = document.getElementById("modList");
-  list.setAttribute("aria-labelledby", `tab-${currentCategory}`);
-  const mods = MODS.filter(m => m.category === currentCategory);
-
-  if (!mods.length) {
-    list.innerHTML = `
-      <div class="empty">
-        <strong>Пока пусто</strong>
-        Скоро здесь появятся мои моды для этого раздела.
-      </div>`;
-    return;
-  }
-
-  list.innerHTML = mods.map(mod => {
-    const status = STATUS_LABELS[mod.status] ? mod.status : "plan";
-    const key = "mod:" + (mod.id || mod.name);
-    const features = (mod.features || []).map(f => `<li>${escapeHtml(f)}</li>`).join("");
-    return `
-      <article class="card reveal">
-        ${mod.image ? `<img class="mod-img" src="${escapeHtml(mod.image)}" alt="${escapeHtml(mod.name)}" loading="lazy">` : ""}
-        <div class="card-head">
-          <div class="icon" aria-hidden="true">${mod.icon || "📦"}</div>
-          <div class="head-text">
-            <span class="status status-${status}">${STATUS_LABELS[status]}</span>
-            <h2 class="card-title">${escapeHtml(mod.name)}</h2>
-          </div>
-        </div>
-        ${mod.description ? `<p class="mod-desc">${escapeHtml(mod.description)}</p>` : ""}
-        ${features ? `<ul class="mod-features">${features}</ul>` : ""}
-        <div class="mod-foot">${commentButton(key, "Комментарии")}</div>
-        ${threadHtml(key)}
-      </article>`;
-  }).join("");
-  observeReveal();
-}
-
-function selectCategory(id, focus) {
-  currentCategory = id;
-  save(KEYS.category, id);
-  renderCategoryTabs();
-  renderMods();
-  if (focus) document.getElementById(`tab-${id}`).focus();
-}
-
-/* ---------- Меню: клики и стрелки ---------- */
-
-function bindTabs(containerId, attr, items, getCurrent, select) {
-  const el = document.getElementById(containerId);
-  el.addEventListener("click", e => {
-    const tab = e.target.closest(`[${attr}]`);
-    if (tab) select(tab.getAttribute(attr), false);
-  });
-  el.addEventListener("keydown", e => {
-    const i = items.findIndex(x => x.id === getCurrent());
-    let next = null;
-    if (e.key === "ArrowRight") next = (i + 1) % items.length;
-    if (e.key === "ArrowLeft") next = (i - 1 + items.length) % items.length;
-    if (next === null) return;
-    e.preventDefault();
-    select(items[next].id, true);
-  });
-}
-
-bindTabs("stageTabs", "data-stage", [{ id: PLAN_TAB }, ...ROADMAP], () => currentStage, selectStage);
-bindTabs("catTabs", "data-cat", MOD_CATEGORIES, () => currentCategory, selectCategory);
 
 /* ---------- Появление карточек ---------- */
 
 function observeReveal() {
   const cards = document.querySelectorAll(".reveal:not(.observed)");
   cards.forEach(c => c.classList.add("observed"));
-  if (!("IntersectionObserver" in window)) {
-    cards.forEach(c => c.classList.add("visible"));
-    return;
-  }
+  if (!("IntersectionObserver" in window)) { cards.forEach(c => c.classList.add("visible")); return; }
   const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("visible");
-        io.unobserve(entry.target);
-      }
+      if (entry.isIntersecting) { entry.target.classList.add("visible"); io.unobserve(entry.target); }
     });
-  }, { threshold: 0.08 });
+  }, { threshold: 0.05 });
   cards.forEach((c, i) => {
     c.style.transitionDelay = `${Math.min(i, 4) * 60}ms`;
     c.addEventListener("transitionend", () => { c.style.transitionDelay = "0ms"; }, { once: true });
@@ -1601,45 +2512,88 @@ function observeReveal() {
   });
 }
 
-/* ---------- Переключение разделов ---------- */
+/* ---------- Разделы ---------- */
+
+const VIEWS = ["mods", "news", "map", "plan"];
+
+function currentView() {
+  const h = location.hash.replace("#", "");
+  if (h === "server") return "mods";
+  if (h === "roadmap") return "plan";
+  return VIEWS.includes(h) ? h : "mods";
+}
 
 function showView() {
-  const view = location.hash === "#server" ? "server" : "roadmap";
-  document.getElementById("view-roadmap").hidden = view !== "roadmap";
-  document.getElementById("view-server").hidden = view !== "server";
+  const view = currentView();
+  VIEWS.forEach(v => { $("view-" + v).hidden = v !== view; });
   document.querySelectorAll("[data-view]").forEach(a => {
-    if (a.dataset.view === view) a.setAttribute("aria-current", "page");
-    else a.removeAttribute("aria-current");
+    if (a.dataset.view === view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
-  document.title = view === "server" ? `DayZ Server · ${SERVER_NAME}` : `Дорожная карта сервера ${SERVER_NAME}`;
+  const titles = { mods: "DayZ Server", news: "Что нового", map: "Карта спавна", plan: "Дорожная карта" };
+  document.title = `${titles[view]} · ${CONFIG.serverName}`;
+  if (view === "map") MapView.draw();
   window.scrollTo(0, 0);
 }
 
 window.addEventListener("hashchange", showView);
 
+function applyAdminUI() {
+  const admin = isAdmin();
+  document.querySelector('[data-view="plan"]').hidden = !admin;
+  $("editBtn").hidden = !admin;
+  $("accountBtn").firstChild.textContent = admin ? "⚙️" : "🔒";
+  $("accountBtn").setAttribute("aria-label", admin ? "Настройки администратора" : "Вход для администратора");
+  $("syncDot").hidden = !admin;
+  if (admin) {
+    const on = !!lsGet(LS.edit, false);
+    document.body.classList.toggle("editing", on);
+    $("editBtn").setAttribute("aria-pressed", String(on));
+    setSync(dirty ? (GH.token() ? "saving" : "local") : (GH.token() ? "ok" : "local"));
+    if (dirty && GH.token()) publish(false);
+  } else {
+    document.body.classList.remove("editing");
+  }
+}
+
+function renderAll() {
+  renderMods();
+  renderNews();
+  renderRoadmap();
+}
+
 /* ---------- Запуск ---------- */
 
-document.getElementById("brandName").textContent = SERVER_NAME;
-document.getElementById("serverName").textContent = SERVER_NAME;
-document.getElementById("discordLink").href = DISCORD_URL;
-document.getElementById("footerText").textContent = `© ${new Date().getFullYear()} ${SERVER_NAME} · DayZ-сервер`;
-
-// Искры на фоне (на телефоне — меньше)
 (function makeEmbers() {
-  const box = document.getElementById("embers");
   const count = window.innerWidth < 600 ? 12 : 22;
   let html = "";
   for (let i = 0; i < count; i++) {
     const r = (a, b) => (a + Math.random() * (b - a)).toFixed(2);
     html += `<span class="ember" style="left:${r(2, 98)}%;--s:${r(2, 4)}px;--d:${r(11, 22)}s;--delay:-${r(0, 22)}s;--x:${r(-60, 60)}px"></span>`;
   }
-  box.innerHTML = html;
+  $("embers").innerHTML = html;
 })();
 
-renderStage();
-renderCategoryTabs();
-renderMods();
-showView();
+$("brandName").textContent = CONFIG.serverName;
+$("serverName").textContent = CONFIG.serverName;
+$("discordLink").href = CONFIG.discordUrl;
+$("footerText").textContent = `© ${new Date().getFullYear()} ${CONFIG.serverName} · DayZ-сервер`;
+
+(async function start() {
+  await loadData();
+  MapView.init();
+  renderAll();
+  applyAdminUI();
+  showView();
+  const saved = lsGet(LS.pass, null);
+  if (saved) {
+    try { await unlock(saved, true); } catch (e) { lsDel(LS.pass); }
+  }
+})();
+
+// Работа без интернета (только когда сайт открыт по https://)
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 </script>
 </body>
 </html>

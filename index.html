@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DawnLine · DayZ-сервер</title>
-<meta name="description" content="DayZ-сервер DawnLine: моды, новости и карта спавна техники.">
+<meta name="description" content="DawnLine: моды для DayZ-серверов, новости и личный кабинет.">
 <meta name="theme-color" content="#120804">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1088,49 +1088,6 @@
   .news-date b { display: block; font-size: 18px; color: var(--text); }
   .news-text { flex: 1; min-width: 0; padding-top: 2px; font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
 
-  /* ---------- Карта ---------- */
-  .map-tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .map-tools input { flex: 1; }
-
-  .map-box {
-    position: relative;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: #170a04;
-    aspect-ratio: 1 / 1;
-    max-height: 72vh;
-    margin: 0 auto;
-  }
-
-  .map-box svg { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; }
-  .map-box svg.dragging { cursor: grabbing; }
-
-  .map-zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
-
-  .map-zoom button {
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--border-strong);
-    border-radius: 10px;
-    background: rgba(18, 8, 4, 0.85);
-    font-size: 18px;
-    font-weight: 700;
-  }
-
-  .marker { cursor: pointer; }
-  .marker circle { fill: #f97316; stroke: #fff1e6; transition: opacity 0.2s ease; }
-  .marker.multi circle { fill: #fdba74; }
-  .marker.dim { opacity: 0.18; }
-  .marker.sel circle { fill: #22c55e; }
-
-  .map-info { margin-top: 12px; }
-  .map-info .coords { font-variant-numeric: tabular-nums; color: var(--accent-soft); font-weight: 700; }
-  .map-info ul { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-  .map-info li { padding: 3px 9px; border-radius: 999px; background: rgba(234, 88, 12, 0.14); border: 1px solid var(--border); font-size: 13.5px; }
-
-  .map-note { margin-top: 10px; color: var(--muted); font-size: 13px; }
-
   /* ---------- Диалоги ---------- */
   dialog {
     width: min(520px, calc(100vw - 24px));
@@ -1629,7 +1586,6 @@
     <div class="seg">
       <a href="#mods" data-view="mods"><span class="ico" aria-hidden="true">🎮</span><span class="full">DayZ Server</span><span class="short">Моды</span></a>
       <a href="#news" data-view="news"><span class="ico" aria-hidden="true">📰</span><span class="full">Что нового</span><span class="short">Новое</span></a>
-      <a href="#map" data-view="map"><span class="ico" aria-hidden="true">🗺️</span><span class="full">Карта</span><span class="short">Карта</span></a>
       <a href="#cabinet" data-view="cabinet"><span class="ico" aria-hidden="true">👤</span><span class="full">Кабинет</span><span class="short">Кабинет</span></a>
       <a href="#plan" data-view="plan" hidden><span class="ico" aria-hidden="true">📋</span><span class="full">Дорожная карта</span><span class="short">План</span></a>
     </div>
@@ -1690,30 +1646,6 @@
     <section class="stack" id="newsList"></section>
   </div>
 
-  <!-- ===== Карта ===== -->
-  <div class="view" id="view-map" hidden>
-    <div class="head">
-      <h1>Карта спавна техники</h1>
-      <p class="lead" id="mapLead"></p>
-    </div>
-    <div class="map-tools">
-      <div class="field" style="margin:0;flex:1">
-        <input type="search" id="mapSearch" list="vehicleList" placeholder="Найти технику: УАЗ, Нива, ЗИЛ…" aria-label="Поиск техники">
-      </div>
-      <datalist id="vehicleList"></datalist>
-    </div>
-    <div class="map-box" id="mapBox">
-      <svg id="mapSvg" viewBox="0 0 15360 15360" role="img" aria-label="Схема карты с точками спавна техники"></svg>
-      <div class="map-zoom">
-        <button type="button" id="zoomIn" aria-label="Приблизить">＋</button>
-        <button type="button" id="zoomOut" aria-label="Отдалить">−</button>
-        <button type="button" id="zoomReset" aria-label="Показать всю карту">⟲</button>
-      </div>
-    </div>
-    <div class="card map-info" id="mapInfo">Нажми на точку, чтобы увидеть, какая техника там появляется.</div>
-    <p class="map-note">Схема без рельефа: сетка по 1 км, координаты как в игре (X — восток, Z — север). Координаты можно проверить на интерактивной карте DayZ. Ивенты и спавн игроков добавим, когда будут файлы.</p>
-  </div>
-
   <!-- ===== Дорожная карта (только админ) ===== -->
   <div class="view" id="view-plan" hidden>
     <div id="planLocked" class="locked">
@@ -1754,9 +1686,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Опубликованные данные сайта (копия data.json). Обновляется скриптом tools/embed-data.mjs -->
-<script id="embedded-data" type="application/json">{"v":1,"updatedAt":"2026-11-19T06:37:03.100Z","categories":[{"id":"transport","icon":"🚙","title":"Транспорт"},{"id":"clothes","icon":"🧥","title":"Одежда"},{"id":"gear","icon":"🎒","title":"Снаряжение"}],"mods":[{"id":"hummer-hatch","category":"transport","icon":"🚙","name":"Хаммер с открывающимся люком","status":"wip","description":"Свой Хаммер для сервера с люком, который открывается.","features":["Открывающийся люк","Сейчас: текстура, покраска под стиль игры, проверка езды и анимаций","Дальше: стрельба из Хаммера"],"images":[],"video":""}],"news":[{"id":"n-site","date":"2026-11-19","text":"Открыт сайт сервера DawnLine: моды, новости и карта спавна техники."}],"private":{"v":1,"iter":200000,"salt":"SMk4x4UIaWtPHhZVoCgbIw==","iv":"JMvH2VDrZhvUiraL","ct":"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"}}</script>
-<!-- Точки спавна техники из файла rusforma_vehicles_cfgeventspawn -->
-<script id="map-data" type="application/json">[{"name":"Niva2329","x":965.7,"z":2074.2},{"name":"UAZ 3163","x":4526.3,"z":2400.9},{"name":"AEC Matador","x":5864.4,"z":2206.8},{"name":"ZiS5 Benzovoz","x":6464.8,"z":2711.2},{"name":"M3A1 Scout Ca","x":6497.2,"z":3667.4},{"name":"ZAZ 968M","x":10424.9,"z":2464.7},{"name":"UAZ 469 milicia","x":13255.6,"z":3981.8},{"name":"GAZ 51","x":13376.6,"z":6617.3},{"name":"GAZ 33081","x":12607.9,"z":8741.2},{"name":"UAZ 31519 Police","x":13076.2,"z":10348.6},{"name":"Mercedes G4 W31","x":11673.5,"z":14661.7},{"name":"UAZ 27722","x":7931.8,"z":12582.4},{"name":"IJ 2125 Kombi","x":3283.1,"z":13050.8},{"name":"GAZ M20","x":2206.4,"z":11111.6},{"name":"GAZ 3110 volga","x":1206.8,"z":8693.8},{"name":"Willys MB","x":1987.8,"z":7336.3},{"name":"ZIL 131","x":3803.9,"z":8831.2},{"name":"UAZ 3962","x":5322.7,"z":8623},{"name":"GAZ 66","x":4902.8,"z":5682.8},{"name":"PAZ 672","x":10133.7,"z":5481.5},{"name":"BTR 80","x":10661.5,"z":7994.6},{"name":"LUAZ 969","x":6464.8,"z":2711.2},{"name":"LUAZ 969","x":6497.2,"z":3667.4},{"name":"LUAZ 969","x":10424.9,"z":2464.7},{"name":"URAL 375 1964","x":13255.6,"z":3981.8},{"name":"URAL 375 1964","x":13376.6,"z":6617.3},{"name":"URAL 375 1964","x":12607.9,"z":8741.2},{"name":"UAZ 469 Hunter","x":13076.2,"z":10348.6},{"name":"UAZ 469 Hunter","x":11673.5,"z":14661.7},{"name":"UAZ 469 Hunter","x":7931.8,"z":12582.4},{"name":"kraz 255B","x":3283.1,"z":13050.8},{"name":"kraz 255B","x":2206.4,"z":11111.6},{"name":"kraz 255B","x":1206.8,"z":8693.8},{"name":"VBL","x":1987.8,"z":7336.3},{"name":"VBL","x":3803.9,"z":8831.2},{"name":"VBL","x":5322.7,"z":8623},{"name":"KAVZ685 RF","x":4902.8,"z":5682.8},{"name":"KAVZ685 RF","x":10133.7,"z":5481.5},{"name":"KAVZ685 RF","x":10661.5,"z":7994.6},{"name":"ij 2715 RF","x":965.7,"z":2074.2},{"name":"ij 2715 RF","x":4526.3,"z":2400.9},{"name":"ij 2715 RF","x":5864.4,"z":2206.8},{"name":"LIAZ 677RF","x":6464.8,"z":2711.2},{"name":"LIAZ 677RF","x":6497.2,"z":3667.4},{"name":"LIAZ 677RF","x":10424.9,"z":2464.7},{"name":"vaz 2106 RF","x":13255.6,"z":3981.8},{"name":"vaz 2106 RF","x":13376.6,"z":6617.3},{"name":"vaz 2106 RF","x":12607.9,"z":8741.2},{"name":"VAZ 2109 RF","x":13076.2,"z":10348.6},{"name":"VAZ 2109 RF","x":11673.5,"z":14661.7},{"name":"VAZ 2109 RF","x":7931.8,"z":12582.4},{"name":"UAZ 3172","x":3283.1,"z":13050.8},{"name":"UAZ 3172","x":2206.4,"z":11111.6},{"name":"UAZ 3172","x":1206.8,"z":8693.8},{"name":"azlk 400","x":1987.8,"z":7336.3},{"name":"azlk 400","x":3803.9,"z":8831.2},{"name":"azlk 400","x":5322.7,"z":8623},{"name":"BRDM2 RF","x":4902.8,"z":5682.8},{"name":"BRDM2 RF","x":10133.7,"z":5481.5},{"name":"BRDM2 RF","x":10661.5,"z":7994.6},{"name":"Moskvich 407","x":965.7,"z":2074.2},{"name":"Moskvich 407","x":4526.3,"z":2400.9},{"name":"Moskvich 407","x":5864.4,"z":2206.8},{"name":"UAZ 33094","x":6464.8,"z":2711.2},{"name":"UAZ 33094","x":6497.2,"z":3667.4},{"name":"UAZ 33094","x":10424.9,"z":2464.7},{"name":"Kuban G1","x":13255.6,"z":3981.8},{"name":"Kuban G1","x":13376.6,"z":6617.3},{"name":"Kuban G1","x":12607.9,"z":8741.2},{"name":"GAZ 21 Volga","x":13076.2,"z":10348.6},{"name":"GAZ 21 Volga","x":11673.5,"z":14661.7},{"name":"GAZ 21 Volga","x":7931.8,"z":12582.4},{"name":"Opel Blitz","x":3283.1,"z":13050.8},{"name":"Opel Blitz","x":2206.4,"z":11111.6},{"name":"Opel Blitz","x":1206.8,"z":8693.8},{"name":"M4 Tractor","x":1987.8,"z":7336.3},{"name":"M4 Tractor","x":3803.9,"z":8831.2},{"name":"M4 Tractor","x":5322.7,"z":8623},{"name":"Artillery Tractor","x":4902.8,"z":5682.8},{"name":"Artillery Tractor","x":10133.7,"z":5481.5},{"name":"Artillery Tractor","x":10661.5,"z":7994.6},{"name":"GAZ 13 Chaika","x":965.7,"z":2074.2},{"name":"GAZ 13 Chaika","x":4526.3,"z":2400.9},{"name":"GAZ 13 Chaika","x":5864.4,"z":2206.8},{"name":"Gaz 53 RF","x":6464.8,"z":2711.2},{"name":"Gaz 53 RF","x":6497.2,"z":3667.4},{"name":"Gaz 53 RF","x":10424.9,"z":2464.7},{"name":"ZAZ 968","x":13255.6,"z":3981.8},{"name":"ZAZ 968","x":13376.6,"z":6617.3},{"name":"ZAZ 968","x":12607.9,"z":8741.2},{"name":"ZIL 130","x":13076.2,"z":10348.6},{"name":"ZIL 130","x":11673.5,"z":14661.7},{"name":"ZIL 130","x":7931.8,"z":12582.4},{"name":"ZIL 130 ac40","x":3283.1,"z":13050.8},{"name":"ZIL 130 ac40","x":2206.4,"z":11111.6},{"name":"ZIL 130 ac40","x":1206.8,"z":8693.8},{"name":"GAZ 12","x":1987.8,"z":7336.3},{"name":"GAZ 12","x":3803.9,"z":8831.2},{"name":"GAZ 12","x":5322.7,"z":8623},{"name":"kamaz 4310RUS","x":4902.8,"z":5682.8},{"name":"kamaz 4310RUS","x":10133.7,"z":5481.5},{"name":"kamaz 4310RUS","x":10661.5,"z":7994.6},{"name":"T 34 76","x":965.7,"z":2074.2},{"name":"T 34 76","x":4526.3,"z":2400.9},{"name":"T 34 76","x":5864.4,"z":2206.8},{"name":"VAZ 21099R","x":6464.8,"z":2711.2},{"name":"VAZ 21099R","x":6497.2,"z":3667.4},{"name":"VAZ 21099R","x":10424.9,"z":2464.7},{"name":"F1 Pickup","x":13255.6,"z":3981.8},{"name":"F1 Pickup","x":13376.6,"z":6617.3},{"name":"F1 Pickup","x":12607.9,"z":8741.2},{"name":"ZAZ 965","x":13076.2,"z":10348.6},{"name":"ZAZ 965","x":11673.5,"z":14661.7},{"name":"ZAZ 965","x":7931.8,"z":12582.4},{"name":"VAZ 2104RF","x":3283.1,"z":13050.8},{"name":"VAZ 2104RF","x":2206.4,"z":11111.6},{"name":"VAZ 2104RF","x":1206.8,"z":8693.8},{"name":"GAZ 69 rus","x":1987.8,"z":7336.3},{"name":"GAZ 69 rus","x":3803.9,"z":8831.2},{"name":"GAZ 69 rus","x":5322.7,"z":8623},{"name":"IJ 2140 SL","x":4902.8,"z":5682.8},{"name":"IJ 2140 SL","x":10133.7,"z":5481.5},{"name":"IJ 2140 SL","x":10661.5,"z":7994.6},{"name":"ZIL133 double","x":965.7,"z":2074.2},{"name":"ZIL133 double","x":4526.3,"z":2400.9},{"name":"ZIL133 double","x":5864.4,"z":2206.8},{"name":"UAZ 469 army","x":6464.8,"z":2711.2},{"name":"UAZ 469 army","x":6497.2,"z":3667.4},{"name":"UAZ 469 army","x":10424.9,"z":2464.7},{"name":"Gaz 233002 Tiger","x":13255.6,"z":3981.8},{"name":"Gaz 233002 Tiger","x":13376.6,"z":6617.3},{"name":"Gaz 233002 Tiger","x":12607.9,"z":8741.2},{"name":"AZLK 2141RF","x":13076.2,"z":10348.6},{"name":"AZLK 2141RF","x":11673.5,"z":14661.7},{"name":"AZLK 2141RF","x":7931.8,"z":12582.4},{"name":"VAZ 2105 RUS","x":3283.1,"z":13050.8},{"name":"VAZ 2105 RUS","x":2206.4,"z":11111.6},{"name":"VAZ 2105 RUS","x":1206.8,"z":8693.8},{"name":"UAZ Patrot Pikap","x":1987.8,"z":7336.3},{"name":"UAZ Patrot Pikap","x":3803.9,"z":8831.2},{"name":"UAZ Patrot Pikap","x":5322.7,"z":8623},{"name":"ZIL 157 rus","x":4902.8,"z":5682.8},{"name":"ZIL 157 rus","x":10133.7,"z":5481.5},{"name":"ZIL 157 rus","x":10661.5,"z":7994.6}]</script>
+<script id="embedded-data" type="application/json">{"v":1,"updatedAt":"2026-11-19T10:02:37.725Z","categories":[{"id":"transport","icon":"🚙","title":"Транспорт"},{"id":"clothes","icon":"🧥","title":"Одежда"},{"id":"gear","icon":"🎒","title":"Снаряжение"}],"mods":[{"id":"hummer-hatch","category":"transport","icon":"🚙","name":"Хаммер с открывающимся люком","status":"wip","description":"Свой Хаммер для сервера с люком, который открывается.","features":["Открывающийся люк","Сейчас: текстура, покраска под стиль игры, проверка езды и анимаций","Дальше: стрельба из Хаммера"],"images":[],"video":""},{"id":"interactive-map","category":"gear","icon":"🗺️","name":"Интерактивная карта","status":"plan","description":"Интерактивная карта прямо в игре: ивенты, точки спавна и отметки для своей группы.","features":["Ивенты и спавн техники на карте","Отметки для пати"],"images":[],"video":""}],"news":[{"id":"n-site","date":"2026-11-19","text":"Открыт сайт сервера DawnLine: моды, новости и личный кабинет."}],"private":{"v":1,"iter":200000,"salt":"SMk4x4UIaWtPHhZVoCgbIw==","iv":"JMvH2VDrZhvUiraL","ct":"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"}}</script>
 
 <script>
 /* =====================================================================
@@ -1765,7 +1695,6 @@
 const CONFIG = {
   serverName: "DawnLine",
   discordUrl: "#",            // ссылка на Discord (пока заглушка)
-  mapSize: 15360,             // размер карты в метрах
   api: "https://dawnline.rpor87707.workers.dev", // адрес сервера магазина (Cloudflare Worker), например https://dawnline.xxx.workers.dev
   repo: {                     // куда сайт сохраняет данные (файл data.json)
     owner: "Danill228228",
@@ -3120,163 +3049,6 @@ function renderNews() {
   observeReveal();
 }
 
-/* ---------- Карта ---------- */
-
-const MapView = {
-  points: [],
-  locations: [],
-  vb: null,
-  selected: null,
-
-  init() {
-    try { this.points = JSON.parse($("map-data").textContent); } catch (e) { this.points = []; }
-    const byPos = new Map();
-    this.points.forEach(p => {
-      const k = `${Math.round(p.x)}:${Math.round(p.z)}`;
-      if (!byPos.has(k)) byPos.set(k, { x: p.x, z: p.z, names: [] });
-      const loc = byPos.get(k);
-      if (!loc.names.includes(p.name)) loc.names.push(p.name);
-    });
-    this.locations = [...byPos.values()];
-    const kinds = [...new Set(this.points.map(p => p.name))].sort((a, b) => a.localeCompare(b, "ru"));
-    $("vehicleList").innerHTML = kinds.map(k => `<option value="${esc(k)}">`).join("");
-    $("mapLead").textContent = `${plural(this.locations.length, "точка", "точки", "точек")} спавна · ${plural(kinds.length, "вид", "вида", "видов")} техники`;
-    this.reset();
-    this.bind();
-  },
-
-  reset() { const S = CONFIG.mapSize; this.vb = { x: 0, y: 0, w: S, h: S }; this.draw(); },
-
-  draw() {
-    const S = CONFIG.mapSize, vb = this.vb;
-    const unit = vb.w / ($("mapSvg").clientWidth || 600); // метров в одном пикселе
-    const step = 1000;
-    let grid = "";
-    for (let i = 0; i <= S; i += step) {
-      grid += `<line x1="${i}" y1="0" x2="${i}" y2="${S}"/><line x1="0" y1="${i}" x2="${S}" y2="${i}"/>`;
-    }
-    let labels = "";
-    const fs = 11 * unit;
-    for (let i = step; i < S - step / 2; i += step) {
-      const n = String(i / 1000);
-      labels += `<text x="${i + 4 * unit}" y="${vb.y + fs + 4 * unit}" font-size="${fs}">${n}</text>`;
-      labels += `<text x="${vb.x + 4 * unit}" y="${S - i - 4 * unit}" font-size="${fs}">${n}</text>`;
-    }
-    labels += `<text x="${vb.x + 4 * unit}" y="${vb.y + vb.h - 4 * unit}" font-size="${fs}">0 км</text>`;
-    const q = ($("mapSearch").value || "").trim().toLowerCase();
-    const r = Math.max(5 * unit, 18);
-    const markers = this.locations.map((loc, i) => {
-      const match = !q || loc.names.some(n => n.toLowerCase().includes(q));
-      const cls = ["marker", loc.names.length > 1 ? "multi" : "", match ? "" : "dim", this.selected === i ? "sel" : ""].join(" ");
-      return `<g class="${cls}" data-loc="${i}"><circle cx="${loc.x}" cy="${S - loc.z}" r="${r}" stroke-width="${1.5 * unit}"/></g>`;
-    }).join("");
-    const svg = $("mapSvg");
-    svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
-    svg.innerHTML = `
-      <rect x="0" y="0" width="${S}" height="${S}" fill="#1b0c05"/>
-      <g stroke="rgba(253,186,116,0.13)" stroke-width="${unit}">${grid}</g>
-      <rect x="0" y="0" width="${S}" height="${S}" fill="none" stroke="rgba(234,88,12,0.6)" stroke-width="${2 * unit}"/>
-      <g fill="rgba(253,186,116,0.55)" font-family="Rubik, sans-serif">${labels}</g>
-      ${markers}`;
-  },
-
-  zoom(factor, cx, cy) {
-    const S = CONFIG.mapSize, vb = this.vb;
-    const w = Math.min(S, Math.max(400, vb.w * factor));
-    const k = w / vb.w;
-    cx = cx ?? vb.x + vb.w / 2; cy = cy ?? vb.y + vb.h / 2;
-    vb.x = cx - (cx - vb.x) * k; vb.y = cy - (cy - vb.y) * k; vb.w = w; vb.h = w;
-    this.clamp(); this.draw();
-  },
-
-  clamp() {
-    const S = CONFIG.mapSize, vb = this.vb;
-    vb.x = Math.min(Math.max(vb.x, 0), S - vb.w);
-    vb.y = Math.min(Math.max(vb.y, 0), S - vb.h);
-  },
-
-  toMap(evt) {
-    const rect = $("mapSvg").getBoundingClientRect();
-    return { x: this.vb.x + (evt.clientX - rect.left) / rect.width * this.vb.w, y: this.vb.y + (evt.clientY - rect.top) / rect.height * this.vb.h };
-  },
-
-  select(i) {
-    this.selected = i;
-    const loc = this.locations[i];
-    const coords = `${Math.round(loc.x)} / ${Math.round(loc.z)}`;
-    $("mapInfo").innerHTML = `
-      <div>Точка спавна · <span class="coords">X ${Math.round(loc.x)} · Z ${Math.round(loc.z)}</span></div>
-      <ul>${loc.names.map(n => `<li>${esc(n)}</li>`).join("")}</ul>
-      <button class="btn small" type="button" data-copy="${esc(coords)}">Скопировать координаты</button>`;
-    this.draw();
-  },
-
-  bind() {
-    const svg = $("mapSvg");
-    const pointers = new Map();
-    let start = null, moved = false, pinch = null;
-
-    svg.addEventListener("pointerdown", e => {
-      svg.setPointerCapture(e.pointerId);
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      moved = false;
-      if (pointers.size === 1) start = { x: e.clientX, y: e.clientY, vb: { ...this.vb } };
-      if (pointers.size === 2) {
-        const [a, b] = [...pointers.values()];
-        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), w: this.vb.w };
-      }
-    });
-
-    svg.addEventListener("pointermove", e => {
-      if (!pointers.has(e.pointerId)) return;
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      const rect = svg.getBoundingClientRect();
-      if (pointers.size === 2 && pinch) {
-        const [a, b] = [...pointers.values()];
-        const d = Math.hypot(a.x - b.x, a.y - b.y);
-        const mid = this.toMap({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 });
-        this.zoom((pinch.w * pinch.d / d) / this.vb.w, mid.x, mid.y);
-        moved = true;
-      } else if (pointers.size === 1 && start) {
-        const dx = (e.clientX - start.x) / rect.width * start.vb.w;
-        const dy = (e.clientY - start.y) / rect.height * start.vb.h;
-        if (Math.abs(e.clientX - start.x) + Math.abs(e.clientY - start.y) > 4) moved = true;
-        if (moved) {
-          svg.classList.add("dragging");
-          this.vb.x = start.vb.x - dx; this.vb.y = start.vb.y - dy;
-          this.clamp(); this.draw();
-        }
-      }
-    });
-
-    const end = e => {
-      const wasTap = pointers.size === 1 && !moved;
-      pointers.delete(e.pointerId);
-      if (pointers.size < 2) pinch = null;
-      if (pointers.size === 0) { start = null; svg.classList.remove("dragging"); }
-      if (wasTap && e.type === "pointerup") {
-        const hit = document.elementFromPoint(e.clientX, e.clientY);
-        const g = hit && hit.closest && hit.closest("[data-loc]");
-        if (g) this.select(Number(g.dataset.loc));
-      }
-    };
-    svg.addEventListener("pointerup", end);
-    svg.addEventListener("pointercancel", end);
-
-    svg.addEventListener("wheel", e => {
-      e.preventDefault();
-      const p = this.toMap(e);
-      this.zoom(e.deltaY > 0 ? 1.2 : 1 / 1.2, p.x, p.y);
-    }, { passive: false });
-
-    $("zoomIn").addEventListener("click", () => this.zoom(1 / 1.5));
-    $("zoomOut").addEventListener("click", () => this.zoom(1.5));
-    $("zoomReset").addEventListener("click", () => this.reset());
-    $("mapSearch").addEventListener("input", () => this.draw());
-    window.addEventListener("resize", () => { if (!$("view-map").hidden) this.draw(); });
-  }
-};
-
 /* ---------- Формы (окно редактирования) ---------- */
 
 let formState = null;
@@ -3855,7 +3627,7 @@ function observeReveal() {
 
 /* ---------- Разделы ---------- */
 
-const VIEWS = ["mods", "product", "news", "map", "cabinet", "plan"];
+const VIEWS = ["mods", "product", "news", "cabinet", "plan"];
 
 function currentView() {
   const h = location.hash.replace("#", "").split("&")[0];
@@ -3874,9 +3646,8 @@ function showView() {
   document.querySelectorAll("[data-view]").forEach(a => {
     if (a.dataset.view === tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
-  const titles = { mods: "Моды", news: "Что нового", map: "Карта спавна", cabinet: "Личный кабинет", plan: "Дорожная карта" };
+  const titles = { mods: "Моды", news: "Что нового", cabinet: "Личный кабинет", plan: "Дорожная карта" };
   if (titles[view]) document.title = `${titles[view]} · ${CONFIG.serverName}`;
-  if (view === "map") MapView.draw();
   if (view === "mods") renderMods();
   if (view === "product") renderProduct();
   if (view === "cabinet") { renderCabinet(); if (Steam.user && Steam.user.admin) Steam.loadAdmin(); }
@@ -3930,7 +3701,6 @@ $("footerText").textContent = `© ${new Date().getFullYear()} ${CONFIG.serverNam
 
 (async function start() {
   await loadData();
-  MapView.init();
   renderAll();
   applyAdminUI();
   showView();

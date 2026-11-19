@@ -1,6 +1,6 @@
 // RF_Humvee — свой HMMWV M1025 с открываемым люком стрелка. Модель своя (RF_Humvee/source/m1025.py, по образцу
 // ванильного M1025), а двигатель, коробка, подвеска, звуки, места экипажа и колёса — от ванильного Offroad_02
-// (наследование, файлы игры не копируются). Окраска — ванильные текстура и материалы крыши M1025.
+// (наследование, файлы игры не копируются). Окраска — своя текстура с износом (RF_Humvee_Mod/tools/texture_atlas.py).
 // Действия «Открыть/Закрыть люк» — в отдельном аддоне RF_Humvee_Hatch.
 
 class CfgPatches
@@ -49,15 +49,12 @@ class CfgVehicles
 		attachments[] = {"CarBattery", "Reflector_1_1", "Reflector_2_1", "GlowPlug",
 			"Offroad_02_Wheel_1_1", "Offroad_02_Wheel_1_2", "Offroad_02_Wheel_2_1", "Offroad_02_Wheel_2_2"};
 
-		// CarScript меняет материалы фар по номерам 0…8, поэтому, как у ванили, сначала фары, затем окраска:
-		// camo — снаружи (многослойный материал крыши M1025), camo_interior — изнутри
+		// CarScript меняет материалы фар по номерам 0…8, поэтому, как у ванили, сначала фары, затем окраска camo:
+		// своя текстура-атлас всей модели (камуфляж, пыль, грязь, потёртости), рельеф и блики — в rf_humvee_body.rvmat
 		hiddenSelections[] = {"light_1_1", "light_2_1", "light_brake_1_2", "light_brake_2_2", "light_reverse_1_2",
-			"light_reverse_2_2", "light_1_2", "light_2_2", "light_dashboard", "camo", "camo_interior"};
-		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "",
-			"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof_co.paa"};
-		hiddenSelectionsMaterials[] = {"", "", "", "", "", "", "", "", "",
-			"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof_multi.rvmat",
-			"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof.rvmat"};
+			"light_reverse_2_2", "light_1_2", "light_2_2", "light_dashboard", "camo"};
+		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "\RF_Humvee\data\rf_humvee_woodland_co.paa"};
+		hiddenSelectionsMaterials[] = {"", "", "", "", "", "", "", "", "", "\RF_Humvee\data\rf_humvee_body.rvmat"};
 
 		class GUIInventoryAttachmentsProps
 		{
@@ -200,10 +197,6 @@ class CfgVehicles
 	class RF_Humvee_Desert: RF_Humvee
 	{
 		displayName = "Humvee M1114 (пустынный)";
-		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "",
-			"dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof_co.paa"};
-		hiddenSelectionsMaterials[] = {"", "", "", "", "", "", "", "", "",
-			"dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof_multi.rvmat",
-			"dz\vehicles\wheeled\offroad_02\data\beige\offroad_02_roof.rvmat"};
+		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "\RF_Humvee\data\rf_humvee_desert_co.paa"};
 	};
 };

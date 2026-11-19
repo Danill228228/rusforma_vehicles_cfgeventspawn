@@ -3,13 +3,13 @@ ambient[]={1,1,1,1};
 diffuse[]={1,1,1,1};
 forcedDiffuse[]={0,0,0,0};
 emmisive[]={0,0,0,1};
-specular[]={0.15,0.15,0.15,1};
-specularPower=12;
+specular[]={0.5,0.5,0.5,1};
+specularPower=30;
 PixelShaderID="Super";
 VertexShaderID="Super";
 class Stage1
 {
-	texture="rf_humvee\data\rf_humvee_metal_nohq.paa";
+	texture="rf_humvee\data\rf_humvee_body_nohq.paa";
 	uvSource="tex";
 	class uvTransform
 	{
@@ -57,7 +57,7 @@ class Stage4
 };
 class Stage5
 {
-	texture="rf_humvee\data\rf_humvee_metal_smdi.paa";
+	texture="rf_humvee\data\rf_humvee_body_smdi.paa";
 	uvSource="tex";
 	class uvTransform
 	{

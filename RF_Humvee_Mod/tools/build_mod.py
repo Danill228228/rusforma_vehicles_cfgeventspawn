@@ -26,30 +26,36 @@ import m1025 as G  # noqa: E402  — своя модель M1025 (RF_Humvee/sour
 import p3d_mlod as P3D  # noqa: E402
 import paa  # noqa: E402
 import pbo  # noqa: E402
+import texture_atlas  # noqa: E402
 
 SRC = os.path.join(MOD, "src")
 DATA = os.path.join(SRC, "RF_Humvee", "data")
 OUT_ADDONS = os.path.join(MOD, "@RF_Humvee", "Addons")
 
-# Окраска — ванильные текстура и материалы крыши M1025 (ссылками): снаружи многослойный материал (грязь, потёртости),
-# изнутри — материал внутренней стороны крыши. Окраску задаёт config.cpp через селекции camo и camo_interior
-# (зелёная или бежевая). Развёртка каждого связного куска — в ровный камуфляж атласа (u 0.62…0.76, v 0.83…0.98),
-# где маска слоёв однородна; соседние куски получают разные пятна.
-ROOF_TEX = r"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof_co.paa"
-ROOF_MULTI = r"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof_multi.rvmat"
-ROOF_MAT = r"dz\vehicles\wheeled\offroad_02\data\offroad_02_roof.rvmat"
-HIDDEN = {"paint": ["camo"], "interior": ["camo_interior"]}
-ATLAS_BOX, ATLAS_K = (0.62, 0.76, 0.83, 0.98), 0.065
-ATLAS_CENTERS = [(0.69, 0.90), (0.66, 0.87), (0.73, 0.94), (0.67, 0.95), (0.72, 0.86), (0.70, 0.92)]
-SURFACES = {  # материал генератора: (цвет, rvmat) — грани с файловой текстурой обязаны иметь rvmat
-    "dark": (r"rf_humvee\data\rf_humvee_metal_co.paa", r"rf_humvee\data\rf_humvee_metal.rvmat"),
-}
+# Окраска — своя текстура-атлас (texture_atlas.py): все окрашенные грани (кузов, тёмные детали, салон, сиденья)
+# развёрнуты в один атлас 2048×2048 и окрашены с камуфляжем, пылью, грязью, потёртостями и подтёками. Лесная и
+# пустынная окраски — две _co текстуры (config.cpp, селекция camo), рельеф и блики общие.
+ATLAS_MATS = ("paint", "dark", "interior", "seat")
+BODY_TEX = r"rf_humvee\data\rf_humvee_woodland_co.paa"
+BODY_MAT = r"rf_humvee\data\rf_humvee_body.rvmat"
+ATLAS = None          # texture_atlas.Atlas, строится в build_car_p3d
+# трафареты (текст, центр, нормаль, ширина в м) в координатах модели: коды на бамперах, давление шин на крыльях,
+# топливо над горловиной бака
+MARKINGS = [
+    ("2-7 B", (0.84, 0.57, G.FRONT_Z + 0.14), (0, 0, 1), 0.20),
+    ("HQ 14", (-0.84, 0.57, G.FRONT_Z + 0.14), (0, 0, 1), 0.20),
+    ("2-7 B", (0.84, 0.56, G.Z_REAR - 0.12), (0, 0, -1), 0.20),
+    ("HQ 14", (-0.84, 0.56, G.Z_REAR - 0.12), (0, 0, -1), 0.20),
+    ("TIRE PRESS 20 PSI", (G.FENDER_W, 1.115, G.AXLE_F), (1, 0, 0), 0.30),
+    ("TIRE PRESS 20 PSI", (-G.FENDER_W, 1.115, G.AXLE_F), (-1, 0, 0), 0.30),
+    ("DIESEL\nFUEL ONLY", (-G.HALF_W, 1.17, -1.45), (-1, 0, 0), 0.14),
+]
 
 
 def material_for(mat):
-    if mat in HIDDEN:
-        return ROOF_MULTI if mat == "paint" else ROOF_MAT
-    return SURFACES[mat][1] if mat in SURFACES else ""
+    return BODY_MAT if mat in ATLAS_MATS else ""
+
+
 RES_GEOMETRY, RES_PHYS = 1e13, 4e13
 RES_MEMORY, RES_LANDCONTACT, RES_ROADWAY = 1e15, 2e15, 3e15
 RES_VIEWGEO, RES_FIREGEO = 6e15, 7e15
@@ -70,50 +76,12 @@ def to_p3d(p):
 
 
 def texture_for(mat):
-    if mat in HIDDEN:
-        return ROOF_TEX
-    if mat in SURFACES:
-        return SURFACES[mat][0]
+    if mat in ATLAS_MATS:
+        return BODY_TEX
     rgb, _, _, extra = G.MATERIALS[mat]
     if "alpha" in extra:
         return "#(argb,8,8,3)color(%.3f,%.3f,%.3f,%.2f,ca)" % (*rgb, extra["alpha"])
     return "#(argb,8,8,3)color(%.3f,%.3f,%.3f,1,co)" % rgb
-
-
-def atlas_uv(g):
-    """Развёртка в ровный участок атласа: каждый связный кусок (по общим вершинам) — вокруг своего центра,
-    кубическая проекция в метрах; крупный кусок ужимается, чтобы целиком влезть в участок."""
-    P, N, I = g.P, g.N, g.I
-    _, vid = np.unique(np.round(P, 4), axis=0, return_inverse=True)
-    vid = vid.reshape(-1)
-    parent = np.arange(vid.max() + 1)
-
-    def find(a):
-        while parent[a] != a:
-            parent[a] = parent[parent[a]]
-            a = parent[a]
-        return a
-    for a, b, c in vid[I]:
-        ra = find(a)
-        parent[find(b)] = ra
-        parent[find(c)] = ra
-    comp = np.array([find(v) for v in vid])
-    u0, u1, v0, v1 = ATLAS_BOX
-    ax = np.argmax(np.abs(N), axis=1)
-    uv = np.zeros((len(P), 2))
-    for k, r in enumerate(np.unique(comp)):
-        center = ATLAS_CENTERS[k % len(ATLAS_CENTERS)]
-        for a, (u, v) in ((0, (2, 1)), (1, (0, 2)), (2, (0, 1))):
-            m = (comp == r) & (ax == a)
-            if not m.any():
-                continue
-            pu, pv = P[m, u], P[m, v]
-            K = min(ATLAS_K, 0.98 * (u1 - u0) / max(np.ptp(pu), 1e-6), 0.98 * (v1 - v0) / max(np.ptp(pv), 1e-6))
-            hu, hv = K * np.ptp(pu) / 2, K * np.ptp(pv) / 2
-            cu, cv = np.clip(center[0], u0 + hu, u1 - hu), np.clip(center[1], v0 + hv, v1 - hv)
-            uv[m, 0] = cu + K * (pu - (pu.min() + pu.max()) / 2)
-            uv[m, 1] = cv - K * (pv - (pv.min() + pv.max()) / 2)
-    return uv
 
 
 class LodBuilder:
@@ -144,20 +112,21 @@ class LodBuilder:
         """g — Geo в исходных координатах; грани/нормали переводятся в соглашения P3D."""
         if not len(g.I):
             return
-        if not uv:
-            UV = np.zeros((len(g.P), 2))
+        if texture == BODY_TEX:
+            UVc = ATLAS.uv_for(g.P[g.I])                 # своя развёртка: UV на угол треугольника
         else:
-            UV = atlas_uv(g) if texture == ROOF_TEX else G.compute_uv(g)
+            UV = G.compute_uv(g) if uv else np.zeros((len(g.P), 2))
+            UVc = UV[g.I]
         P = g.P * np.array([1.0, 1.0, -1.0])           # как to_p3d
         N = g.N * np.array([-1.0, -1.0, 1.0])         # отражённая нормаль, развернутая внутрь
         pidx = [self.point(p, group=group) for p in P]
         nidx = [self.normal(n) for n in N]
         f0 = len(self.L.faces)
-        for a, b, c in g.I:
+        for t, (a, b, c) in enumerate(g.I):
             if len({pidx[a], pidx[b], pidx[c]}) < 3:
                 continue
             self.L.faces.append(dict(
-                verts=[(pidx[k], nidx[k], float(UV[k, 0]), float(UV[k, 1])) for k in (a, b, c)],
+                verts=[(pidx[k], nidx[k], float(UVc[t, j, 0]), float(UVc[t, j, 1])) for j, k in enumerate((a, b, c))],
                 flags=0, texture=texture, material=material))
         faces = range(f0, len(self.L.faces))
         pts = {v[0] for i in faces for v in self.L.faces[i]["verts"]}
@@ -166,7 +135,7 @@ class LodBuilder:
 
     def add_parts(self, parts, selections=()):
         for mat, g in parts.items():
-            sel = list(selections) + HIDDEN.get(mat, [])
+            sel = list(selections) + (["camo"] if mat in ATLAS_MATS else [])
             # Грань с текстурой-файлом PAA без rvmat игра не рисует (кузов был невидим), процедурным цветам материал не нужен.
             self.add_geo(g, texture_for(mat), material_for(mat), sel, group=",".join(selections))
 
@@ -372,6 +341,18 @@ def build_car_p3d(path):
     lid_world = {m: g.transformed(G.T(0, G.HINGE_Y, G.HINGE_Z)) for m, g in lid.items()}
     doors = {sel: G.clean(p) for sel, p in {**G.build_doors(), **G.build_lids()}.items()}
 
+    # развёртка всех окрашенных граней (двери, капот, багажник и люк — закрыты) в свой атлас
+    global ATLAS
+    ATLAS = texture_atlas.Atlas()
+    for parts in (body, interior, lid_world, *doors.values()):
+        for mat, g in parts.items():
+            if mat in ATLAS_MATS:
+                ATLAS.add(g, mat)
+            elif mat != "glass":
+                ATLAS.add_occluder(g)                    # фары, фонари, железо — только тень в затенении
+    density = ATLAS.build()
+    print(f"  атлас: кусков {len(ATLAS.patches)}, плотность {density:.0f} пикс/м")
+
     # LOD 0…2 — визуальная модель, дальние без мелких деталей
     lods = []
     for res, min_size, with_interior in VISUAL_LODS:
@@ -392,9 +373,9 @@ def build_car_p3d(path):
         lods.append(v.done(props=NO_SHADOW))
     # самый дальний LOD и источник тени: выпуклые блоки коллизии в камуфляже
     h = LodBuilder(HULL_LOD)
-    for _, g, _, _ in collision_parts():
-        h.add_geo(g, ROOF_TEX, ROOF_MULTI, ["camo"])
-    h.add_geo(hatch_collider(), ROOF_TEX, ROOF_MULTI, ["camo", "hatch_roof"])
+    for _, g, _, _ in collision_parts():      # блоки не в атласе: цвет — из середины крыши
+        h.add_geo(g, BODY_TEX, BODY_MAT, ["camo"])
+    h.add_geo(hatch_collider(), BODY_TEX, BODY_MAT, ["camo", "hatch_roof"])
     add_proxies(h)
     lods.append(h.done())
 
@@ -493,18 +474,6 @@ def build_car_p3d(path):
     return lods
 
 
-def _scratches(mask, rng, count, lmin, lmax):
-    """Царапины: тонкие отрезки толщиной в пиксель, бесшовно."""
-    n = mask.shape[0]
-    for _ in range(count):
-        x0, y0 = rng.uniform(0, n, 2)
-        a, L = rng.uniform(0, math.pi), rng.uniform(lmin, lmax)
-        t = np.arange(0, L, 0.5)
-        xs = (x0 + t * math.cos(a)).astype(int) % n
-        ys = (y0 + t * math.sin(a)).astype(int) % n
-        mask[ys, xs] = np.maximum(mask[ys, xs], rng.uniform(0.4, 1.0))
-
-
 def _normal_map(h, strength):
     """Карта нормалей (_nohq) из карты высот: RGB = нормаль * 0.5 + 0.5."""
     gx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) * 0.5 * strength
@@ -518,23 +487,6 @@ def _smdi(spec, gloss):
     """_smdi: R не используется (белый), G — сила блика, B — глянец; spec/gloss в 0…1."""
     s = np.stack([np.ones_like(spec), spec, gloss], -1)
     return np.clip(s * 255, 0, 255).astype(np.uint8)
-
-
-def surface_textures(base, dust, spec, gloss, n=1024, seed=3, scratches=0):
-    """Резина и тёмный металл: зерно, пятна, пыль, при желании царапины. Возвращает (_co, _nohq, _smdi)."""
-    rng = np.random.default_rng(seed)
-    img = np.tile(np.array(base, float), (n, n, 1))
-    img *= (1 + 0.06 * G.periodic_field(n, 1.0, rng) + 0.05 * G.periodic_field(n, 0.04 * n, rng))[..., None]
-    dust_m = np.clip((G.periodic_field(n, 0.05 * n, rng) - 0.6) * 0.3, 0, 0.25)[..., None]
-    img = img * (1 - dust_m) + np.array(dust, float) * dust_m
-    scr = np.zeros((n, n))
-    if scratches:
-        _scratches(scr, rng, scratches, 0.01 * n, 0.05 * n)
-        img = img * (1 - 0.4 * scr[..., None]) + np.array([96, 96, 90.0]) * 0.4 * scr[..., None]
-    h = 0.3 * G.periodic_field(n, 1.0, rng) + 0.5 * G.periodic_field(n, 0.02 * n, rng) - scr
-    sp = np.full((n, n), spec) + 0.3 * scr - 0.3 * dust_m[..., 0]
-    gl = np.full((n, n), gloss) + 0.3 * scr
-    return np.clip(img, 0, 255).astype(np.uint8), _normal_map(h, 0.15), _smdi(sp, gl)
 
 
 def write_rvmat(path, nohq, smdi, specular, power):
@@ -697,14 +649,17 @@ class CfgModels
 
 def main():
     lods = build_car_p3d(os.path.join(DATA, "rf_humvee.p3d"))
-    # тёмный металл и пластик (рама, решётка, сиденья, приборная панель): матовая краска. Прежние светлая пыль,
-    # царапины и сильный рельеф с бликом в игре выглядели как пупырчатый синеватый шум
-    for name, args, (spec, power) in (("metal", ((46, 49, 42), (66, 64, 56), 0.15, 0.25), (0.15, 12)),):
-        co, nohq, smdi = surface_textures(*args)
-        for kind, img in (("co", co), ("nohq", nohq), ("smdi", smdi)):
-            paa.write_paa(os.path.join(DATA, "rf_humvee_%s_%s.paa" % (name, kind)), img)
-        write_rvmat(os.path.join(DATA, "rf_humvee_%s.rvmat" % name), r"rf_humvee\data\rf_humvee_%s_nohq.paa" % name,
-                    r"rf_humvee\data\rf_humvee_%s_smdi.paa" % name, spec, power)
+    # своя текстура: лесная и пустынная окраска, общие рельеф (по высоте сколов, царапин, грязи) и блики
+    wheels = [(x, G.WHEEL_Y, z, G.WHEEL_R) for x, z, _ in WHEELS.values()]
+    ATLAS.rasterize()
+    co, height, spec, gloss = ATLAS.paint("woodland", wheels, MARKINGS)
+    paa.write_paa(os.path.join(DATA, "rf_humvee_woodland_co.paa"), co)
+    paa.write_paa(os.path.join(DATA, "rf_humvee_body_nohq.paa"), _normal_map(height, 0.35))
+    paa.write_paa(os.path.join(DATA, "rf_humvee_body_smdi.paa"), _smdi(spec, gloss))
+    co, _, _, _ = ATLAS.paint("desert", wheels, MARKINGS)
+    paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"), co)
+    write_rvmat(os.path.join(SRC, BODY_MAT), r"rf_humvee\data\rf_humvee_body_nohq.paa",
+                r"rf_humvee\data\rf_humvee_body_smdi.paa", 0.5, 30)
     with open(os.path.join(DATA, "model.cfg"), "w", encoding="utf-8") as f:
         f.write(model_cfg())
 

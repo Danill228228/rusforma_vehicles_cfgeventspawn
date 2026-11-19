@@ -814,6 +814,61 @@
 
   .empty strong { display: block; color: var(--text); font-size: 16px; margin-bottom: 2px; }
 
+  /* ---------- Обсуждение (Steam) ---------- */
+  .discuss {
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--inset);
+  }
+
+  .discuss[hidden] { display: none; }
+
+  .pc-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .pc { display: flex; gap: 10px; align-items: flex-start; }
+
+  .pc-ava {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: rgba(234, 88, 12, 0.2);
+    object-fit: cover;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    color: var(--accent-soft);
+  }
+
+  .pc-body { flex: 1; min-width: 0; }
+  .pc-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 13px; color: var(--muted); }
+  .pc-head a { color: var(--accent-soft); font-weight: 700; text-decoration: none; font-size: 14px; }
+  .pc-head a:hover { text-decoration: underline; }
+  .pc-admin { padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; }
+  .pc-text { font-size: 14.5px; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 2px; }
+  .pc-tools { display: flex; gap: 4px; margin-top: 2px; }
+
+  .steam-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid #66c0f4;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #2a475e, #1b2838);
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 700;
+  }
+
+  .steam-btn:hover { box-shadow: 0 0 14px rgba(102, 192, 244, 0.5); }
+
+  .pc-me { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 8px; font-size: 13px; color: var(--muted); }
+  .pc-me b { color: var(--text); }
+  .pc-empty { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+  .pc-hint { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+
   /* ---------- Новости ---------- */
   .news-item { display: flex; gap: 12px; align-items: flex-start; }
 
@@ -1139,6 +1194,7 @@ const CONFIG = {
   serverName: "DawnLine",
   discordUrl: "#",            // ссылка на Discord (пока заглушка)
   mapSize: 15360,             // размер карты в метрах
+  commentsApi: "",            // адрес сервера комментариев (Cloudflare Worker), например https://dawnline-comments.xxx.workers.dev
   repo: {                     // куда сайт сохраняет данные (файл data.json)
     owner: "Danill228228",
     name: "rusforma_vehicles_cfgeventspawn",
@@ -1163,7 +1219,8 @@ const LS = {
   edit: "dl-edit-mode",
   migrated: "dl-migrated-v1",
   oldProgress: "dayz-roadmap-progress-v1",
-  oldComments: "dayz-comments-v1"
+  oldComments: "dayz-comments-v1",
+  steam: "dl-steam-token"
 };
 const PLAN_TAB = "plan";
 
@@ -1814,14 +1871,152 @@ function renderMods() {
         </div>
         ${mod.description ? `<p class="mod-desc">${esc(mod.description)}</p>` : ""}
         ${features ? `<ul class="mod-features">${features}</ul>` : ""}
-        ${video || isAdmin() ? `<div class="mod-foot">
+        ${video || isAdmin() || CONFIG.commentsApi ? `<div class="mod-foot">
           ${video ? `<a class="btn small" href="${esc(video)}" target="_blank" rel="noopener">▶ Смотреть видео</a>` : ""}
-          ${commentButton(key, "Комментарии")}
+          ${discussButton(mod.id)}
+          ${commentButton(key, "Заметки")}
         </div>` : ""}
         ${threadHtml(key)}
+        ${discussBox(mod.id)}
       </article>`;
   }).join("");
   observeReveal();
+}
+
+/* ---------- Обсуждение под модами (вход через Steam) ---------- */
+
+const Steam = {
+  token: lsGet(LS.steam, ""),
+  user: null,
+  counts: {},
+  cache: {},
+  open: new Set(),
+  loading: new Set(),
+
+  api(path, opts = {}) {
+    const headers = { ...(opts.headers || {}) };
+    if (this.token) headers["Authorization"] = `Bearer ${this.token}`;
+    if (opts.body) headers["Content-Type"] = "application/json";
+    return fetch(CONFIG.commentsApi.replace(/\/+$/, "") + path, { ...opts, headers, cache: "no-store" })
+      .then(async res => {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401 && this.token) { this.logout(true); }
+        if (!res.ok) throw new Error(data.error || `Ошибка ${res.status}`);
+        return data;
+      });
+  },
+
+  // Возврат со страницы Steam: #mods&steam=ТОКЕН или #mods&steam_error=…
+  takeFromHash() {
+    const h = location.hash;
+    const tok = h.match(/[#&]steam=([\w.-]+)/);
+    const err = h.match(/[#&]steam_error=(\w+)/);
+    if (!tok && !err) return;
+    if (tok) { this.token = tok[1]; lsSet(LS.steam, this.token); }
+    history.replaceState(null, "", location.pathname + location.search + "#mods");
+    if (err) toast(err[1] === "cancel" ? "Вход через Steam отменён" : "Не удалось войти через Steam");
+  },
+
+  async init() {
+    if (!CONFIG.commentsApi) return;
+    this.takeFromHash();
+    try { this.counts = (await this.api("/comments/counts")).counts || {}; } catch (e) { /* сервер недоступен */ }
+    if (this.token) {
+      try { this.user = await this.api("/me"); toast(`Ты вошёл как ${this.user.name}`); } catch (e) { /* токен устарел */ }
+    }
+    renderMods();
+  },
+
+  login() {
+    lsSet(LS.cat, currentCategory);
+    location.href = CONFIG.commentsApi.replace(/\/+$/, "") + "/auth/steam";
+  },
+
+  logout(silent) {
+    this.token = ""; this.user = null;
+    lsDel(LS.steam);
+    if (!silent) { toast("Ты вышел из Steam"); renderMods(); }
+  },
+
+  async load(mod) {
+    this.loading.add(mod);
+    refreshDiscuss(mod);
+    try {
+      this.cache[mod] = (await this.api(`/comments?mod=${encodeURIComponent(mod)}`)).comments || [];
+      this.counts[mod] = this.cache[mod].length;
+    } catch (e) {
+      toast("Не удалось загрузить комментарии: " + e.message);
+    }
+    this.loading.delete(mod);
+    refreshDiscuss(mod);
+  }
+};
+
+function discussButton(modId) {
+  if (!CONFIG.commentsApi) return "";
+  const n = Steam.counts[modId] || 0;
+  return `<button class="mini${n ? " has" : ""}" type="button" data-discuss="${esc(modId)}" aria-expanded="${Steam.open.has(modId)}">${CHAT_SVG}<span>Обсуждение</span><span class="n">${n || ""}</span></button>`;
+}
+
+function discussBox(modId) {
+  if (!CONFIG.commentsApi) return "";
+  const open = Steam.open.has(modId);
+  return `<div class="discuss" data-discuss-box="${esc(modId)}"${open ? "" : " hidden"}>${open ? discussInner(modId) : ""}</div>`;
+}
+
+function avatarHtml(c) {
+  const url = /^https:\/\//.test(c.avatar || "") ? c.avatar : "";
+  return url ? `<img class="pc-ava" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+             : `<span class="pc-ava" aria-hidden="true">${esc((c.name || "?").slice(0, 1).toUpperCase())}</span>`;
+}
+
+function discussInner(modId) {
+  if (Steam.loading.has(modId) && !Steam.cache[modId]) return `<p class="pc-empty">Загружаю…</p>`;
+  const list = Steam.cache[modId] || [];
+  const me = Steam.user;
+  const items = list.map(c => {
+    const mine = me && c.steamid === me.steamid;
+    const canDelete = me && (mine || me.admin);
+    return `
+      <li class="pc">
+        ${avatarHtml(c)}
+        <div class="pc-body">
+          <div class="pc-head">
+            <a href="https://steamcommunity.com/profiles/${esc(c.steamid)}" target="_blank" rel="noopener">${esc(c.name || "Игрок")}</a>
+            <span>${esc(fmtDate(c.ts, true))}</span>
+          </div>
+          <p class="pc-text">${esc(c.text)}</p>
+          ${canDelete ? `<div class="pc-tools">
+            <button class="del" type="button" data-pc-del="${esc(c.id)}" data-mod="${esc(modId)}">Удалить</button>
+            ${me.admin && !mine ? `<button class="del" type="button" data-pc-ban="${esc(c.steamid)}" data-mod="${esc(modId)}">Заблокировать</button>` : ""}
+          </div>` : ""}
+        </div>
+      </li>`;
+  }).join("");
+  const form = me
+    ? (me.banned
+        ? `<p class="pc-hint">Ты не можешь оставлять комментарии.</p>`
+        : `<div class="pc-me">Ты вошёл как <b>${esc(me.name)}</b>${me.admin ? ` <span class="pc-admin">админ</span>` : ""}<button class="del" type="button" data-act="steam-logout">Выйти</button></div>
+           <form class="comment-form pc-form" data-mod="${esc(modId)}">
+             <textarea rows="1" maxlength="1000" placeholder="Что думаешь об этом моде?" aria-label="Комментарий"></textarea>
+             <button class="send" type="submit" aria-label="Отправить" disabled>${SEND_SVG}</button>
+           </form>`)
+    : `<button class="steam-btn" type="button" data-act="steam-login">Войти через Steam</button>
+       <p class="pc-hint">Чтобы написать комментарий, войди через Steam. Сайт получит только твой Steam ID, ник и аватар — пароль остаётся у Steam.</p>`;
+  return `${items ? `<ul class="pc-list">${items}</ul>` : `<p class="pc-empty">Комментариев пока нет — будь первым.</p>`}${form}`;
+}
+
+function refreshDiscuss(modId) {
+  document.querySelectorAll(`[data-discuss="${CSS.escape(modId)}"]`).forEach(btn => {
+    const n = Steam.counts[modId] || 0;
+    btn.classList.toggle("has", n > 0);
+    btn.querySelector(".n").textContent = n || "";
+    btn.setAttribute("aria-expanded", String(Steam.open.has(modId)));
+  });
+  const box = document.querySelector(`[data-discuss-box="${CSS.escape(modId)}"]`);
+  if (!box) return;
+  box.hidden = !Steam.open.has(modId);
+  if (!box.hidden) box.innerHTML = discussInner(modId);
 }
 
 /* ---------- Новости ---------- */
@@ -2380,6 +2575,33 @@ document.addEventListener("click", async e => {
     return;
   }
 
+  const disc = t.closest("[data-discuss]");
+  if (disc) {
+    const mod = disc.dataset.discuss;
+    if (Steam.open.has(mod)) Steam.open.delete(mod); else { Steam.open.add(mod); Steam.load(mod); }
+    refreshDiscuss(mod);
+    return;
+  }
+
+  const pcDel = t.closest("[data-pc-del]");
+  if (pcDel) {
+    if (!confirm("Удалить комментарий?")) return;
+    try { await Steam.api(`/comments/${pcDel.dataset.pcDel}`, { method: "DELETE" }); toast("Комментарий удалён"); }
+    catch (err) { toast(err.message); }
+    Steam.load(pcDel.dataset.mod);
+    return;
+  }
+
+  const pcBan = t.closest("[data-pc-ban]");
+  if (pcBan) {
+    if (!confirm("Заблокировать этого игрока? Он больше не сможет писать комментарии, а все его комментарии будут удалены.")) return;
+    try { await Steam.api("/ban", { method: "POST", body: JSON.stringify({ steamid: pcBan.dataset.pcBan, removeAll: true }) }); toast("Игрок заблокирован"); }
+    catch (err) { toast(err.message); }
+    Steam.counts = (await Steam.api("/comments/counts").catch(() => ({ counts: Steam.counts }))).counts || Steam.counts;
+    Steam.load(pcBan.dataset.mod);
+    return;
+  }
+
   const toggle = t.closest("[data-toggle]");
   if (toggle) {
     const key = toggle.dataset.toggle;
@@ -2411,6 +2633,8 @@ document.addEventListener("click", async e => {
   const id = act.dataset.id;
   switch (act.dataset.act) {
     case "login": loginForm(); break;
+    case "steam-login": Steam.login(); break;
+    case "steam-logout": Steam.logout(false); break;
     case "add-task": taskForm(act.dataset.stage, null); break;
     case "edit-task": e.preventDefault(); taskForm(null, id); break;
     case "add-stage": stageForm(null); break;
@@ -2452,7 +2676,25 @@ document.addEventListener("change", e => {
   if (GH.token()) { setSync("saving"); clearTimeout(publishTimer); publishTimer = setTimeout(() => publish(false), 2500); } else setSync("local");
 });
 
-document.addEventListener("submit", e => {
+document.addEventListener("submit", async e => {
+  const pc = e.target.closest(".pc-form");
+  if (pc) {
+    e.preventDefault();
+    const ta = pc.querySelector("textarea");
+    const text = ta.value.trim();
+    if (!text) return;
+    const mod = pc.dataset.mod;
+    pc.querySelector(".send").disabled = true;
+    try {
+      await Steam.api("/comments", { method: "POST", body: JSON.stringify({ mod, text }) });
+      ta.value = "";
+      await Steam.load(mod);
+    } catch (err) {
+      toast(err.message);
+      pc.querySelector(".send").disabled = false;
+    }
+    return;
+  }
   const form = e.target.closest(".comment-form");
   if (!form) return;
   e.preventDefault();
@@ -2517,7 +2759,7 @@ function observeReveal() {
 const VIEWS = ["mods", "news", "map", "plan"];
 
 function currentView() {
-  const h = location.hash.replace("#", "");
+  const h = location.hash.replace("#", "").split("&")[0];
   if (h === "server") return "mods";
   if (h === "roadmap") return "plan";
   return VIEWS.includes(h) ? h : "mods";
@@ -2584,6 +2826,7 @@ $("footerText").textContent = `© ${new Date().getFullYear()} ${CONFIG.serverNam
   renderAll();
   applyAdminUI();
   showView();
+  Steam.init();
   const saved = lsGet(LS.pass, null);
   if (saved) {
     try { await unlock(saved, true); } catch (e) { lsDel(LS.pass); }

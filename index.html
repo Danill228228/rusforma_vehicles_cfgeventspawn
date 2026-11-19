@@ -973,7 +973,9 @@ function moneyCard(u) {
       <div class="gpay-box" id="gpayBox"></div>
       <p class="note" id="gpayNote">Оплата через Google Pay. Баланс пополнится сразу после оплаты.</p></form>` : "";
   const hasManual = m && (m.info || m.boosty);
-  const manualForm = `<form data-form="topup">${u.googlePay ? "" : quick([5, 10, 20, 50])}<div class="inline">${amountField()}<button class="btn ${u.googlePay ? "" : "primary"}" type="submit">Создать заявку</button></div></form>`;
+  const manualLabel = m && m.boosty ? "Пополнить через Boosty" : "Создать заявку";
+  const manualHint = !u.googlePay && m && m.boosty ? `<p class="note">Создай заявку, задонать эту сумму на Boosty и укажи код заявки в сообщении к донату. Баланс пополнится, когда администратор подтвердит донат.</p>` : "";
+  const manualForm = `<form data-form="topup">${u.googlePay ? "" : quick([5, 10, 20, 50])}<div class="inline">${amountField()}<button class="btn ${u.googlePay ? "" : "primary"}" type="submit">${manualLabel}</button></div>${manualHint}</form>`;
   const manual = !hasManual ? (u.googlePay ? "" : `<p class="note">Пополнение скоро будет доступно.</p>`)
     : u.googlePay ? `<details style="margin-top:14px"><summary>Другой способ: ${m.boosty ? "Boosty" : "перевод"}</summary>${manualForm}</details>` : manualForm;
   const pending = m ? m.topups.filter(t => t.status === "pending") : [];

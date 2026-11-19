@@ -11,6 +11,7 @@
 //   STEAM_API_KEY     — (Secret, необязательно) ключ Steam Web API для ников и аватаров
 //   STRIPE_SECRET_KEY      — (Secret) секретный ключ Stripe (права: PaymentIntents — Write) для оплаты Google Pay
 //   STRIPE_PUBLISHABLE_KEY — (Text) публичный ключ Stripe pk_… — нужен странице, чтобы показать кнопку Google Pay
+//   BOOSTY_URL / PAYMENT_INFO — (необязательно) ссылка на Boosty и инструкция для ручного пополнения (можно задать в админке)
 //   CURRENCY          — валюта (по умолчанию usd), CURRENCY_SIGN — её знак (по умолчанию $)
 
 const STEAM_OPENID = "https://steamcommunity.com/openid/login";
@@ -428,8 +429,11 @@ function checkAmount(env, amount) {
   return amount;
 }
 
+// Ручное пополнение: значения из админки, а если там пусто — из переменных воркера BOOSTY_URL и PAYMENT_INFO
 async function manualInfo(env) {
-  return { info: (await getSetting(env, "payment_info")) || "", boosty: (await getSetting(env, "boosty_url")) || "" };
+  const info = await getSetting(env, "payment_info");
+  const boosty = await getSetting(env, "boosty_url");
+  return { info: info || String(env.PAYMENT_INFO || ""), boosty: boosty || String(env.BOOSTY_URL || "") };
 }
 
 async function createTopup(env, steamid, amount) {

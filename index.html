@@ -48,15 +48,123 @@
     overflow-x: hidden;
   }
 
-  body::before {
-    content: "";
+  /* ---------- Фон: «рассвет» ---------- */
+  .bg {
     position: fixed;
     inset: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(600px 400px at 15% 0%, rgba(234, 88, 12, 0.14), transparent 70%),
-      radial-gradient(500px 500px at 100% 60%, rgba(253, 186, 116, 0.06), transparent 70%);
     z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 70% at 50% 0%, #1c0b04 0%, transparent 60%),
+      linear-gradient(180deg, #0c0502 0%, #150804 45%, #241005 100%);
+  }
+
+  /* восход у нижнего края */
+  .bg-sun {
+    position: absolute;
+    left: 50%;
+    bottom: -55vh;
+    width: max(140vw, 900px);
+    height: 90vh;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(closest-side,
+      rgba(251, 146, 60, 0.5) 0%,
+      rgba(234, 88, 12, 0.3) 35%,
+      rgba(185, 28, 28, 0.12) 62%,
+      transparent 100%);
+    filter: blur(10px);
+    animation: sunrise 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes sunrise {
+    from { opacity: 0.75; transform: translateX(-50%) scale(1); }
+    to   { opacity: 1;    transform: translateX(-50%) scale(1.06); }
+  }
+
+  /* мягкие облака света, медленно плывут */
+  .bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.55;
+    animation: drift 26s ease-in-out infinite alternate;
+  }
+
+  .bg-glow.g1 {
+    top: -12vh;
+    left: -10vw;
+    width: 55vw;
+    height: 45vh;
+    min-width: 320px;
+    background: rgba(234, 88, 12, 0.35);
+  }
+
+  .bg-glow.g2 {
+    top: 30vh;
+    right: -15vw;
+    width: 45vw;
+    height: 40vh;
+    min-width: 280px;
+    background: rgba(153, 27, 27, 0.32);
+    animation-duration: 32s;
+    animation-direction: alternate-reverse;
+  }
+
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(6vw, 4vh) scale(1.15); }
+  }
+
+  /* тактическая сетка, как на карте, тает к краям */
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(253, 186, 116, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(253, 186, 116, 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+    background-position: center top;
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 35%, #000 20%, transparent 80%);
+            mask-image: radial-gradient(ellipse 80% 70% at 50% 35%, #000 20%, transparent 80%);
+  }
+
+  /* лёгкое плёночное зерно */
+  .bg-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.09;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* затемнение по краям */
+  .bg-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(5, 2, 1, 0.65) 100%);
+  }
+
+  /* искры, поднимающиеся от «костра» */
+  .ember {
+    position: absolute;
+    bottom: -10px;
+    width: var(--s, 3px);
+    height: var(--s, 3px);
+    border-radius: 50%;
+    background: #fdba74;
+    box-shadow: 0 0 6px 1px rgba(251, 146, 60, 0.9), 0 0 14px 3px rgba(234, 88, 12, 0.45);
+    opacity: 0;
+    animation: rise var(--d, 14s) linear var(--delay, 0s) infinite;
+  }
+
+  @keyframes rise {
+    0%   { opacity: 0;   transform: translate(0, 0); }
+    10%  { opacity: 0.9; }
+    50%  { transform: translate(var(--x, 30px), -50vh); }
+    80%  { opacity: 0.5; }
+    100% { opacity: 0;   transform: translate(calc(var(--x, 30px) * -0.5), -100vh); }
   }
 
   button, textarea { font: inherit; color: inherit; }
@@ -277,6 +385,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .bg-sun, .bg-glow { animation: none; }
+    .ember { display: none; }
     .reveal { opacity: 1; transform: none; }
     .bar-fill, .mini-fill { transition: none; }
   }
@@ -401,8 +511,8 @@
     stroke: #fff;
     stroke-width: 3;
     fill: none;
-    stroke-dasharray: 20;
-    stroke-dashoffset: 20;
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
     transition: stroke-dashoffset 0.25s ease;
   }
 
@@ -708,6 +818,16 @@
 </style>
 </head>
 <body>
+
+<div class="bg" aria-hidden="true">
+  <div class="bg-glow g1"></div>
+  <div class="bg-glow g2"></div>
+  <div class="bg-sun"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-vignette"></div>
+  <div id="embers"></div>
+</div>
 
 <nav class="topnav" aria-label="Разделы">
   <div class="topnav-inner">
@@ -1304,6 +1424,18 @@ document.getElementById("brandName").textContent = SERVER_NAME;
 document.getElementById("serverName").textContent = SERVER_NAME;
 document.getElementById("discordLink").href = DISCORD_URL;
 document.getElementById("footerText").textContent = `© ${new Date().getFullYear()} ${SERVER_NAME} · DayZ-сервер`;
+
+// Искры на фоне (на телефоне — меньше)
+(function makeEmbers() {
+  const box = document.getElementById("embers");
+  const count = window.innerWidth < 600 ? 12 : 22;
+  let html = "";
+  for (let i = 0; i < count; i++) {
+    const r = (a, b) => (a + Math.random() * (b - a)).toFixed(2);
+    html += `<span class="ember" style="left:${r(2, 98)}%;--s:${r(2, 4)}px;--d:${r(11, 22)}s;--delay:-${r(0, 22)}s;--x:${r(-60, 60)}px"></span>`;
+  }
+  box.innerHTML = html;
+})();
 
 renderStage();
 renderCategoryTabs();

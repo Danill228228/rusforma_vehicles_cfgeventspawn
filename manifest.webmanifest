@@ -1,11 +1,11 @@
 {
-  "name": "Дорожная карта DawnLine",
-  "short_name": "DawnLine",
+  "name": "DAWNLINE — мастерская модов DayZ",
+  "short_name": "DAWNLINE",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#120804",
-  "theme_color": "#120804",
+  "background_color": "#121826",
+  "theme_color": "#121826",
   "lang": "ru",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },

@@ -1,4 +1,4 @@
-# Настройки сервера магазина DawnLine (Cloudflare Workers)
+# Сервер магазина DAWNLINE (Cloudflare Workers)
 name = "dawnline"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
@@ -6,9 +6,11 @@ workers_dev = true
 
 [vars]
 SITE_URL = "https://danill228228.github.io/rusforma_vehicles_cfgeventspawn/"
-ADMIN_STEAM_IDS = ""   # можно не заполнять: админ назначается одноразовым кодом ADMIN_CLAIM_CODE
+ADMIN_STEAM_IDS = ""
+CURRENCY = "pln"
+CURRENCY_SIGN = "zł"
 
-# Данные магазина: SQLite внутри Durable Object (доступно на бесплатном тарифе)
+# Данные магазина: SQLite внутри Durable Object (есть на бесплатном тарифе)
 [[durable_objects.bindings]]
 name = "SHOP"
 class_name = "Shop"

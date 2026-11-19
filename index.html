@@ -537,6 +537,101 @@
     text-decoration-color: rgba(253, 186, 116, 0.5);
   }
 
+  /* ---------- План: этапы по очереди ---------- */
+  .phase-now    { --ph: #f97316; }
+  .phase-next   { --ph: #eab308; }
+  .phase-later  { --ph: #dc2626; }
+  .phase-paused { --ph: #78716c; }
+
+  .phase { border-left: 3px solid var(--ph); }
+
+  .phase-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .phase-dot {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    margin-top: 7px;
+    border-radius: 50%;
+    background: var(--ph);
+    box-shadow: 0 0 10px var(--ph);
+  }
+
+  .phase-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ph);
+  }
+
+  .phase-paused .phase-title { color: #a8a29e; }
+
+  .phase-hint {
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+
+  .phase-paused { opacity: 0.75; }
+
+  .src {
+    margin-right: 4px;
+  }
+
+  .when {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 7px;
+    border-radius: 999px;
+    border: 1px solid var(--ph);
+    color: var(--ph);
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.6;
+    vertical-align: 1px;
+    white-space: nowrap;
+  }
+
+  .phase-paused.when, .when.phase-paused { color: #a8a29e; }
+
+  .next-label {
+    display: none;
+    margin-left: 6px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.6;
+    vertical-align: 1px;
+    white-space: nowrap;
+  }
+
+  .task.is-next .next-label { display: inline-block; }
+
+  .task.is-next {
+    margin: 0 -10px;
+    padding: 0 10px;
+    border-radius: 10px;
+    background: rgba(234, 88, 12, 0.1);
+  }
+
+  .chip.paused { opacity: 0.6; }
+
+  .badge-paused {
+    display: inline-block;
+    margin-bottom: 3px;
+    padding: 1px 9px;
+    border-radius: 999px;
+    background: #57534e;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
   /* ---------- Кнопка комментариев ---------- */
   .cbtn {
     flex: 0 0 auto;
@@ -895,37 +990,17 @@ const DISCORD_URL = "#";
 
 /*
   ДОРОЖНАЯ КАРТА. Каждый этап — своё меню:
-    id    — уникальный ключ (латиницей), по нему сохраняется прогресс
-    menu  — короткое название кнопки в меню
-    icon  — emoji
-    title — заголовок
-    note  — (необязательно) пояснение под заголовком
-    tasks — подпункты: { id: "уникальный-ключ", text: "текст" }
+    id     — уникальный ключ (латиницей), по нему сохраняется прогресс
+    menu   — короткое название кнопки в меню
+    icon   — emoji
+    title  — заголовок
+    note   — (необязательно) пояснение под заголовком
+    paused — (необязательно) true, если этап временно отложен
+    tasks  — подпункты: { id: "уникальный-ключ", text: "текст" }
 
   Если поменять id подпункта, его галочка и комментарии пропадут.
 */
 const ROADMAP = [
-  {
-    id: "minipc",
-    menu: "Сервер",
-    icon: "🖥️",
-    title: "Купить мини-ПК для DayZ-сервера",
-    tasks: [
-      { id: "minipc-setup", text: "Дать Claude полный доступ к мини-ПК, пробросить порты и настроить всё, чтобы на сервер могли заходить все игроки" }
-    ]
-  },
-  {
-    id: "mods",
-    menu: "Моды",
-    icon: "🛠️",
-    title: "Написать свои моды для DayZ-сервера",
-    tasks: [
-      { id: "mods-car-shooting", text: "Стрельба из автомобилей" },
-      { id: "mods-nobuild",      text: "Зоны запрета строительства на карте" },
-      { id: "mods-player-map",   text: "Интерактивная веб-карта для игроков: все ивенты и спавн игроков" },
-      { id: "mods-admin-map",    text: "Такая же карта для админов, но обновляющаяся в реальном времени" }
-    ]
-  },
   {
     id: "hummer",
     menu: "Хаммер",
@@ -941,12 +1016,15 @@ const ROADMAP = [
     ]
   },
   {
-    id: "promo",
-    menu: "Реклама",
-    icon: "🎬",
-    title: "Пиар сервера и Discord",
+    id: "mods",
+    menu: "Моды",
+    icon: "🛠️",
+    title: "Написать свои моды для DayZ-сервера",
     tasks: [
-      { id: "promo-video", text: "Снять видео для TikTok и YouTube Shorts: что умеет сервер, что на нём уже есть и что будет" }
+      { id: "mods-nobuild",      text: "Зоны запрета строительства на карте" },
+      { id: "mods-car-shooting", text: "Стрельба из автомобилей" },
+      { id: "mods-player-map",   text: "Интерактивная веб-карта для игроков: все ивенты и спавн игроков" },
+      { id: "mods-admin-map",    text: "Такая же карта для админов, но обновляющаяся в реальном времени" }
     ]
   },
   {
@@ -959,6 +1037,15 @@ const ROADMAP = [
     ]
   },
   {
+    id: "promo",
+    menu: "Реклама",
+    icon: "🎬",
+    title: "Пиар сервера и Discord",
+    tasks: [
+      { id: "promo-video", text: "Снять видео для TikTok и YouTube Shorts: что умеет сервер, что на нём уже есть и что будет" }
+    ]
+  },
+  {
     id: "donate",
     menu: "Сайт",
     icon: "💳",
@@ -967,6 +1054,48 @@ const ROADMAP = [
       { id: "donate-gpay",  text: "Оплата через Google Pay" },
       { id: "donate-cards", text: "Приём карт РФ, Украины и Беларуси" }
     ]
+  },
+  {
+    id: "minipc",
+    menu: "Мини-ПК",
+    icon: "🖥️",
+    title: "Купить мини-ПК для DayZ-сервера",
+    paused: true,
+    tasks: [
+      { id: "minipc-setup", text: "Дать Claude полный доступ к мини-ПК, пробросить порты и настроить всё, чтобы на сервер могли заходить все игроки" }
+    ]
+  }
+];
+
+/*
+  ПОРЯДОК РАБОТЫ — меню «План».
+  В tasks перечислены id подпунктов из ROADMAP в том порядке, в котором их делать.
+  Чтобы перенести пункт в другой этап — перенеси его id в другой список.
+*/
+const PLAN = [
+  {
+    id: "now",
+    title: "Сейчас",
+    hint: "Мини-ПК для этого не нужен — можно делать уже сегодня.",
+    tasks: ["hummer-texture", "hummer-paint", "hummer-polish", "hummer-test", "mods-nobuild", "discord-info"]
+  },
+  {
+    id: "next",
+    title: "Дальше",
+    hint: "Когда Хаммер проверен и работает.",
+    tasks: ["hummer-shooting", "mods-car-shooting", "mods-player-map"]
+  },
+  {
+    id: "later",
+    title: "Потом",
+    hint: "Когда сервер постоянно доступен игрокам.",
+    tasks: ["promo-video", "mods-admin-map", "donate-gpay", "donate-cards"]
+  },
+  {
+    id: "paused",
+    title: "Отложено",
+    hint: "Покупка мини-ПК временно отложена.",
+    tasks: ["minipc-setup"]
   }
 ];
 
@@ -1052,8 +1181,16 @@ if (typeof progress !== "object" || Array.isArray(progress)) progress = {};
 let comments = load(KEYS.comments, {});
 if (typeof comments !== "object" || Array.isArray(comments)) comments = {};
 
+const PLAN_TAB = "plan";
+
+// Быстрый поиск: подпункт → этап и очередь
+const TASK_INFO = {};
+ROADMAP.forEach(stage => stage.tasks.forEach(task => { TASK_INFO[task.id] = { task, stage }; }));
+const PHASE_OF = {};
+PLAN.forEach(phase => phase.tasks.forEach(id => { PHASE_OF[id] = phase; }));
+
 let currentStage = load(KEYS.stage, null);
-if (!ROADMAP.some(s => s.id === currentStage)) currentStage = ROADMAP[0].id;
+if (currentStage !== PLAN_TAB && !ROADMAP.some(s => s.id === currentStage)) currentStage = PLAN_TAB;
 
 let currentCategory = load(KEYS.category, null);
 if (!MOD_CATEGORIES.some(c => c.id === currentCategory)) currentCategory = MOD_CATEGORIES[0].id;
@@ -1191,26 +1328,91 @@ document.addEventListener("keydown", e => {
 
 /* ---------- Дорожная карта ---------- */
 
+function taskRow(task, opts) {
+  const key = "task:" + task.id;
+  const phase = PHASE_OF[task.id];
+  const src = opts.stage ? `<span class="src" title="${escapeHtml(opts.stage.menu || opts.stage.title)}">${opts.stage.icon || ""}</span>` : "";
+  const when = opts.showWhen && phase && phase.id !== "paused" ? `<span class="when phase-${escapeHtml(phase.id)}">${escapeHtml(phase.title)}</span>` : "";
+  return `
+    <li class="task" data-row="${escapeHtml(task.id)}">
+      <div class="task-row">
+        <label>
+          <input type="checkbox" data-task="${escapeHtml(task.id)}" ${progress[task.id] ? "checked" : ""}>
+          <span class="check">${CHECK_SVG}</span>
+          <span class="task-text">${src}${escapeHtml(task.text)}${when}<span class="next-label">Следующий шаг</span></span>
+        </label>
+        ${commentButton(key)}
+      </div>
+      ${threadHtml(key)}
+    </li>`;
+}
+
+// Первый невыполненный пункт по плану (кроме отложенных)
+function nextStepId() {
+  for (const phase of PLAN) {
+    if (phase.id === "paused") continue;
+    for (const id of phase.tasks) {
+      if (TASK_INFO[id] && !progress[id]) return id;
+    }
+  }
+  return null;
+}
+
+function renderPlan() {
+  const root = document.getElementById("roadmap");
+  root.setAttribute("aria-labelledby", `stage-${PLAN_TAB}`);
+  root.innerHTML = `<div class="stack">${PLAN.map(phase => {
+    const tasks = phase.tasks.filter(id => TASK_INFO[id]);
+    return `
+      <section class="card phase phase-${escapeHtml(phase.id)} reveal" data-phase="${escapeHtml(phase.id)}">
+        <div class="phase-head">
+          <span class="phase-dot" aria-hidden="true"></span>
+          <div class="head-text">
+            <h2 class="phase-title">${escapeHtml(phase.title)}</h2>
+            ${phase.hint ? `<p class="phase-hint">${escapeHtml(phase.hint)}</p>` : ""}
+          </div>
+          <span class="counter" data-phase-counter></span>
+        </div>
+        <ul class="tasks" style="margin-top:6px">
+          ${tasks.map(id => taskRow(TASK_INFO[id].task, { stage: TASK_INFO[id].stage })).join("")}
+        </ul>
+      </section>`;
+  }).join("")}</div>`;
+  updateCounters();
+  observeReveal();
+}
+
 function stageStats(item) {
   return { done: item.tasks.filter(t => progress[t.id]).length, total: item.tasks.length };
 }
 
 function renderStageTabs() {
-  document.getElementById("stageTabs").innerHTML = ROADMAP.map(item => {
+  let allDone = 0, allTotal = 0;
+  ROADMAP.forEach(item => { const st = stageStats(item); allDone += st.done; allTotal += st.total; });
+  const planSelected = currentStage === PLAN_TAB;
+  const planChip = `
+      <button class="chip" type="button" role="tab" id="stage-${PLAN_TAB}"
+              aria-controls="roadmap" aria-selected="${planSelected}" tabindex="${planSelected ? 0 : -1}"
+              data-stage="${PLAN_TAB}">
+        <span class="chip-icon" aria-hidden="true">📋</span>План
+        <span class="chip-count">${allDone}/${allTotal}</span>
+      </button>`;
+  document.getElementById("stageTabs").innerHTML = planChip + ROADMAP.map(item => {
     const { done, total } = stageStats(item);
     const complete = total > 0 && done === total;
     const selected = item.id === currentStage;
     return `
-      <button class="chip${complete ? " done" : ""}" type="button" role="tab" id="stage-${escapeHtml(item.id)}"
+      <button class="chip${complete ? " done" : ""}${item.paused ? " paused" : ""}" type="button" role="tab" id="stage-${escapeHtml(item.id)}"
               aria-controls="roadmap" aria-selected="${selected}" tabindex="${selected ? 0 : -1}"
               data-stage="${escapeHtml(item.id)}">
         <span class="chip-icon" aria-hidden="true">${item.icon || "⭐"}</span>${escapeHtml(item.menu || item.title)}
-        <span class="chip-count">${complete ? "✓" : `${done}/${total}`}</span>
+        <span class="chip-count">${complete ? "✓" : item.paused ? "пауза" : `${done}/${total}`}</span>
       </button>`;
   }).join("");
 }
 
 function renderStage() {
+  if (currentStage === PLAN_TAB) { renderPlan(); return; }
   const root = document.getElementById("roadmap");
   const index = Math.max(0, ROADMAP.findIndex(item => item.id === currentStage));
   const item = ROADMAP[index];
@@ -1220,7 +1422,7 @@ function renderStage() {
       <div class="card-head">
         <div class="icon" aria-hidden="true">${item.icon || "⭐"}</div>
         <div class="head-text">
-          <span class="kicker">Этап ${index + 1} из ${ROADMAP.length}</span>
+          ${item.paused ? `<span class="badge-paused">Отложено</span>` : `<span class="kicker">Этап ${index + 1} из ${ROADMAP.length}</span>`}
           <h2 class="card-title">${escapeHtml(item.title)}</h2>
         </div>
         <span class="counter" data-counter></span>
@@ -1228,21 +1430,7 @@ function renderStage() {
       ${item.note ? `<p class="note">${escapeHtml(item.note)}</p>` : ""}
       <div class="mini-bar"><div class="mini-fill" data-mini></div></div>
       <ul class="tasks">
-        ${item.tasks.map(task => {
-          const key = "task:" + task.id;
-          return `
-          <li class="task">
-            <div class="task-row">
-              <label>
-                <input type="checkbox" data-task="${escapeHtml(task.id)}" ${progress[task.id] ? "checked" : ""}>
-                <span class="check">${CHECK_SVG}</span>
-                <span class="task-text">${escapeHtml(task.text)}</span>
-              </label>
-              ${commentButton(key)}
-            </div>
-            ${threadHtml(key)}
-          </li>`;
-        }).join("")}
+        ${item.tasks.map(task => taskRow(task, { showWhen: true })).join("")}
       </ul>
     </section>`;
   updateCounters();
@@ -1262,6 +1450,17 @@ function updateCounters() {
     card.querySelector("[data-mini]").style.width = stats.total ? `${(stats.done / stats.total) * 100}%` : "0";
     card.classList.toggle("complete", stats.total > 0 && stats.done === stats.total);
   });
+  PLAN.forEach(phase => {
+    const el = document.querySelector(`[data-phase="${CSS.escape(phase.id)}"] [data-phase-counter]`);
+    if (!el) return;
+    const ids = phase.tasks.filter(id => TASK_INFO[id]);
+    el.textContent = `${ids.filter(id => progress[id]).length}/${ids.length}`;
+  });
+  const next = nextStepId();
+  document.querySelectorAll("[data-row]").forEach(row => {
+    row.classList.toggle("is-next", row.dataset.row === next);
+  });
+
   renderStageTabs();
   const pct = total ? Math.round((done / total) * 100) : 0;
   document.getElementById("overallCount").textContent = `${done}/${total} · ${pct}%`;
@@ -1375,7 +1574,7 @@ function bindTabs(containerId, attr, items, getCurrent, select) {
   });
 }
 
-bindTabs("stageTabs", "data-stage", ROADMAP, () => currentStage, selectStage);
+bindTabs("stageTabs", "data-stage", [{ id: PLAN_TAB }, ...ROADMAP], () => currentStage, selectStage);
 bindTabs("catTabs", "data-cat", MOD_CATEGORIES, () => currentCategory, selectCategory);
 
 /* ---------- Появление карточек ---------- */

@@ -1,6 +1,6 @@
 // DawnLine — сервер магазина модов DayZ.
-// Вход через Steam, товары и фото, верификация покупателей, баланс (онлайн: Google Pay через Stripe;
-// вручную: Boosty и реквизиты), покупки с выдачей ссылки, отзывы и лайки, админка.
+// Вход через Steam, товары и фото, верификация покупателей, покупка через донат на Boosty
+// (администратор подтверждает донат — доступ выдаётся сразу), отзывы и лайки, админка.
 // Cloudflare Worker; данные хранятся в Durable Object со встроенной SQLite.
 //
 // Переменные (Settings → Variables and Secrets):
@@ -11,8 +11,8 @@
 //   STEAM_API_KEY     — (Secret, необязательно) ключ Steam Web API для ников и аватаров
 //   STRIPE_SECRET_KEY      — (Secret) секретный ключ Stripe (права: PaymentIntents — Write) для оплаты Google Pay
 //   STRIPE_PUBLISHABLE_KEY — (Text) публичный ключ Stripe pk_… — нужен странице, чтобы показать кнопку Google Pay
-//   BOOSTY_URL / PAYMENT_INFO — (необязательно) ссылка на Boosty и инструкция для ручного пополнения (можно задать в админке)
-//   CURRENCY          — валюта (по умолчанию usd), CURRENCY_SIGN — её знак (по умолчанию $)
+//   BOOSTY_URL        — страница доната на Boosty (по умолчанию https://boosty.to/tufelka), можно поменять в админке
+//   CURRENCY          — валюта (по умолчанию rub), CURRENCY_SIGN — её знак (по умолчанию ₽)
 
 const STEAM_OPENID = "https://steamcommunity.com/openid/login";
 const STEAM_API = "https://api.steampowered.com";
@@ -38,6 +38,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS purchases (steamid TEXT NOT NULL, mod TEXT NOT NULL, price INTEGER NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (steamid, mod))`,
   `CREATE TABLE IF NOT EXISTS reviews (steamid TEXT NOT NULL, mod TEXT NOT NULL, rating INTEGER NOT NULL, text TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (steamid, mod))`,
   `CREATE TABLE IF NOT EXISTS likes (steamid TEXT NOT NULL, mod TEXT NOT NULL, PRIMARY KEY (steamid, mod))`,
+  `CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, steamid TEXT NOT NULL, mod TEXT NOT NULL, price INTEGER NOT NULL, code TEXT NOT NULL, status TEXT NOT NULL, ts INTEGER NOT NULL, done_ts INTEGER)`,
+  `CREATE INDEX IF NOT EXISTS idx_orders_user ON orders (steamid, status)`,
   `CREATE TABLE IF NOT EXISTS verifications (steamid TEXT PRIMARY KEY, project TEXT NOT NULL, discord TEXT NOT NULL, about TEXT NOT NULL, ip TEXT NOT NULL, port INTEGER NOT NULL, qport INTEGER NOT NULL, status TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', ts INTEGER NOT NULL)`
 ];
 
@@ -150,8 +152,9 @@ async function claimAdmin(env, steamid, code) {
   return { ok: true };
 }
 
-const currency = env => String(env.CURRENCY || "usd").toLowerCase();
-const sign = env => String(env.CURRENCY_SIGN || "$");
+const currency = env => String(env.CURRENCY || "rub").toLowerCase();
+const sign = env => String(env.CURRENCY_SIGN || "₽");
+const DEFAULT_BOOSTY = "https://boosty.to/tufelka";
 const googlePayReady = env => !!(env.STRIPE_SECRET_KEY && env.STRIPE_PUBLISHABLE_KEY);
 
 /* ---------- Steam: вход ---------- */
@@ -433,7 +436,7 @@ function checkAmount(env, amount) {
 async function manualInfo(env) {
   const info = await getSetting(env, "payment_info");
   const boosty = await getSetting(env, "boosty_url");
-  return { info: info || String(env.PAYMENT_INFO || ""), boosty: boosty || String(env.BOOSTY_URL || "") };
+  return { info: info || String(env.PAYMENT_INFO || ""), boosty: boosty || String(env.BOOSTY_URL || DEFAULT_BOOSTY) };
 }
 
 async function createTopup(env, steamid, amount) {
@@ -512,6 +515,61 @@ async function confirmCard(env, steamid, paymentId) {
   return { paid: false, status: "pending" };
 }
 
+/* ---------- покупка через Boosty ---------- */
+
+const donationMessage = (steamid, code) => `SteamID ${steamid} · ${code}`;
+
+async function createOrder(env, steamid, mod) {
+  if (!validId(mod)) fail(400, "Неверный продукт");
+  const p = await getProduct(env, mod, false);
+  if (await banned(env, steamid)) fail(403, "Аккаунт заблокирован");
+  const v = await verificationOf(env, steamid);
+  if (!isAdmin(env, steamid) && (!v || v.status !== "approved")) fail(403, "Сначала пройди верификацию в личном кабинете");
+  if (await env.DB.prepare(`SELECT 1 FROM purchases WHERE steamid = ?1 AND mod = ?2`).bind(steamid, mod).first()) fail(409, "Этот продукт уже куплен");
+  const find = () => env.DB.prepare(`SELECT id, mod, price, code, status, ts FROM orders WHERE steamid = ?1 AND mod = ?2 AND status = 'pending'`).bind(steamid, mod).first();
+  let o = await find();
+  if (!o) {
+    const open = await env.DB.prepare(`SELECT COUNT(*) AS n FROM orders WHERE steamid = ?1 AND status = 'pending'`).bind(steamid).first();
+    if (open && open.n >= 5) fail(429, "У тебя уже 5 заказов ждут подтверждения");
+    await env.DB.prepare(`INSERT INTO orders (steamid, mod, price, code, status, ts) VALUES (?1, ?2, ?3, ?4, 'pending', ?5)`).bind(steamid, mod, p.price, randomCode("DL-", 5), Date.now()).run();
+    o = await find();
+  }
+  return { order: { ...o, title: p.title, message: donationMessage(steamid, o.code) }, boosty: (await manualInfo(env)).boosty };
+}
+
+async function myOrders(env, steamid) {
+  const { results } = await env.DB.prepare(
+    `SELECT o.id, o.mod, o.price, o.code, o.status, o.ts, p.title FROM orders o LEFT JOIN products p ON p.id = o.mod
+     WHERE o.steamid = ?1 AND (o.status = 'pending' OR o.ts > ?2) ORDER BY o.ts DESC LIMIT 30`
+  ).bind(steamid, Date.now() - 30 * 86400000).all();
+  return { orders: results.map(o => ({ ...o, message: donationMessage(steamid, o.code) })), boosty: (await manualInfo(env)).boosty };
+}
+
+async function cancelOrder(env, steamid, id) {
+  const r = await env.DB.prepare(`UPDATE orders SET status = 'canceled', done_ts = ?3 WHERE id = ?1 AND steamid = ?2 AND status = 'pending'`).bind(id, steamid, Date.now()).run();
+  if (!r.meta.changes) fail(404, "Заказ не найден");
+  return { ok: true };
+}
+
+async function adminOrder(env, b) {
+  const id = Number(b.id);
+  const o = await env.DB.prepare(`SELECT steamid, mod, price, code, status FROM orders WHERE id = ?1`).bind(id).first();
+  if (!o) fail(404, "Заказ не найден");
+  if (o.status !== "pending") fail(409, "Заказ уже обработан");
+  if (b.action === "reject") {
+    await env.DB.prepare(`UPDATE orders SET status = 'rejected', done_ts = ?2 WHERE id = ?1 AND status = 'pending'`).bind(id, Date.now()).run();
+    return { ok: true };
+  }
+  if (b.action !== "approve") fail(400, "Неверное действие");
+  const ts = Date.now();
+  // Одна транзакция: закрыть заказ и выдать доступ к продукту
+  await env.DB.batch([
+    env.DB.prepare(`UPDATE orders SET status = 'done', done_ts = ?2 WHERE id = ?1 AND status = 'pending'`).bind(id, ts),
+    env.DB.prepare(`INSERT OR IGNORE INTO purchases (steamid, mod, price, ts) SELECT ?1, ?2, ?3, ?4 WHERE changes() = 1`).bind(o.steamid, o.mod, o.price, ts)
+  ]);
+  return { ok: true };
+}
+
 /* ---------- отзывы и лайки ---------- */
 
 async function listReviews(env, mod, limit) {
@@ -556,9 +614,13 @@ async function adminOverview(env) {
     env.DB.prepare(`SELECT COUNT(*) AS n FROM users`),
     env.DB.prepare(`SELECT c.steamid, c.amount, c.done_ts, u.name FROM card_payments c LEFT JOIN users u ON u.steamid = c.steamid WHERE c.status = 'done' ORDER BY c.done_ts DESC LIMIT 20`)
   ]);
+  const orders = await env.DB.prepare(
+    `SELECT o.id, o.steamid, o.mod, o.price, o.code, o.ts, u.name, p.title FROM orders o
+     LEFT JOIN users u ON u.steamid = o.steamid LEFT JOIN products p ON p.id = o.mod WHERE o.status = 'pending' ORDER BY o.ts`
+  ).all();
   const del = await env.DB.prepare(`SELECT mod, url, note FROM delivery`).all();
   return {
-    verifications: ver.results, topups: topups.results, sales: sales.results, users: users.results[0].n, cards: cards.results,
+    verifications: ver.results, orders: orders.results.map(o => ({ ...o, message: donationMessage(o.steamid, o.code) })), topups: topups.results, sales: sales.results, users: users.results[0].n, cards: cards.results,
     delivery: del.results, googlePay: googlePayReady(env), ...(await manualInfo(env)), ...(await listProducts(env, true))
   };
 }
@@ -669,6 +731,10 @@ async function route(request, env) {
   }
   if (path === "/verify" && M === "POST") return json(await submitVerification(env, need(), await body(request)));
   if (path === "/buy" && M === "POST") return json(await buy(env, need(), (await body(request)).mod));
+  if (path === "/order" && M === "POST") return json(await createOrder(env, need(), (await body(request)).mod), 201);
+  if (path === "/orders" && M === "GET") return json(await myOrders(env, need()));
+  const delOrder = path.match(/^\/orders\/(\d+)$/);
+  if (delOrder && M === "DELETE") return json(await cancelOrder(env, need(), Number(delOrder[1])));
   if (path === "/purchases" && M === "GET") return json(await myPurchases(env, need()));
   if (path === "/money" && M === "GET") return json(await myMoney(env, need()));
   if (path === "/topup" && M === "POST") return json(await createTopup(env, need(), (await body(request)).amount), 201);
@@ -691,6 +757,20 @@ async function route(request, env) {
     if (path === "/admin/image" && M === "POST") return json(await uploadImage(env, b));
     if (path === "/admin/verification" && M === "POST") return json(await adminVerification(env, b));
     if (path === "/admin/topup" && M === "POST") return json(await adminTopup(env, b));
+    if (path === "/admin/order" && M === "POST") return json(await adminOrder(env, b));
+    if (path === "/admin/grant" && M === "POST") {
+      if (!/^\d{17}$/.test(b.steamid || "")) fail(400, "Неверный Steam ID");
+      const p = await getProduct(env, String(b.mod || ""), true);
+      await env.DB.prepare(`INSERT OR IGNORE INTO purchases (steamid, mod, price, ts) VALUES (?1, ?2, ?3, ?4)`).bind(b.steamid, p.id, p.price, Date.now()).run();
+      return json({ ok: true });
+    }
+    if (path === "/admin/revoke" && M === "POST") {
+      await env.DB.batch([
+        env.DB.prepare(`DELETE FROM purchases WHERE steamid = ?1 AND mod = ?2`).bind(String(b.steamid || ""), String(b.mod || "")),
+        env.DB.prepare(`DELETE FROM reviews WHERE steamid = ?1 AND mod = ?2`).bind(String(b.steamid || ""), String(b.mod || ""))
+      ]);
+      return json({ ok: true });
+    }
     if (path === "/admin/balance" && M === "POST") return json(await adminBalance(env, b));
     if (path === "/admin/refund" && M === "POST") return json(await adminRefund(env, b));
     if (path === "/admin/settings" && M === "POST") return json(await adminSettings(env, b));

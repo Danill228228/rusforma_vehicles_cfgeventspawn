@@ -7,8 +7,9 @@ workers_dev = true
 [vars]
 SITE_URL = "https://danill228228.github.io/rusforma_vehicles_cfgeventspawn/"
 ADMIN_STEAM_IDS = ""
-CURRENCY = "usd"
-CURRENCY_SIGN = "$"
+BOOSTY_URL = "https://boosty.to/tufelka"
+CURRENCY = "rub"
+CURRENCY_SIGN = "₽"
 
 # Данные магазина: SQLite внутри Durable Object (есть на бесплатном тарифе)
 [[durable_objects.bindings]]

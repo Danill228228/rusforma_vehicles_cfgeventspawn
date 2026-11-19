@@ -355,8 +355,10 @@
   .pp .meta { display: flex; gap: 16px; align-items: center; margin-top: 10px; color: var(--muted); font-size: 14px; }
   .big-price { margin: 18px 0 14px; font-size: 30px; font-weight: 800; }
   .big-price .cur { margin-right: 2px; }
-  .gpay-box { margin-top: 12px; min-height: 48px; }
-  .gpay-box.off { min-height: 0; }
+  .steps { margin: 10px 0 14px 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+  .steps .code { display: inline-block; margin-top: 4px; user-select: all; overflow-wrap: anywhere; word-break: normal; }
+  .notice.order { margin: 12px 0 0; }
+  .notice.order + .notice.order { margin-top: 12px; }
   .note { color: var(--muted); font-size: 13.5px; margin-top: 10px; }
   .ok-text { color: #86efac; font-weight: 700; }
   .desc { margin-top: 26px; white-space: pre-wrap; font-size: 15px; overflow-wrap: anywhere; }
@@ -576,7 +578,6 @@
     <a class="brand" href="#/">DAWNLINE</a>
     <nav class="nav"><a href="#/" id="navHome">Главная</a></nav>
     <div class="tools">
-      <a class="chip-bal" id="balChip" href="#/ucp" hidden><svg class="i" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2"/><path d="M3 7v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1H5a2 2 0 0 1-2-2z"/><circle cx="16" cy="13.5" r="1.2" fill="currentColor"/></svg><span id="balText">0</span></a>
       <a class="sq" id="profileBtn" href="#/ucp" title="Личный кабинет" aria-label="Личный кабинет"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></a>
       <button class="sq" id="logoutBtn" type="button" title="Выйти" aria-label="Выйти" hidden><svg class="i out" viewBox="0 0 24 24"><path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></button>
     </div>
@@ -604,7 +605,7 @@ const CONFIG = {
   name: "DAWNLINE",
   api: "https://dawnline.rpor87707.workers.dev",   // сервер магазина (Cloudflare Worker)
   discordUrl: "#",                                  // ссылка-приглашение в Discord
-  currencySign: "$"
+  currencySign: "₽"
 };
 
 /* =====================================================================
@@ -621,7 +622,7 @@ function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-const money = n => `${Number(n) < 0 ? "−" : ""}${CONFIG.currencySign}${Math.abs(Number(n || 0)).toLocaleString("en-US")}`;
+const money = n => `${Number(n || 0).toLocaleString("ru-RU")} ${CONFIG.currencySign}`;
 const date = ts => { try { return new Date(ts).toLocaleDateString("ru-RU"); } catch (e) { return ""; } };
 const dateTime = ts => { try { return new Date(ts).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
 const imgUrl = u => (/^img\/[a-z0-9]{16}$/.test(u || "") ? `${CONFIG.api}/${u}` : /^https:\/\//.test(u || "") ? u : "");
@@ -660,6 +661,8 @@ const S = {
   products: null,
   likes: new Set(),
   purchases: [],
+  orders: [],
+  boosty: "",
   money: null,
   admin: null,
   adminUser: null,
@@ -689,13 +692,18 @@ async function loadLatest() {
   try { S.latest = (await api("/reviews?limit=6")).reviews; } catch (e) { S.latest = []; }
 }
 
+let lastRefresh = 0;
+
 async function refreshUser() {
+  lastRefresh = Date.now();
   if (!S.token) { S.user = null; return; }
   try {
-    const [me, likes, purchases] = await Promise.all([api("/me"), api("/likes/mine"), api("/purchases")]);
+    const [me, likes, purchases, orders] = await Promise.all([api("/me"), api("/likes/mine"), api("/purchases"), api("/orders")]);
     S.user = me;
     S.likes = new Set(likes.likes || []);
     S.purchases = purchases.purchases || [];
+    S.orders = orders.orders || [];
+    S.boosty = orders.boosty || "";
   } catch (e) { /* токен устарел */ }
 }
 
@@ -705,7 +713,7 @@ function login() {
 }
 
 function logout(silent) {
-  S.token = ""; S.user = null; S.likes = new Set(); S.purchases = []; S.money = null; S.admin = null; S.adminUser = null; S.topup = null;
+  S.token = ""; S.user = null; S.likes = new Set(); S.purchases = []; S.orders = []; S.money = null; S.admin = null; S.adminUser = null; S.topup = null;
   lsDel("dl-token");
   renderHeader();
   if (!silent) { toast("Ты вышел из аккаунта"); render(); }
@@ -724,6 +732,8 @@ function go(hash) { if (location.hash === hash) render(); else location.hash = h
 
 async function render() {
   const { path } = parseHash();
+  // Свежие данные о заказах и покупках (например, админ только что подтвердил донат)
+  if (S.token && Date.now() - lastRefresh > 5000 && (path.startsWith("/product") || path === "/ucp")) await refreshUser();
   $("navHome").classList.toggle("active", path === "/" || path.startsWith("/product") || path === "/reviews");
   $("profileBtn").classList.toggle("on", path === "/ucp" || path === "/admin");
   const p = path.match(/^\/product\/([\w-]+)$/);
@@ -738,9 +748,7 @@ async function render() {
 
 function renderHeader() {
   const u = S.user;
-  $("balChip").hidden = !u;
   $("logoutBtn").hidden = !u;
-  if (u) $("balText").textContent = money(u.balance);
 }
 
 /* =====================================================================
@@ -759,7 +767,7 @@ function productCard(p) {
         ${p.description ? `<p class="p-desc">${esc(p.description)}</p>` : ""}
       </div>
       <div class="p-foot">
-        <span class="price"><span class="cur">${esc(CONFIG.currencySign)}</span>${esc(Number(p.price).toLocaleString("en-US"))}</span>
+        <span class="price"><span class="cur">${esc(CONFIG.currencySign)}</span>${esc(Number(p.price).toLocaleString("ru-RU"))}</span>
         <span class="likes${S.likes.has(p.id) ? " on" : ""}">${ICON.heart}${esc(p.likes)}</span>
       </div>
     </a>`;
@@ -829,6 +837,25 @@ async function renderAllReviews() {
 const owned = id => S.purchases.some(p => p.mod === id);
 const verified = () => !!(S.user && S.user.verification && S.user.verification.status === "approved");
 
+const pendingOrder = id => S.orders.find(o => o.mod === id && o.status === "pending");
+
+function orderPanel(o) {
+  return `
+    <div class="notice order">
+      <b>Заказ ${esc(o.code)}${o.title ? ` · ${esc(o.title)}` : ""}</b>
+      <ol class="steps">
+        <li>Нажми <b>«Перейти на Boosty»</b>: сообщение для доната скопируется само.</li>
+        <li>Задонать <b>${esc(money(o.price))}</b> и вставь в сообщение к донату:<br><span class="code">${esc(o.message)}</span></li>
+        <li>Доступ к продукту появится здесь и в личном кабинете, как только администратор подтвердит донат.</li>
+      </ol>
+      <div class="inline">
+        <button class="btn primary boosty" type="button" data-act="go-boosty" data-msg="${esc(o.message)}">Перейти на Boosty</button>
+        <button class="btn small" type="button" data-copy="${esc(o.message)}">Скопировать сообщение</button>
+        <button class="btn small" type="button" data-act="cancel-order" data-id="${esc(o.id)}">Отменить</button>
+      </div>
+    </div>`;
+}
+
 function buyBox(p) {
   const u = S.user;
   if (!u) return `<button class="steam" type="button" data-act="login">Войти через Steam, чтобы купить</button>`;
@@ -838,9 +865,11 @@ function buyBox(p) {
       ${safeHttps(x.url) ? `<p style="margin-top:12px"><a class="btn primary" href="${esc(safeHttps(x.url))}" target="_blank" rel="noopener">Скачать</a></p>` : ""}
       ${x.note ? `<p class="note" style="white-space:pre-wrap">${esc(x.note)}</p>` : (!x.url ? `<p class="note">Ссылка на скачивание скоро появится в личном кабинете.</p>` : "")}`;
   }
-  if (!verified()) return `<a class="btn primary" href="#/ucp">Пройти верификацию</a><p class="note">Покупать могут только владельцы DayZ-серверов, прошедшие верификацию.</p>`;
-  if (u.balance < p.price) return `<a class="btn primary" href="#/ucp">Пополнить баланс</a><p class="note">На балансе ${esc(money(u.balance))}, не хватает ${esc(money(p.price - u.balance))}.</p>`;
-  return `<button class="btn primary" type="button" data-act="buy" data-id="${esc(p.id)}">${p.price === 0 ? "Получить бесплатно" : `Купить за ${esc(money(p.price))}`}</button><p class="note">На балансе ${esc(money(u.balance))}</p>`;
+  const o = pendingOrder(p.id);
+  if (o) return orderPanel({ ...o, title: "" });
+  if (!verified() && !u.admin) return `<a class="btn primary" href="#/ucp">Пройти верификацию</a><p class="note">Покупать могут только владельцы DayZ-серверов, прошедшие верификацию.</p>`;
+  return `<button class="btn primary boosty" type="button" data-act="order" data-id="${esc(p.id)}">Купить через Boosty</button>
+    <p class="note">Оплата — донатом ${esc(money(p.price))} на Boosty с твоим Steam ID в сообщении. Доступ выдаётся после подтверждения доната.</p>`;
 }
 
 async function renderProduct(id) {
@@ -871,7 +900,7 @@ async function renderProduct(id) {
           <div class="meta">
             ${p.rating ? `<span>${stars(Math.round(p.rating.avg))} ${esc(p.rating.avg)} · ${esc(p.rating.n)}</span>` : `<span>Пока без отзывов</span>`}
           </div>
-          <div class="big-price"><span class="cur">${esc(CONFIG.currencySign)}</span>${esc(Number(p.price).toLocaleString("en-US"))}</div>
+          <div class="big-price">${esc(Number(p.price).toLocaleString("ru-RU"))} <span class="cur">${esc(CONFIG.currencySign)}</span></div>
           <div>${buyBox(p)}</div>
           <p style="margin-top:18px"><button class="like-btn${S.likes.has(p.id) ? " on" : ""}" type="button" data-act="like" data-id="${esc(p.id)}" aria-pressed="${S.likes.has(p.id)}">${ICON.heart}<span>${esc(p.likes)}</span></button></p>
         </div>
@@ -963,128 +992,8 @@ function pendingBox(v) {
     </div>`;
 }
 
-function moneyCard(u) {
-  const m = S.money;
-  const r = S.topup;
-  const quick = vals => `<div class="quick">${vals.map(v => `<button type="button" data-amount="${v}">${esc(money(v))}</button>`).join("")}</div>`;
-  const amountField = (val) => `<label class="field"><input name="amount" type="number" min="1" max="1000" step="1" placeholder="Сумма, ${esc(CONFIG.currencySign)}"${val ? ` value="${val}"` : ""} required aria-label="Сумма"></label>`;
-  const online = u.googlePay ? `
-    <form data-form="gpay" id="gpayForm" onsubmit="return false">${quick([5, 10, 20, 50])}<div class="inline">${amountField(10)}</div>
-      <div class="gpay-box" id="gpayBox"></div>
-      <p class="note" id="gpayNote">Оплата через Google Pay. Баланс пополнится сразу после оплаты.</p></form>` : "";
-  const hasManual = m && (m.info || m.boosty);
-  const manualLabel = m && m.boosty ? "Пополнить через Boosty" : "Создать заявку";
-  const manualHint = !u.googlePay && m && m.boosty ? `<p class="note">Создай заявку, задонать эту сумму на Boosty и укажи код заявки в сообщении к донату. Баланс пополнится, когда администратор подтвердит донат.</p>` : "";
-  const manualForm = `<form data-form="topup">${u.googlePay ? "" : quick([5, 10, 20, 50])}<div class="inline">${amountField()}<button class="btn ${u.googlePay ? "" : "primary"}" type="submit">${manualLabel}</button></div>${manualHint}</form>`;
-  const manual = !hasManual ? (u.googlePay ? "" : `<p class="note">Пополнение скоро будет доступно.</p>`)
-    : u.googlePay ? `<details style="margin-top:14px"><summary>Другой способ: ${m.boosty ? "Boosty" : "перевод"}</summary>${manualForm}</details>` : manualForm;
-  const pending = m ? m.topups.filter(t => t.status === "pending") : [];
-  return `
-    <section class="card">
-      <div class="bal-head"><h2>Баланс</h2><span class="bal-num">${esc(money(u.balance))}</span></div>
-      ${r ? `<div class="notice"><b>Заявка на ${esc(money(r.amount))} создана.</b> Код: <span class="code">${esc(r.code)}</span><br>
-        ${r.boosty ? `Задонать ${esc(money(r.amount))} на Boosty и укажи код в сообщении к донату.<br><a class="btn primary small boosty" style="margin:8px 0" href="${esc(safeHttps(r.boosty))}" target="_blank" rel="noopener">Оплатить на Boosty</a><br>` : ""}
-        ${r.info ? `<span style="white-space:pre-wrap">${esc(r.info)}</span><br>` : ""}
-        Баланс пополнится, когда администратор подтвердит оплату.</div>` : ""}
-      ${online}${manual}
-      ${pending.length ? `<p class="note" style="margin-top:14px">Ждут подтверждения: ${pending.map(t => `${esc(money(t.amount))} (<span class="mono">${esc(t.code)}</span>)`).join(", ")}</p>` : ""}
-      ${m && m.transactions.length ? `<details style="margin-top:14px"><summary>История операций</summary><ul class="rows">${m.transactions.map(t => `
-        <li><span>${esc(TX[t.kind] || t.kind)}${t.note ? ` · ${esc(t.note)}` : ""}<br><span class="muted">${esc(dateTime(t.ts))}</span></span><span class="${t.amount < 0 ? "minus" : "plus"}">${t.amount > 0 ? "+" : ""}${esc(money(t.amount))}</span></li>`).join("")}</ul></details>` : ""}
-    </section>`;
-}
-
-/* ---------- Google Pay (Stripe Express Checkout) ---------- */
-const GP = { config: null, stripe: null, elements: null, loading: null };
-
-function loadStripeJs() {
-  if (window.Stripe) return Promise.resolve();
-  if (!GP.loading) GP.loading = new Promise((resolve, reject) => {
-    const sc = document.createElement("script");
-    sc.src = "https://js.stripe.com/v3/";
-    sc.onload = resolve;
-    sc.onerror = () => { GP.loading = null; reject(new Error("не удалось загрузить Stripe")); };
-    document.head.appendChild(sc);
-  });
-  return GP.loading;
-}
-
-function gpayAmount() {
-  const inp = document.querySelector("#gpayForm [name=amount]");
-  const v = Math.round(Number(inp && inp.value));
-  return v >= 1 && v <= 1000 ? v : 0;
-}
-
-async function mountGooglePay() {
-  const box = $("gpayBox");
-  if (!box) return;
-  const note = $("gpayNote");
-  try {
-    if (!GP.config) GP.config = await api("/pay/config");
-    if (!GP.config.googlePay) { box.classList.add("off"); return; }
-    await loadStripeJs();
-    if (!GP.stripe) GP.stripe = window.Stripe(GP.config.publishableKey);
-    const elements = GP.stripe.elements({
-      mode: "payment",
-      amount: (gpayAmount() || 10) * 100,
-      currency: GP.config.currency,
-      paymentMethodTypes: ["card"],      // как у платежа на сервере: Google Pay — это карта из кошелька
-      appearance: { theme: "night" }
-    });
-    GP.elements = elements;
-    const button = elements.create("expressCheckout", {
-      paymentMethods: { googlePay: "always", applePay: "never", link: "never", paypal: "never", amazonPay: "never", klarna: "never" },
-      buttonType: { googlePay: "pay" },
-      buttonTheme: { googlePay: "black" },
-      buttonHeight: 48
-    });
-    button.on("ready", ev => {
-      if (!ev.availablePaymentMethods || !ev.availablePaymentMethods.googlePay) {
-        box.classList.add("off");
-        note.textContent = "Google Pay недоступен на этом устройстве. Открой сайт в Chrome на телефоне или компьютере с настроенным Google Pay.";
-      }
-    });
-    button.on("click", ev => {
-      if (!gpayAmount()) { toast("Укажи сумму от $1 до $1000"); return; }
-      elements.update({ amount: gpayAmount() * 100 });
-      ev.resolve();
-    });
-    button.on("confirm", async () => {
-      const amount = gpayAmount();
-      try {
-        const { error: submitError } = await elements.submit();
-        if (submitError) throw new Error(submitError.message);
-        const intent = await post("/topup/gpay", { amount });
-        const base = location.origin + location.pathname;
-        const { error } = await GP.stripe.confirmPayment({
-          elements,
-          clientSecret: intent.clientSecret,
-          confirmParams: { return_url: `${base}?gpay=${intent.id}#/ucp` },
-          redirect: "if_required"
-        });
-        if (error) throw new Error(error.message);
-        await finishGooglePay(intent.id);
-      } catch (err) { toast("Оплата не прошла: " + err.message); }
-    });
-    button.mount(box);
-  } catch (err) {
-    box.classList.add("off");
-    if (note) note.textContent = "Google Pay сейчас недоступен: " + err.message;
-  }
-}
-
-async function finishGooglePay(id) {
-  try {
-    const r = await post("/topup/confirm", { payment: id });
-    toast(r.paid ? `Баланс пополнен на ${money(r.amount)}` : "Оплата ещё обрабатывается — баланс обновится сам");
-  } catch (err) { toast(err.message); }
-  S.money = null;
-  await refreshUser();
-  renderHeader();
-  if (parseHash().path === "/ucp") renderUcp();
-}
-
 function cabinet(u) {
-  if (!S.money) loadMoney();
+  const pend = S.orders.filter(o => o.status === "pending");
   return `
     <div class="stack">
       <section class="card profile">
@@ -1093,7 +1002,7 @@ function cabinet(u) {
           ${u.verification ? `<div class="muted">Проект: ${esc(u.verification.project)} · <span class="pill ok">верифицирован</span></div>` : ""}</div>
         ${u.admin ? `<a class="btn small" href="#/admin">Админка</a>` : ""}
       </section>
-      ${moneyCard(u)}
+      ${pend.length ? `<section class="card"><h2>Ждут подтверждения доната</h2>${pend.map(o => orderPanel(o)).join("")}</section>` : ""}
       <section class="card">
         <h2>Мои продукты</h2>
         ${S.purchases.length ? `<ul class="rows">${S.purchases.map(p => `
@@ -1102,15 +1011,6 @@ function cabinet(u) {
           : `<p class="muted" style="margin-top:8px">Пока ничего не куплено. <a href="#/" style="color:var(--accent-2)">Перейти к продуктам →</a></p>`}
       </section>
     </div>`;
-}
-
-let moneyLoading = false;
-async function loadMoney() {
-  if (moneyLoading) return;
-  moneyLoading = true;
-  try { S.money = await api("/money"); } catch (e) { S.money = { topups: [], transactions: [], info: "", boosty: "" }; }
-  moneyLoading = false;
-  if (parseHash().path === "/ucp") renderUcp();
 }
 
 async function renderUcp() {
@@ -1142,7 +1042,6 @@ async function renderUcp() {
     html = cabinet(u);
   }
   app.innerHTML = `<div class="wrap"><div class="ucp">${html}${claimBlock()}</div></div>`;
-  mountGooglePay();
 }
 
 /* =====================================================================
@@ -1178,15 +1077,13 @@ async function renderAdmin() {
       </section>
 
       <section class="card">
-        <h2>Пополнения (${a.topups.length})</h2>
-        ${a.topups.length ? `<ul class="rows">${a.topups.map(t => `
-          <li><span>${who(t)}<br><b>${esc(money(t.amount))}</b> · код <span class="mono">${esc(t.code)}</span> · ${esc(dateTime(t.ts))}</span>
-          <span class="inline"><button class="btn primary small" type="button" data-act="topup" data-do="approve" data-id="${esc(t.id)}">Деньги пришли</button>
-          <button class="btn danger small" type="button" data-act="topup" data-do="reject" data-id="${esc(t.id)}">Отклонить</button></span></li>`).join("")}</ul>`
-          : `<p class="muted">Заявок нет.</p>`}
-        <div class="sub">Google Pay</div>
-        ${!a.googlePay ? `<p class="muted">Не подключено: на сервере нужны ключи Stripe — STRIPE_SECRET_KEY и STRIPE_PUBLISHABLE_KEY.</p>`
-          : a.cards.length ? `<ul class="rows">${a.cards.map(c => `<li><span>${who(c)}</span><span><b>${esc(money(c.amount))}</b> · <span class="muted">${esc(dateTime(c.done_ts))}</span></span></li>`).join("")}</ul>` : `<p class="muted">Оплат пока нет.</p>`}
+        <h2>Заказы через Boosty (${a.orders.length})</h2>
+        <p class="muted">Проверь в Boosty, что пришёл донат на нужную сумму с этим Steam ID, и нажми «Донат пришёл» — доступ выдастся сразу.</p>
+        ${a.orders.length ? `<ul class="rows">${a.orders.map(o => `
+          <li><span>${who(o)}<br><b>${esc(o.title || o.mod)}</b> · <b>${esc(money(o.price))}</b> · ${esc(dateTime(o.ts))}<br>Сообщение: <span class="mono">${esc(o.message)}</span></span>
+          <span class="inline"><button class="btn primary small" type="button" data-act="order-ok" data-id="${esc(o.id)}">Донат пришёл</button>
+          <button class="btn danger small" type="button" data-act="order-no" data-id="${esc(o.id)}">Отклонить</button></span></li>`).join("")}</ul>`
+          : `<p class="muted" style="margin-top:8px">Новых заказов нет.</p>`}
       </section>
 
       <section class="card">
@@ -1208,22 +1105,20 @@ async function renderAdmin() {
           <b>${esc(au.name || "Игрок")}</b> · баланс <b>${esc(money(au.balance))}</b>${au.banned ? ` · <span class="pill bad">заблокирован</span>` : ""}<br>
           Верификация: ${au.verification ? `${esc(au.verification.status)} · ${esc(au.verification.project)}` : "нет"}
           ${au.purchases.length ? `<ul class="rows" style="margin-top:8px">${au.purchases.map(p => `<li><span>${esc(p.title || p.mod)} · ${esc(money(p.price))}</span>
-            <button class="btn danger small" type="button" data-act="refund" data-steamid="${esc(au.steamid)}" data-mod="${esc(p.mod)}">Вернуть деньги</button></li>`).join("")}</ul>` : ""}
-          <form data-form="balance" class="inline" style="margin-top:12px">
+            <button class="btn danger small" type="button" data-act="revoke" data-steamid="${esc(au.steamid)}" data-mod="${esc(p.mod)}">Забрать доступ</button></li>`).join("")}</ul>` : ""}
+          ${a.products.length ? `<form data-form="grant" class="inline" style="margin-top:12px">
             <input type="hidden" name="steamid" value="${esc(au.steamid)}">
-            <label class="field" style="max-width:130px"><input name="amount" type="number" step="1" placeholder="± ${esc(CONFIG.currencySign)}" required aria-label="Сумма"></label>
-            <label class="field"><input name="note" placeholder="Комментарий" aria-label="Комментарий"></label>
-            <button class="btn small" type="submit">Изменить баланс</button>
-          </form>
+            <label class="field"><select name="mod" aria-label="Продукт">${a.products.map(p => `<option value="${esc(p.id)}">${esc(p.title)}</option>`).join("")}</select></label>
+            <button class="btn small" type="submit">Выдать продукт</button>
+          </form>` : ""}
           ${!au.banned && !au.admin ? `<p style="margin-top:10px"><button class="btn danger small" type="button" data-act="ban" data-steamid="${esc(au.steamid)}">Заблокировать</button></p>` : ""}
         </div>` : ""}
       </section>
 
       <section class="card">
-        <h2>Ручное пополнение</h2>
-        <form data-form="settings">
-          <label class="field"><span>Ссылка на Boosty</span><input name="boosty" type="url" placeholder="https://boosty.to/твой_ник/donate" value="${esc(a.boosty || "")}"></label>
-          <label class="field"><span>Реквизиты и инструкция для игрока</span><textarea name="paymentInfo" placeholder="Например: перевод по номеру… В комментарии укажи код заявки.">${esc(a.info || "")}</textarea></label>
+        <h2>Boosty</h2>
+        <form data-form="settings" class="inline">
+          <label class="field"><input name="boosty" type="url" placeholder="https://boosty.to/tufelka" value="${esc(a.boosty || "")}" aria-label="Ссылка на Boosty"></label>
           <button class="btn small" type="submit">Сохранить</button>
         </form>
       </section>
@@ -1336,13 +1231,13 @@ function renderTerms() {
     <h2>Покупка</h2>
     <ul>
       <li>Покупать могут только пользователи, прошедшие верификацию: вход через Steam и заявка с данными о своём DayZ-сервере.</li>
-      <li>Покупка оплачивается с внутреннего баланса. После покупки в личном кабинете появляется ссылка на скачивание и инструкция.</li>
+      <li>Покупка оплачивается пожертвованием на Boosty в размере цены продукта, с вашим Steam ID и номером заказа в сообщении к донату. После подтверждения доната в личном кабинете появляется ссылка на скачивание и инструкция.</li>
       <li>Купленный мод можно использовать на своём сервере. Передавать или перепродавать файлы третьим лицам нельзя.</li>
     </ul>
-    <h2>Баланс и возвраты</h2>
+    <h2>Проблемы с покупкой</h2>
     <ul>
-      <li>Баланс пополняется онлайн через Google Pay или вручную по заявке. Средства баланса не выводятся.</li>
-      <li>Если продукт не работает и мы не можем это исправить, напишите нам в Discord — администратор может вернуть средства на баланс.</li>
+      <li>Если донат отправлен, а доступ не появился в течение суток — напишите нам в Discord, указав Steam ID и номер заказа.</li>
+      <li>Если продукт не работает и мы не можем это исправить, напишите нам в Discord — вопрос решим индивидуально.</li>
     </ul>
     <h2>Аккаунт</h2>
     <p>Администратор может отклонить верификацию или заблокировать аккаунт за нарушение этих условий.</p>
@@ -1357,10 +1252,10 @@ function renderPrivacy() {
     <ul>
       <li>Из Steam: ваш Steam ID, ник и аватар. Пароль от Steam мы не получаем.</li>
       <li>Из заявки на верификацию: название проекта, Discord ID, IP и порты сервера, описание проекта.</li>
-      <li>Баланс, покупки, заявки на пополнение, отзывы и лайки.</li>
+      <li>Заказы, покупки, отзывы и лайки.</li>
     </ul>
     <h2>Оплата</h2>
-    <p>Оплата через Google Pay проходит на стороне Google и Stripe — данные карты мы не видим и не храним.</p>
+    <p>Оплата проходит на стороне Boosty — данные вашей карты мы не видим и не храним. Мы видим только сумму доната и ваше сообщение к нему.</p>
     <h2>Зачем</h2>
     <p>Данные нужны только для работы магазина: входа, проверки покупателей, выдачи купленных продуктов. Мы не продаём и не передаём их третьим лицам.</p>
     <h2>Удаление</h2>
@@ -1392,12 +1287,18 @@ document.addEventListener("click", async e => {
   const lb = t.closest("[data-lb]");
   if (lb && LB.list.length) { LB.i = Number(lb.dataset.lb) || 0; showLb(); $("lightbox").showModal(); return; }
 
+  const copy = t.closest("[data-copy]");
+  if (copy) {
+    try { await navigator.clipboard.writeText(copy.dataset.copy); toast("Скопировано"); }
+    catch (err) { prompt("Скопируй сообщение:", copy.dataset.copy); }
+    return;
+  }
+
   const amount = t.closest("[data-amount]");
   if (amount) {
     const inp = amount.closest("form").querySelector("[name=amount]");
     inp.value = amount.dataset.amount;
-    if (amount.closest("#gpayForm") && GP.elements && gpayAmount()) GP.elements.update({ amount: gpayAmount() * 100 });
-    else inp.focus();
+    inp.focus();
     return;
   }
 
@@ -1406,13 +1307,13 @@ document.addEventListener("click", async e => {
   const act = el.dataset.act;
   try {
     if (act === "login") login();
-    else if (act === "buy") {
-      const p = S.page[el.dataset.id].product;
-      if (!confirm(`Купить «${p.title}» за ${money(p.price)}?`)) return;
+    else if (act === "order") {
       el.disabled = true;
-      await post("/buy", { mod: p.id });
-      toast("Покупка прошла! Ссылка на скачивание — здесь и в личном кабинете");
-      await refreshUser(); renderHeader(); S.money = null; render();
+      const r = await post("/order", { mod: el.dataset.id });
+      S.boosty = r.boosty || S.boosty;
+      await refreshUser();
+      render();
+      toast("Заказ создан — осталось задонатить на Boosty");
     } else if (act === "like") {
       if (!S.user) { login(); return; }
       const r = await post("/likes", { mod: el.dataset.id });
@@ -1431,15 +1332,23 @@ document.addEventListener("click", async e => {
       await post("/admin/verification", { steamid: el.dataset.steamid, action: el.dataset.do, note });
       toast(el.dataset.do === "approve" ? "Верификация одобрена" : "Заявка отклонена");
       await loadAdmin(); renderAdmin();
-    } else if (act === "topup") {
-      if (el.dataset.do === "approve" && !confirm("Деньги действительно пришли? Баланс игрока будет пополнен.")) return;
-      await post("/admin/topup", { id: Number(el.dataset.id), action: el.dataset.do });
-      toast(el.dataset.do === "approve" ? "Баланс пополнен" : "Заявка отклонена");
+    } else if (act === "order-ok" || act === "order-no") {
+      if (act === "order-ok" && !confirm("Донат пришёл? Игрок сразу получит доступ к продукту.")) return;
+      await post("/admin/order", { id: Number(el.dataset.id), action: act === "order-ok" ? "approve" : "reject" });
+      toast(act === "order-ok" ? "Доступ выдан" : "Заказ отклонён");
       await loadAdmin(); renderAdmin();
-    } else if (act === "refund") {
-      if (!confirm("Вернуть деньги за этот продукт? Покупка и отзыв игрока будут удалены.")) return;
-      await post("/admin/refund", { steamid: el.dataset.steamid, mod: el.dataset.mod });
-      toast("Деньги возвращены");
+    } else if (act === "go-boosty") {
+      const url = safeHttps(S.boosty) || "https://boosty.to/tufelka";
+      try { navigator.clipboard.writeText(el.dataset.msg); toast("Сообщение скопировано — вставь его в донат"); } catch (err) { /* скопирует кнопкой */ }
+      window.open(url, "_blank", "noopener");
+    } else if (act === "cancel-order") {
+      if (!confirm("Отменить заказ?")) return;
+      await api(`/orders/${el.dataset.id}`, { method: "DELETE" });
+      await refreshUser(); render();
+    } else if (act === "revoke") {
+      if (!confirm("Забрать у игрока доступ к продукту? Его отзыв тоже удалится.")) return;
+      await post("/admin/revoke", { steamid: el.dataset.steamid, mod: el.dataset.mod });
+      toast("Доступ забран");
       S.adminUser = await api(`/admin/user?steamid=${el.dataset.steamid}`);
       await loadAdmin(); renderAdmin();
     } else if (act === "ban") {
@@ -1458,7 +1367,6 @@ document.addEventListener("click", async e => {
 
 document.addEventListener("input", e => {
   if (e.target.name === "about" && $("aboutCount")) $("aboutCount").textContent = e.target.value.length;
-  if (e.target.closest && e.target.closest("#gpayForm") && GP.elements && gpayAmount()) GP.elements.update({ amount: gpayAmount() * 100 });
 });
 
 document.addEventListener("submit", async e => {
@@ -1482,11 +1390,6 @@ document.addEventListener("submit", async e => {
         renderUcp();
         break;
       }
-      case "topup":
-        S.topup = await post("/topup", { amount: Number(f.amount) });
-        S.money = null;
-        await loadMoney();
-        break;
       case "review":
         await post("/reviews", { mod: form.dataset.id, rating: Number(f.rating), text: f.text });
         toast("Спасибо за отзыв!");
@@ -1502,15 +1405,14 @@ document.addEventListener("submit", async e => {
         S.adminUser = await api(`/admin/user?steamid=${encodeURIComponent(f.steamid.trim())}`);
         renderAdmin();
         break;
-      case "balance":
-        await post("/admin/balance", { steamid: f.steamid, amount: Number(f.amount), note: f.note });
-        toast("Баланс изменён");
+      case "grant":
+        await post("/admin/grant", { steamid: f.steamid, mod: f.mod });
+        toast("Продукт выдан");
         S.adminUser = await api(`/admin/user?steamid=${f.steamid}`);
-        if (S.user && f.steamid === S.user.steamid) { await refreshUser(); renderHeader(); S.money = null; }
         renderAdmin();
         break;
       case "settings":
-        await post("/admin/settings", { boosty: f.boosty, paymentInfo: f.paymentInfo });
+        await post("/admin/settings", { boosty: f.boosty, paymentInfo: "" });
         toast("Сохранено");
         S.money = null;
         await loadAdmin(); renderAdmin();
@@ -1523,6 +1425,22 @@ document.addEventListener("submit", async e => {
 });
 
 $("logoutBtn").addEventListener("click", () => { logout(false); go("#/"); });
+
+// Вернулся на вкладку после Boosty — проверяем, не подтвердили ли уже заказ
+async function checkOrders() {
+  if (!S.token || document.hidden || document.querySelector("dialog[open]")) return;
+  const wasPending = S.orders.filter(o => o.status === "pending").map(o => o.id);
+  if (!wasPending.length) return;
+  await refreshUser();
+  const done = wasPending.filter(id => !S.orders.some(o => o.id === id && o.status === "pending"));
+  if (done.length) {
+    if (S.purchases.length) toast("Донат подтверждён — продукт доступен!");
+    const { path } = parseHash();
+    if (path.startsWith("/product") || path === "/ucp") render();
+  }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkOrders(); });
+setInterval(checkOrders, 20000);
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
 
 /* =====================================================================
@@ -1541,26 +1459,16 @@ if ("serviceWorker" in navigator) {
   // Возврат со страницы входа Steam: #/ucp?steam=ТОКЕН
   if (query.get("steam")) { S.token = query.get("steam"); lsSet("dl-token", S.token); }
   if (query.get("steam_error")) toast(query.get("steam_error") === "cancel" ? "Вход через Steam отменён" : "Не удалось войти через Steam");
-  const search = new URLSearchParams(location.search);
-  const gpayReturn = search.get("gpay") || search.get("payment_intent");
   if (query.get("steam") || query.get("steam_error")) {
     const back = query.get("steam") ? lsGet("dl-back", "#/ucp") : "#/ucp";
     lsDel("dl-back");
     history.replaceState(null, "", location.pathname + location.search + (/^#\/[\w/-]*$/.test(back) ? back : "#/ucp"));
   }
-  if (gpayReturn) history.replaceState(null, "", location.pathname + "#/ucp");
+
 
   await refreshUser();
   renderHeader();
 
-  // Возврат после подтверждения оплаты Google Pay (если банк потребовал перейти на свою страницу)
-  if (gpayReturn && /^pi_\w+$/.test(gpayReturn) && S.token) {
-    try {
-      const r = await post("/topup/confirm", { payment: gpayReturn });
-      toast(r.paid ? `Баланс пополнен на ${money(r.amount)}` : "Оплата ещё обрабатывается — баланс обновится сам");
-    } catch (err) { toast(err.message); }
-    await refreshUser(); renderHeader();
-  }
   if (S.user && query.get("steam")) toast(`Добро пожаловать, ${S.user.name}!`);
   render();
 })();

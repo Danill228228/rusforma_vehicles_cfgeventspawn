@@ -21,20 +21,18 @@
     --bg-2: #1a0b2e;
     --card: #241038;
     --card-2: #2c1446;
+    --inset: rgba(13, 6, 24, 0.55);
     --accent: #8b5cf6;
     --accent-soft: #c4b5fd;
     --text: #ede9fe;
     --muted: #a99cc9;
     --border: rgba(139, 92, 246, 0.28);
     --border-strong: rgba(139, 92, 246, 0.6);
-    --glow: 0 0 0 1px rgba(139, 92, 246, 0.55), 0 10px 40px -8px rgba(139, 92, 246, 0.55);
-    --done: #a78bfa;
-    --radius: 18px;
+    --glow: 0 0 0 1px rgba(139, 92, 246, 0.55), 0 8px 30px -8px rgba(139, 92, 246, 0.55);
+    --radius: 16px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
 
   body {
     min-height: 100vh;
@@ -42,27 +40,28 @@
     color: var(--text);
     background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
     background-color: var(--bg-1);
-    line-height: 1.5;
+    line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
 
-  /* мягкие фиолетовые пятна на фоне */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     pointer-events: none;
     background:
-      radial-gradient(600px 400px at 15% 0%, rgba(139, 92, 246, 0.16), transparent 70%),
-      radial-gradient(500px 500px at 100% 60%, rgba(196, 181, 253, 0.07), transparent 70%);
+      radial-gradient(600px 400px at 15% 0%, rgba(139, 92, 246, 0.14), transparent 70%),
+      radial-gradient(500px 500px at 100% 60%, rgba(196, 181, 253, 0.06), transparent 70%);
     z-index: 0;
   }
+
+  button, textarea { font: inherit; color: inherit; }
 
   .wrap {
     position: relative;
     z-index: 1;
-    max-width: 880px;
+    max-width: 760px;
     margin: 0 auto;
     padding: 0 16px;
   }
@@ -73,7 +72,7 @@
     top: 0;
     z-index: 10;
     padding-top: env(safe-area-inset-top);
-    background: rgba(13, 6, 24, 0.82);
+    background: rgba(13, 6, 24, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
@@ -84,15 +83,14 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    max-width: 880px;
+    max-width: 760px;
     margin: 0 auto;
-    padding: 10px 16px;
+    padding: 8px 16px;
   }
 
   .brand {
     font-weight: 800;
-    font-size: 18px;
-    letter-spacing: 0.01em;
+    font-size: 17px;
     color: var(--accent-soft);
     text-shadow: 0 0 18px rgba(139, 92, 246, 0.6);
     white-space: nowrap;
@@ -100,21 +98,22 @@
 
   .seg {
     display: flex;
-    gap: 4px;
-    padding: 4px;
+    gap: 3px;
+    padding: 3px;
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 12px;
     background: rgba(36, 16, 56, 0.7);
   }
 
   .seg a {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 8px 14px;
-    border-radius: 10px;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 9px;
     color: var(--muted);
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
@@ -126,108 +125,47 @@
   .seg a[aria-current="page"] {
     background: var(--accent);
     color: #fff;
-    box-shadow: 0 0 16px rgba(139, 92, 246, 0.6);
-  }
-
-  .seg a:focus-visible {
-    outline: 2px solid var(--accent-soft);
-    outline-offset: 2px;
+    box-shadow: 0 0 14px rgba(139, 92, 246, 0.6);
   }
 
   .view[hidden] { display: none; }
 
   /* ---------- Шапка ---------- */
-  header {
-    padding: 48px 0 36px;
-    text-align: center;
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: rgba(36, 16, 56, 0.6);
-    color: var(--accent-soft);
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .badge .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
+  .head {
+    padding: 22px 0 16px;
   }
 
   h1 {
-    margin: 18px 0 10px;
-    font-size: clamp(28px, 6vw, 46px);
+    font-size: clamp(22px, 5vw, 30px);
     font-weight: 800;
-    line-height: 1.12;
+    line-height: 1.15;
     letter-spacing: -0.01em;
     text-wrap: balance;
   }
 
   h1 .name {
     color: var(--accent-soft);
-    text-shadow: 0 0 24px rgba(139, 92, 246, 0.6);
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
   }
 
-  .subtitle {
-    max-width: 560px;
-    margin: 0 auto;
+  .lead {
+    margin-top: 4px;
     color: var(--muted);
-    font-size: clamp(15px, 2.5vw, 17px);
-    text-wrap: pretty;
+    font-size: 14.5px;
   }
 
-  .overall {
-    margin: 32px auto 0;
-    max-width: 560px;
-    padding: 18px 20px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: rgba(36, 16, 56, 0.75);
-    text-align: left;
-  }
-
-  .overall-top {
+  .progress {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 12px;
-    margin-bottom: 10px;
-  }
-
-  .overall-label {
-    font-weight: 600;
-    font-size: 15px;
-  }
-
-  .overall-count {
-    color: var(--accent-soft);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    font-size: 15px;
-    white-space: nowrap;
+    margin-top: 14px;
   }
 
   .bar {
-    height: 12px;
+    flex: 1;
+    height: 8px;
     border-radius: 999px;
-    background: rgba(13, 6, 24, 0.8);
+    background: var(--inset);
     border: 1px solid var(--border);
     overflow: hidden;
   }
@@ -237,26 +175,81 @@
     width: 0;
     border-radius: inherit;
     background: linear-gradient(90deg, var(--accent), var(--accent-soft));
-    box-shadow: 0 0 14px rgba(139, 92, 246, 0.8);
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.8);
     transition: width 0.6s cubic-bezier(.2, .8, .2, 1);
   }
 
+  .progress-text {
+    color: var(--accent-soft);
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ---------- Меню-кнопки (этапы и категории) ---------- */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .chip:hover { border-color: var(--border-strong); }
+
+  .chip[aria-selected="true"] {
+    border-color: var(--accent);
+    background: linear-gradient(160deg, rgba(139, 92, 246, 0.38), var(--card));
+    box-shadow: var(--glow);
+  }
+
+  .chip-icon { font-size: 16px; line-height: 1; }
+
+  .chip-count {
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--inset);
+    color: var(--muted);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chip.done .chip-count { background: var(--accent); color: #fff; }
+  .chip[aria-selected="true"] .chip-count { color: var(--accent-soft); }
+  .chip.done[aria-selected="true"] .chip-count { color: #fff; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 2px;
+  }
+
   /* ---------- Карточки ---------- */
-  .roadmap {
-    position: relative;
+  .stack {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding-bottom: 20px;
+    gap: 12px;
   }
 
   .card {
-    position: relative;
-    padding: 22px 22px 18px;
+    padding: 14px 16px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--card);
-    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
   .card:hover {
@@ -269,59 +262,54 @@
     background: linear-gradient(160deg, var(--card-2), var(--card));
   }
 
-  /* появление при прокрутке */
   .reveal {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(16px);
   }
 
   .reveal.visible {
     opacity: 1;
     transform: none;
-    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(.2, .8, .2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(.2, .8, .2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; }
     .bar-fill, .mini-fill { transition: none; }
-    .badge .dot { animation: none; }
   }
 
   .card-head {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
   }
 
   .icon {
     flex: 0 0 auto;
     display: grid;
     place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
     background: rgba(139, 92, 246, 0.14);
     border: 1px solid var(--border);
-    font-size: 26px;
+    font-size: 20px;
     line-height: 1;
   }
 
-  .head-text {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
+  .head-text { flex: 1 1 auto; min-width: 0; }
 
-  .num {
+  .kicker {
     display: block;
     color: var(--accent);
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   .card-title {
-    font-size: clamp(17px, 3.2vw, 20px);
+    font-size: 17px;
     font-weight: 700;
     line-height: 1.25;
     text-wrap: balance;
@@ -330,35 +318,29 @@
 
   .counter {
     flex: 0 0 auto;
-    padding: 5px 11px;
+    padding: 3px 9px;
     border-radius: 999px;
     border: 1px solid var(--border);
-    background: rgba(13, 6, 24, 0.55);
+    background: var(--inset);
     color: var(--accent-soft);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
 
-  .card.complete .counter {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
+  .card.complete .counter { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-  .card-note {
-    margin-top: 14px;
+  .note {
+    margin-top: 10px;
     color: var(--muted);
-    font-size: 15px;
-    text-wrap: pretty;
+    font-size: 14.5px;
   }
 
   .mini-bar {
-    margin: 16px 0 6px;
-    height: 4px;
+    margin: 12px 0 4px;
+    height: 3px;
     border-radius: 999px;
-    background: rgba(13, 6, 24, 0.7);
+    background: var(--inset);
     overflow: hidden;
   }
 
@@ -366,34 +348,31 @@
     height: 100%;
     width: 0;
     background: var(--accent);
-    border-radius: inherit;
     transition: width 0.5s ease;
   }
 
-  .tasks {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 8px;
-  }
+  /* ---------- Подпункты ---------- */
+  .tasks { list-style: none; }
 
-  .task label {
+  .task + .task { border-top: 1px solid rgba(139, 92, 246, 0.14); }
+
+  .task-row {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 10px 10px;
-    margin: 0 -10px;
-    border-radius: 12px;
+    gap: 6px;
+  }
+
+  .task-row label {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    padding: 9px 0;
     cursor: pointer;
-    transition: background 0.2s ease;
   }
 
-  .task label:hover {
-    background: rgba(139, 92, 246, 0.09);
-  }
-
-  .task input {
+  .task-row input {
     position: absolute;
     opacity: 0;
     width: 1px;
@@ -404,18 +383,18 @@
     flex: 0 0 auto;
     display: grid;
     place-items: center;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     margin-top: 1px;
-    border-radius: 7px;
+    border-radius: 6px;
     border: 2px solid var(--border-strong);
-    background: rgba(13, 6, 24, 0.6);
+    background: var(--inset);
     transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .check svg {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     stroke: #fff;
     stroke-width: 3;
     fill: none;
@@ -424,150 +403,213 @@
     transition: stroke-dashoffset 0.25s ease;
   }
 
-  .task input:checked + .check {
+  .task-row input:checked + .check {
     background: var(--accent);
     border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.7);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
   }
 
-  .task input:checked + .check svg {
-    stroke-dashoffset: 0;
-  }
+  .task-row input:checked + .check svg { stroke-dashoffset: 0; }
 
-  .task input:focus-visible + .check {
+  .task-row input:focus-visible + .check {
     outline: 2px solid var(--accent-soft);
     outline-offset: 2px;
   }
 
-  .task-text {
-    font-size: 15.5px;
-    transition: color 0.2s ease;
-  }
+  .task-text { font-size: 15px; }
 
-  .task input:checked ~ .task-text {
+  .task-row input:checked ~ .task-text {
     color: var(--muted);
     text-decoration: line-through;
     text-decoration-color: rgba(196, 181, 253, 0.5);
   }
 
-  /* ---------- Раздел DayZ Server ---------- */
-  .cat-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 22px;
-  }
-
-  .cat-tab {
-    display: flex;
-    flex-direction: column;
+  /* ---------- Кнопка комментариев ---------- */
+  .cbtn {
+    flex: 0 0 auto;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 16px 8px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--card);
-    color: var(--text);
-    font: inherit;
-    cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  }
-
-  .cat-tab:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--glow);
-  }
-
-  .cat-tab[aria-selected="true"] {
-    border-color: var(--accent);
-    background: linear-gradient(160deg, rgba(139, 92, 246, 0.32), var(--card));
-    box-shadow: var(--glow);
-  }
-
-  .cat-tab:focus-visible {
-    outline: 2px solid var(--accent-soft);
-    outline-offset: 3px;
-  }
-
-  .cat-icon {
-    font-size: 28px;
-    line-height: 1;
-  }
-
-  .cat-title {
-    font-weight: 700;
-    font-size: 16px;
-  }
-
-  .cat-count {
+    gap: 5px;
+    min-height: 32px;
+    margin-top: 4px;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
     color: var(--muted);
     font-size: 13px;
-    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
 
-  .cat-tab[aria-selected="true"] .cat-count { color: var(--accent-soft); }
-
-  .stage-tabs { grid-template-columns: repeat(3, 1fr); }
-
-  @media (min-width: 720px) {
-    .stage-tabs { grid-template-columns: repeat(6, 1fr); }
+  .cbtn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
   }
 
-  .cat-tab.done .cat-count { color: var(--accent-soft); font-weight: 600; }
+  .cbtn:hover, .cbtn[aria-expanded="true"] {
+    background: rgba(139, 92, 246, 0.14);
+    color: var(--accent-soft);
+  }
 
-  .mods {
+  .cbtn.has { color: var(--accent-soft); }
+  .cbtn .n:empty { display: none; }
+
+  .mod-foot {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(139, 92, 246, 0.14);
+  }
+
+  .mod-foot .cbtn { margin: 0 0 0 -8px; }
+
+  /* ---------- Комментарии ---------- */
+  .thread {
+    margin: 0 0 10px 30px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--inset);
+  }
+
+  .thread[hidden] { display: none; }
+
+  .mod-foot + .thread { margin: 4px 0 0; }
+
+  .comments {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .comment {
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  .comment p {
+    font-size: 14.5px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .del {
+    padding: 2px 6px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .del:hover { color: #f0abfc; background: rgba(240, 171, 252, 0.1); }
+
+  .comment-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .comment-form textarea {
+    flex: 1;
+    min-width: 0;
+    min-height: 38px;
+    max-height: 160px;
+    padding: 8px 11px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(36, 16, 56, 0.9);
+    font-size: 16px; /* 16px — чтобы iPhone не увеличивал страницу */
+    line-height: 1.35;
+    resize: none;
+  }
+
+  .comment-form textarea::placeholder { color: var(--muted); opacity: 0.8; }
+  .comment-form textarea:focus { outline: none; border-color: var(--accent); }
+
+  .send {
+    flex: 0 0 auto;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
-    gap: 20px;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, opacity 0.2s ease;
   }
+
+  .send:hover { box-shadow: 0 0 14px rgba(139, 92, 246, 0.8); }
+  .send:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+
+  .send svg { width: 17px; height: 17px; fill: currentColor; }
+
+  /* ---------- Моды ---------- */
+  .status {
+    display: inline-block;
+    margin-bottom: 3px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .status-ready { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .status-wip   { background: rgba(139, 92, 246, 0.16); color: var(--accent-soft); border-color: var(--border-strong); }
+  .status-plan  { background: var(--inset); color: var(--muted); }
 
   .mod-img {
     display: block;
-    width: calc(100% + 44px);
-    margin: -22px -22px 18px;
+    width: calc(100% + 32px);
+    margin: -14px -16px 12px;
     aspect-ratio: 16 / 9;
     object-fit: cover;
     border-radius: var(--radius) var(--radius) 0 0;
     border-bottom: 1px solid var(--border);
   }
 
-  .status {
-    display: inline-block;
-    margin-bottom: 6px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 12.5px;
-    font-weight: 600;
-    white-space: nowrap;
-    border: 1px solid var(--border);
-  }
-
-  .status-ready { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .status-wip   { background: rgba(139, 92, 246, 0.16); color: var(--accent-soft); border-color: var(--border-strong); }
-  .status-plan  { background: rgba(13, 6, 24, 0.55); color: var(--muted); }
-
   .mod-desc {
-    margin-top: 14px;
-    color: var(--text);
-    font-size: 15.5px;
-    text-wrap: pretty;
+    margin-top: 10px;
+    font-size: 15px;
   }
 
   .mod-features {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
+    gap: 5px;
+    margin-top: 8px;
   }
 
   .mod-features li {
     position: relative;
-    padding-left: 20px;
+    padding-left: 18px;
     color: var(--muted);
-    font-size: 15px;
+    font-size: 14.5px;
   }
 
   .mod-features li::before {
@@ -575,124 +617,89 @@
     position: absolute;
     left: 2px;
     top: 0.55em;
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 2px;
     background: var(--accent);
     transform: rotate(45deg);
-    box-shadow: 0 0 8px rgba(139, 92, 246, 0.8);
   }
 
   .empty {
-    grid-column: 1 / -1;
-    padding: 40px 20px;
+    padding: 28px 16px;
     border: 1px dashed var(--border-strong);
     border-radius: var(--radius);
     text-align: center;
     color: var(--muted);
-  }
-
-  .empty-icon {
-    display: block;
-    font-size: 34px;
-    margin-bottom: 10px;
-    opacity: 0.8;
+    font-size: 14.5px;
   }
 
   .empty strong {
     display: block;
     color: var(--text);
-    font-size: 17px;
-    margin-bottom: 4px;
+    font-size: 16px;
+    margin-bottom: 2px;
   }
 
-  /* ---------- Низ страницы ---------- */
+  /* ---------- Низ ---------- */
   .actions {
     display: flex;
     justify-content: center;
-    padding: 28px 0 12px;
+    padding: 16px 0 0;
   }
 
-  .btn {
-    font: inherit;
-    font-weight: 600;
-    font-size: 15px;
-    padding: 12px 22px;
-    border-radius: 12px;
-    border: 1px solid var(--border-strong);
+  .link-btn {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
     background: transparent;
-    color: var(--accent-soft);
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   }
 
-  .btn:hover {
-    background: rgba(139, 92, 246, 0.15);
-    box-shadow: var(--glow);
+  .link-btn:hover {
     color: var(--text);
-  }
-
-  .btn:focus-visible {
-    outline: 2px solid var(--accent-soft);
-    outline-offset: 3px;
+    border-color: var(--border-strong);
+    background: rgba(139, 92, 246, 0.12);
   }
 
   footer {
     margin-top: 28px;
-    padding: 28px 0 36px;
+    padding: 20px 0 calc(28px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
     text-align: center;
     color: var(--muted);
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .discord {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-    padding: 11px 20px;
-    border-radius: 12px;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 9px 16px;
+    border-radius: 11px;
     background: var(--accent);
     color: #fff;
     font-weight: 600;
-    font-size: 15px;
+    font-size: 14.5px;
     text-decoration: none;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    transition: box-shadow 0.2s ease;
   }
 
-  .discord:hover {
-    box-shadow: 0 8px 30px -6px rgba(139, 92, 246, 0.9);
-    transform: translateY(-1px);
-  }
+  .discord:hover { box-shadow: 0 8px 26px -6px rgba(139, 92, 246, 0.9); }
 
-  .discord svg {
-    width: 20px;
-    height: 20px;
-    fill: currentColor;
-  }
+  .discord svg { width: 18px; height: 18px; fill: currentColor; }
 
-  /* ---------- Телефоны ---------- */
-  @media (max-width: 560px) {
-    header { padding: 32px 0 28px; }
-    .seg a { padding: 8px 12px; font-size: 14px; }
-    .cat-tabs { gap: 8px; }
-    .cat-tab { padding: 14px 4px 12px; }
-    .cat-icon { font-size: 24px; }
-    .cat-title { font-size: 14.5px; }
-    .mod-img { width: calc(100% + 32px); margin: -18px -16px 16px; }
-    .card { padding: 18px 16px 14px; }
-    .icon { width: 44px; height: 44px; font-size: 22px; border-radius: 12px; }
-    .card-head { gap: 12px; }
-    .counter { font-size: 13px; padding: 4px 9px; }
-    .task label { padding: 9px 8px; margin: 0 -8px; }
-    .overall { padding: 16px; }
-  }
+  .footnote { margin-top: 4px; font-size: 12px; opacity: 0.8; }
 
   @media (max-width: 400px) {
     .brand { display: none; }
     .seg { flex: 1; }
-    .seg a { flex: 1; justify-content: center; }
+    .seg a { flex: 1; }
+    .thread { margin-left: 0; }
   }
 </style>
 </head>
@@ -709,41 +716,37 @@
 </nav>
 
 <div class="wrap">
- <div class="view" id="view-roadmap">
-  <header>
-    <span class="badge"><span class="dot"></span>DayZ · план развития</span>
-    <h1>Дорожная карта сервера <span class="name" id="serverName"></span></h1>
-    <p class="subtitle">Что уже сделано и что ждёт сервер впереди: от железа и своих модов до Discord и автодоната.</p>
 
-    <div class="overall">
-      <div class="overall-top">
-        <span class="overall-label">Общий прогресс</span>
-        <span class="overall-count" id="overallCount">0 / 0</span>
-      </div>
-      <div class="bar" role="progressbar" aria-label="Общий прогресс" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="overallBar">
-        <div class="bar-fill" id="overallFill"></div>
+  <!-- ===== Дорожная карта ===== -->
+  <div class="view" id="view-roadmap">
+    <div class="head">
+      <h1>Дорожная карта сервера <span class="name" id="serverName"></span></h1>
+      <div class="progress">
+        <div class="bar" role="progressbar" aria-label="Общий прогресс" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="overallBar">
+          <div class="bar-fill" id="overallFill"></div>
+        </div>
+        <span class="progress-text" id="overallCount">0/0</span>
       </div>
     </div>
-  </header>
 
-  <div class="cat-tabs stage-tabs" role="tablist" aria-label="Этапы" id="stageTabs"></div>
-  <main class="roadmap" id="roadmap" role="tabpanel"></main>
+    <div class="chips" role="tablist" aria-label="Этапы" id="stageTabs"></div>
+    <main id="roadmap" role="tabpanel"></main>
 
-  <div class="actions">
-    <button class="btn" type="button" id="resetBtn">Сбросить прогресс</button>
+    <div class="actions">
+      <button class="link-btn" type="button" id="resetBtn">Сбросить галочки</button>
+    </div>
   </div>
- </div>
 
- <div class="view" id="view-server" hidden>
-  <header>
-    <span class="badge"><span class="dot"></span><span id="serverBadge"></span></span>
-    <h1>DayZ Server</h1>
-    <p class="subtitle">Мои моды, сделанные специально для сервера: транспорт, одежда и снаряжение.</p>
-  </header>
+  <!-- ===== DayZ Server ===== -->
+  <div class="view" id="view-server" hidden>
+    <div class="head">
+      <h1>DayZ Server</h1>
+      <p class="lead">Мои моды для сервера: транспорт, одежда и снаряжение.</p>
+    </div>
 
-  <div class="cat-tabs" role="tablist" aria-label="Категории модов" id="catTabs"></div>
-  <section class="mods" role="tabpanel" id="modList" aria-live="polite"></section>
- </div>
+    <div class="chips" role="tablist" aria-label="Категории модов" id="catTabs"></div>
+    <section class="stack" role="tabpanel" id="modList"></section>
+  </div>
 
   <footer>
     <a class="discord" id="discordLink" href="#">
@@ -751,6 +754,7 @@
       Наш Discord
     </a>
     <div id="footerText"></div>
+    <div class="footnote">Галочки и комментарии сохраняются в этом браузере.</div>
   </footer>
 </div>
 
@@ -759,23 +763,22 @@
    НАСТРОЙКИ — меняй здесь
    ===================================================================== */
 
-// Название сервера (подставляется в заголовок и подвал)
+// Название сервера
 const SERVER_NAME = "DawnLine";
 
 // Ссылка на Discord (пока заглушка)
 const DISCORD_URL = "#";
 
 /*
-  План развития. Каждый пункт — карточка:
+  ДОРОЖНАЯ КАРТА. Каждый этап — своё меню:
     id    — уникальный ключ (латиницей), по нему сохраняется прогресс
     menu  — короткое название кнопки в меню
     icon  — emoji
     title — заголовок
-    note  — (необязательно) короткое пояснение под заголовком
+    note  — (необязательно) пояснение под заголовком
     tasks — подпункты: { id: "уникальный-ключ", text: "текст" }
 
-  Чтобы добавить пункт — скопируй блок { ... } и поменяй id и текст.
-  Если поменять id подпункта, его галочка сбросится.
+  Если поменять id подпункта, его галочка и комментарии пропадут.
 */
 const ROADMAP = [
   {
@@ -843,11 +846,11 @@ const ROADMAP = [
   }
 ];
 
-/* =====================================================================
+/* ---------------------------------------------------------------------
    РАЗДЕЛ «DayZ Server» — мои моды
-   ===================================================================== */
+   --------------------------------------------------------------------- */
 
-// Меню раздела (вкладки). Можно переименовать или добавить новую.
+// Меню раздела
 const MOD_CATEGORIES = [
   { id: "transport", icon: "🚙", title: "Транспорт" },
   { id: "clothes",   icon: "🧥", title: "Одежда" },
@@ -856,18 +859,18 @@ const MOD_CATEGORIES = [
 
 /*
   Мои моды. Каждый мод — карточка:
-    category    — в какое меню: "transport", "clothes" или "gear"
+    id          — уникальный ключ (латиницей), по нему сохраняются комментарии
+    category    — меню: "transport", "clothes" или "gear"
     icon        — emoji
     name        — название
     status      — "ready" (Готово), "wip" (В разработке) или "plan" (В планах)
     description — описание
     features    — (необязательно) список особенностей
     image       — (необязательно) картинка, например "images/hummer.jpg"
-
-  Чтобы добавить мод — скопируй блок { ... } и поменяй поля.
 */
 const MODS = [
   {
+    id: "hummer-hatch",
     category: "transport",
     icon: "🚙",
     name: "Хаммер с открывающимся люком",
@@ -885,49 +888,187 @@ const MODS = [
    Дальше — логика страницы, менять не обязательно
    ===================================================================== */
 
-const STORAGE_KEY = "dayz-roadmap-progress-v1";
+const KEYS = {
+  progress: "dayz-roadmap-progress-v1",
+  stage: "dayz-roadmap-stage-v1",
+  category: "dayz-mods-category-v1",
+  comments: "dayz-comments-v1"
+};
 
-function loadProgress() {
+function load(key, fallback) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : {};
-    return data && typeof data === "object" ? data : {};
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    const value = JSON.parse(raw);
+    return value === null || value === undefined ? fallback : value;
   } catch (e) {
-    return {};
+    return fallback;
   }
 }
 
-function saveProgress() {
+function save(key, value) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch (e) {
-    /* хранилище недоступно — прогресс просто не сохранится */
+    /* хранилище недоступно — просто не сохранится */
   }
 }
-
-let progress = loadProgress();
-
-const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5 12.5 10 17 19 7"/></svg>';
 
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-const STAGE_KEY = "dayz-roadmap-stage-v1";
+const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5 12.5 10 17 19 7"/></svg>';
+const CHAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/></svg>';
+const SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>';
 
-function loadStage() {
-  try {
-    const saved = localStorage.getItem(STAGE_KEY);
-    if (ROADMAP.some(item => item.id === saved)) return saved;
-  } catch (e) { /* нет доступа к хранилищу */ }
-  return ROADMAP[0].id;
+let progress = load(KEYS.progress, {});
+if (typeof progress !== "object" || Array.isArray(progress)) progress = {};
+
+let comments = load(KEYS.comments, {});
+if (typeof comments !== "object" || Array.isArray(comments)) comments = {};
+
+let currentStage = load(KEYS.stage, null);
+if (!ROADMAP.some(s => s.id === currentStage)) currentStage = ROADMAP[0].id;
+
+let currentCategory = load(KEYS.category, null);
+if (!MOD_CATEGORIES.some(c => c.id === currentCategory)) currentCategory = MOD_CATEGORIES[0].id;
+
+const openThreads = new Set();
+
+/* ---------- Комментарии ---------- */
+
+function commentList(key) {
+  return Array.isArray(comments[key]) ? comments[key] : [];
 }
 
-let currentStage = loadStage();
+function formatDate(ts) {
+  try {
+    return new Date(ts).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  } catch (e) {
+    return "";
+  }
+}
+
+function commentButton(key, label) {
+  const n = commentList(key).length;
+  const open = openThreads.has(key);
+  return `
+    <button class="cbtn${n ? " has" : ""}" type="button" data-toggle="${escapeHtml(key)}"
+            aria-expanded="${open}" aria-label="Комментарии${n ? ": " + n : ""}">
+      ${CHAT_SVG}${label ? `<span>${label}</span>` : ""}<span class="n">${n || ""}</span>
+    </button>`;
+}
+
+function threadInner(key) {
+  const list = commentList(key);
+  const items = list.map(c => `
+    <li class="comment">
+      <p>${escapeHtml(c.text)}</p>
+      <div class="comment-meta">
+        <time>${escapeHtml(formatDate(c.ts))}</time>
+        <button class="del" type="button" data-del="${escapeHtml(c.id)}">Удалить</button>
+      </div>
+    </li>`).join("");
+  return `
+    ${items ? `<ul class="comments">${items}</ul>` : ""}
+    <form class="comment-form">
+      <textarea rows="1" placeholder="Написать комментарий…" aria-label="Текст комментария"></textarea>
+      <button class="send" type="submit" aria-label="Отправить" disabled>${SEND_SVG}</button>
+    </form>`;
+}
+
+function threadHtml(key) {
+  const open = openThreads.has(key);
+  return `<div class="thread" data-thread="${escapeHtml(key)}"${open ? "" : " hidden"}>${open ? threadInner(key) : ""}</div>`;
+}
+
+function findThread(key) {
+  return document.querySelector(`[data-thread="${CSS.escape(key)}"]`);
+}
+
+function refreshCommentUI(key) {
+  const n = commentList(key).length;
+  document.querySelectorAll(`[data-toggle="${CSS.escape(key)}"]`).forEach(btn => {
+    btn.classList.toggle("has", n > 0);
+    btn.querySelector(".n").textContent = n || "";
+    btn.setAttribute("aria-label", `Комментарии${n ? ": " + n : ""}`);
+    btn.setAttribute("aria-expanded", String(openThreads.has(key)));
+  });
+  const thread = findThread(key);
+  if (!thread) return;
+  thread.hidden = !openThreads.has(key);
+  if (!thread.hidden) thread.innerHTML = threadInner(key);
+}
+
+function toggleThread(key) {
+  if (openThreads.has(key)) openThreads.delete(key);
+  else openThreads.add(key);
+  refreshCommentUI(key);
+  if (openThreads.has(key)) {
+    const ta = findThread(key).querySelector("textarea");
+    if (ta && !commentList(key).length) ta.focus();
+  }
+}
+
+function addComment(key, text) {
+  const list = commentList(key).slice();
+  list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, ts: Date.now() });
+  comments[key] = list;
+  save(KEYS.comments, comments);
+  refreshCommentUI(key);
+  findThread(key).querySelector("textarea").focus();
+}
+
+function deleteComment(key, id) {
+  if (!confirm("Удалить комментарий?")) return;
+  comments[key] = commentList(key).filter(c => c.id !== id);
+  if (!comments[key].length) delete comments[key];
+  save(KEYS.comments, comments);
+  refreshCommentUI(key);
+}
+
+// Общие обработчики для обоих разделов
+document.addEventListener("click", e => {
+  const toggle = e.target.closest("[data-toggle]");
+  if (toggle) { toggleThread(toggle.dataset.toggle); return; }
+  const del = e.target.closest("[data-del]");
+  if (del) {
+    const thread = del.closest("[data-thread]");
+    deleteComment(thread.dataset.thread, del.dataset.del);
+  }
+});
+
+document.addEventListener("submit", e => {
+  const form = e.target.closest(".comment-form");
+  if (!form) return;
+  e.preventDefault();
+  const ta = form.querySelector("textarea");
+  const text = ta.value.trim();
+  if (!text) return;
+  addComment(form.closest("[data-thread]").dataset.thread, text);
+});
+
+document.addEventListener("input", e => {
+  if (!e.target.matches(".comment-form textarea")) return;
+  const ta = e.target;
+  ta.style.height = "auto";
+  ta.style.height = Math.min(ta.scrollHeight + 2, 160) + "px";
+  ta.form.querySelector(".send").disabled = !ta.value.trim();
+});
+
+document.addEventListener("keydown", e => {
+  // Ctrl+Enter / Cmd+Enter — отправить
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target.matches(".comment-form textarea")) {
+    e.preventDefault();
+    e.target.form.requestSubmit();
+  }
+});
+
+/* ---------- Дорожная карта ---------- */
 
 function stageStats(item) {
-  const done = item.tasks.filter(t => progress[t.id]).length;
-  return { done, total: item.tasks.length };
+  return { done: item.tasks.filter(t => progress[t.id]).length, total: item.tasks.length };
 }
 
 function renderStageTabs() {
@@ -936,17 +1077,16 @@ function renderStageTabs() {
     const complete = total > 0 && done === total;
     const selected = item.id === currentStage;
     return `
-      <button class="cat-tab${complete ? " done" : ""}" type="button" role="tab" id="stage-${escapeHtml(item.id)}"
+      <button class="chip${complete ? " done" : ""}" type="button" role="tab" id="stage-${escapeHtml(item.id)}"
               aria-controls="roadmap" aria-selected="${selected}" tabindex="${selected ? 0 : -1}"
               data-stage="${escapeHtml(item.id)}">
-        <span class="cat-icon" aria-hidden="true">${item.icon || "⭐"}</span>
-        <span class="cat-title">${escapeHtml(item.menu || item.title)}</span>
-        <span class="cat-count">${complete ? "✓ " : ""}${done}/${total}</span>
+        <span class="chip-icon" aria-hidden="true">${item.icon || "⭐"}</span>${escapeHtml(item.menu || item.title)}
+        <span class="chip-count">${complete ? "✓" : `${done}/${total}`}</span>
       </button>`;
   }).join("");
 }
 
-function render() {
+function renderStage() {
   const root = document.getElementById("roadmap");
   const index = Math.max(0, ROADMAP.findIndex(item => item.id === currentStage));
   const item = ROADMAP[index];
@@ -956,26 +1096,31 @@ function render() {
       <div class="card-head">
         <div class="icon" aria-hidden="true">${item.icon || "⭐"}</div>
         <div class="head-text">
-          <span class="num">Этап ${String(index + 1).padStart(2, "0")} из ${String(ROADMAP.length).padStart(2, "0")}</span>
+          <span class="kicker">Этап ${index + 1} из ${ROADMAP.length}</span>
           <h2 class="card-title">${escapeHtml(item.title)}</h2>
         </div>
         <span class="counter" data-counter></span>
       </div>
-      ${item.note ? `<p class="card-note">${escapeHtml(item.note)}</p>` : ""}
+      ${item.note ? `<p class="note">${escapeHtml(item.note)}</p>` : ""}
       <div class="mini-bar"><div class="mini-fill" data-mini></div></div>
       <ul class="tasks">
-        ${item.tasks.map(task => `
+        ${item.tasks.map(task => {
+          const key = "task:" + task.id;
+          return `
           <li class="task">
-            <label>
-              <input type="checkbox" data-task="${escapeHtml(task.id)}" ${progress[task.id] ? "checked" : ""}>
-              <span class="check">${CHECK_SVG}</span>
-              <span class="task-text">${escapeHtml(task.text)}</span>
-            </label>
-          </li>`).join("")}
+            <div class="task-row">
+              <label>
+                <input type="checkbox" data-task="${escapeHtml(task.id)}" ${progress[task.id] ? "checked" : ""}>
+                <span class="check">${CHECK_SVG}</span>
+                <span class="task-text">${escapeHtml(task.text)}</span>
+              </label>
+              ${commentButton(key)}
+            </div>
+            ${threadHtml(key)}
+          </li>`;
+        }).join("")}
       </ul>
-    </section>
-  `;
-
+    </section>`;
   updateCounters();
   observeReveal();
 }
@@ -983,48 +1128,133 @@ function render() {
 function updateCounters() {
   let total = 0;
   let done = 0;
-
   ROADMAP.forEach(item => {
     const stats = stageStats(item);
     total += stats.total;
     done += stats.done;
-
     const card = document.querySelector(`[data-card="${CSS.escape(item.id)}"]`);
     if (!card) return;
     card.querySelector("[data-counter]").textContent = `${stats.done}/${stats.total}`;
     card.querySelector("[data-mini]").style.width = stats.total ? `${(stats.done / stats.total) * 100}%` : "0";
     card.classList.toggle("complete", stats.total > 0 && stats.done === stats.total);
   });
-
   renderStageTabs();
-
   const pct = total ? Math.round((done / total) * 100) : 0;
-  document.getElementById("overallCount").textContent = `${done} / ${total} · ${pct}%`;
+  document.getElementById("overallCount").textContent = `${done}/${total} · ${pct}%`;
   document.getElementById("overallFill").style.width = `${pct}%`;
   document.getElementById("overallBar").setAttribute("aria-valuenow", String(pct));
 }
 
 function selectStage(id, focus) {
   currentStage = id;
-  try { localStorage.setItem(STAGE_KEY, id); } catch (e) { /* не страшно */ }
-  render();
+  save(KEYS.stage, id);
+  renderStage();
   if (focus) document.getElementById(`stage-${id}`).focus();
 }
 
-document.getElementById("stageTabs").addEventListener("click", e => {
-  const tab = e.target.closest("[data-stage]");
-  if (tab) selectStage(tab.dataset.stage, false);
+document.getElementById("roadmap").addEventListener("change", e => {
+  const id = e.target.dataset && e.target.dataset.task;
+  if (!id) return;
+  if (e.target.checked) progress[id] = true;
+  else delete progress[id];
+  save(KEYS.progress, progress);
+  updateCounters();
 });
 
-document.getElementById("stageTabs").addEventListener("keydown", e => {
-  const i = ROADMAP.findIndex(item => item.id === currentStage);
-  let next = null;
-  if (e.key === "ArrowRight") next = (i + 1) % ROADMAP.length;
-  if (e.key === "ArrowLeft") next = (i - 1 + ROADMAP.length) % ROADMAP.length;
-  if (next === null) return;
-  e.preventDefault();
-  selectStage(ROADMAP[next].id, true);
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Снять все галочки? Комментарии останутся.")) return;
+  progress = {};
+  save(KEYS.progress, progress);
+  document.querySelectorAll("[data-task]").forEach(cb => { cb.checked = false; });
+  updateCounters();
 });
+
+/* ---------- DayZ Server ---------- */
+
+const STATUS_LABELS = { ready: "Готово", wip: "В разработке", plan: "В планах" };
+
+function renderCategoryTabs() {
+  document.getElementById("catTabs").innerHTML = MOD_CATEGORIES.map(cat => {
+    const count = MODS.filter(m => m.category === cat.id).length;
+    const selected = cat.id === currentCategory;
+    return `
+      <button class="chip" type="button" role="tab" id="tab-${escapeHtml(cat.id)}"
+              aria-controls="modList" aria-selected="${selected}" tabindex="${selected ? 0 : -1}"
+              data-cat="${escapeHtml(cat.id)}">
+        <span class="chip-icon" aria-hidden="true">${cat.icon}</span>${escapeHtml(cat.title)}
+        <span class="chip-count">${count}</span>
+      </button>`;
+  }).join("");
+}
+
+function renderMods() {
+  const list = document.getElementById("modList");
+  list.setAttribute("aria-labelledby", `tab-${currentCategory}`);
+  const mods = MODS.filter(m => m.category === currentCategory);
+
+  if (!mods.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <strong>Пока пусто</strong>
+        Скоро здесь появятся мои моды для этого раздела.
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = mods.map(mod => {
+    const status = STATUS_LABELS[mod.status] ? mod.status : "plan";
+    const key = "mod:" + (mod.id || mod.name);
+    const features = (mod.features || []).map(f => `<li>${escapeHtml(f)}</li>`).join("");
+    return `
+      <article class="card reveal">
+        ${mod.image ? `<img class="mod-img" src="${escapeHtml(mod.image)}" alt="${escapeHtml(mod.name)}" loading="lazy">` : ""}
+        <div class="card-head">
+          <div class="icon" aria-hidden="true">${mod.icon || "📦"}</div>
+          <div class="head-text">
+            <span class="status status-${status}">${STATUS_LABELS[status]}</span>
+            <h2 class="card-title">${escapeHtml(mod.name)}</h2>
+          </div>
+        </div>
+        ${mod.description ? `<p class="mod-desc">${escapeHtml(mod.description)}</p>` : ""}
+        ${features ? `<ul class="mod-features">${features}</ul>` : ""}
+        <div class="mod-foot">${commentButton(key, "Комментарии")}</div>
+        ${threadHtml(key)}
+      </article>`;
+  }).join("");
+  observeReveal();
+}
+
+function selectCategory(id, focus) {
+  currentCategory = id;
+  save(KEYS.category, id);
+  renderCategoryTabs();
+  renderMods();
+  if (focus) document.getElementById(`tab-${id}`).focus();
+}
+
+/* ---------- Меню: клики и стрелки ---------- */
+
+function bindTabs(containerId, attr, items, getCurrent, select) {
+  const el = document.getElementById(containerId);
+  el.addEventListener("click", e => {
+    const tab = e.target.closest(`[${attr}]`);
+    if (tab) select(tab.getAttribute(attr), false);
+  });
+  el.addEventListener("keydown", e => {
+    const i = items.findIndex(x => x.id === getCurrent());
+    let next = null;
+    if (e.key === "ArrowRight") next = (i + 1) % items.length;
+    if (e.key === "ArrowLeft") next = (i - 1 + items.length) % items.length;
+    if (next === null) return;
+    e.preventDefault();
+    select(items[next].id, true);
+  });
+}
+
+bindTabs("stageTabs", "data-stage", ROADMAP, () => currentStage, selectStage);
+bindTabs("catTabs", "data-cat", MOD_CATEGORIES, () => currentCategory, selectCategory);
+
+/* ---------- Появление карточек ---------- */
 
 function observeReveal() {
   const cards = document.querySelectorAll(".reveal:not(.observed)");
@@ -1040,125 +1270,13 @@ function observeReveal() {
         io.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+  }, { threshold: 0.08 });
   cards.forEach((c, i) => {
     c.style.transitionDelay = `${Math.min(i, 4) * 60}ms`;
     c.addEventListener("transitionend", () => { c.style.transitionDelay = "0ms"; }, { once: true });
     io.observe(c);
   });
 }
-
-document.getElementById("roadmap").addEventListener("change", e => {
-  const id = e.target.dataset && e.target.dataset.task;
-  if (!id) return;
-  if (e.target.checked) progress[id] = true;
-  else delete progress[id];
-  saveProgress();
-  updateCounters();
-});
-
-document.getElementById("resetBtn").addEventListener("click", () => {
-  if (!confirm("Сбросить весь прогресс? Все отметки будут сняты.")) return;
-  progress = {};
-  saveProgress();
-  document.querySelectorAll("[data-task]").forEach(cb => { cb.checked = false; });
-  updateCounters();
-});
-
-/* ---------- Раздел DayZ Server ---------- */
-
-const STATUS_LABELS = { ready: "Готово", wip: "В разработке", plan: "В планах" };
-const CAT_KEY = "dayz-mods-category-v1";
-
-function loadCategory() {
-  try {
-    const saved = localStorage.getItem(CAT_KEY);
-    if (MOD_CATEGORIES.some(c => c.id === saved)) return saved;
-  } catch (e) { /* нет доступа к хранилищу */ }
-  return MOD_CATEGORIES[0].id;
-}
-
-let currentCategory = loadCategory();
-
-function modsWord(n) {
-  const n10 = n % 10, n100 = n % 100;
-  if (n10 === 1 && n100 !== 11) return "мод";
-  if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return "мода";
-  return "модов";
-}
-
-function renderCategoryTabs() {
-  document.getElementById("catTabs").innerHTML = MOD_CATEGORIES.map(cat => {
-    const count = MODS.filter(m => m.category === cat.id).length;
-    const selected = cat.id === currentCategory;
-    return `
-      <button class="cat-tab" type="button" role="tab" id="tab-${escapeHtml(cat.id)}"
-              aria-controls="modList" aria-selected="${selected}" tabindex="${selected ? 0 : -1}"
-              data-cat="${escapeHtml(cat.id)}">
-        <span class="cat-icon" aria-hidden="true">${cat.icon}</span>
-        <span class="cat-title">${escapeHtml(cat.title)}</span>
-        <span class="cat-count">${count} ${modsWord(count)}</span>
-      </button>`;
-  }).join("");
-}
-
-function renderMods() {
-  const list = document.getElementById("modList");
-  list.setAttribute("aria-labelledby", `tab-${currentCategory}`);
-  const mods = MODS.filter(m => m.category === currentCategory);
-
-  if (!mods.length) {
-    list.innerHTML = `
-      <div class="empty">
-        <span class="empty-icon" aria-hidden="true">🛠️</span>
-        <strong>Пока пусто</strong>
-        Скоро здесь появятся мои моды для этого раздела.
-      </div>`;
-    return;
-  }
-
-  list.innerHTML = mods.map(mod => {
-    const status = STATUS_LABELS[mod.status] ? mod.status : "plan";
-    const features = (mod.features || []).map(f => `<li>${escapeHtml(f)}</li>`).join("");
-    return `
-      <article class="card reveal">
-        ${mod.image ? `<img class="mod-img" src="${escapeHtml(mod.image)}" alt="${escapeHtml(mod.name)}" loading="lazy">` : ""}
-        <div class="card-head">
-          <div class="icon" aria-hidden="true">${mod.icon || "📦"}</div>
-          <div class="head-text">
-            <span class="status status-${status}">${STATUS_LABELS[status]}</span>
-            <h2 class="card-title">${escapeHtml(mod.name)}</h2>
-          </div>
-        </div>
-        ${mod.description ? `<p class="mod-desc">${escapeHtml(mod.description)}</p>` : ""}
-        ${features ? `<ul class="mod-features">${features}</ul>` : ""}
-      </article>`;
-  }).join("");
-  observeReveal();
-}
-
-function selectCategory(id, focus) {
-  currentCategory = id;
-  try { localStorage.setItem(CAT_KEY, id); } catch (e) { /* не страшно */ }
-  renderCategoryTabs();
-  renderMods();
-  if (focus) document.getElementById(`tab-${id}`).focus();
-}
-
-document.getElementById("catTabs").addEventListener("click", e => {
-  const tab = e.target.closest("[data-cat]");
-  if (tab) selectCategory(tab.dataset.cat, false);
-});
-
-document.getElementById("catTabs").addEventListener("keydown", e => {
-  const i = MOD_CATEGORIES.findIndex(c => c.id === currentCategory);
-  let next = null;
-  if (e.key === "ArrowRight") next = (i + 1) % MOD_CATEGORIES.length;
-  if (e.key === "ArrowLeft") next = (i - 1 + MOD_CATEGORIES.length) % MOD_CATEGORIES.length;
-  if (next === null) return;
-  e.preventDefault();
-  selectCategory(MOD_CATEGORIES[next].id, true);
-});
 
 /* ---------- Переключение разделов ---------- */
 
@@ -1170,21 +1288,20 @@ function showView() {
     if (a.dataset.view === view) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   });
-  document.title = view === "server"
-    ? `DayZ Server · ${SERVER_NAME}`
-    : `Дорожная карта сервера ${SERVER_NAME}`;
+  document.title = view === "server" ? `DayZ Server · ${SERVER_NAME}` : `Дорожная карта сервера ${SERVER_NAME}`;
   window.scrollTo(0, 0);
 }
 
 window.addEventListener("hashchange", showView);
 
+/* ---------- Запуск ---------- */
+
 document.getElementById("brandName").textContent = SERVER_NAME;
-document.getElementById("serverBadge").textContent = `${SERVER_NAME} · мои моды`;
 document.getElementById("serverName").textContent = SERVER_NAME;
 document.getElementById("discordLink").href = DISCORD_URL;
 document.getElementById("footerText").textContent = `© ${new Date().getFullYear()} ${SERVER_NAME} · DayZ-сервер`;
 
-render();
+renderStage();
 renderCategoryTabs();
 renderMods();
 showView();

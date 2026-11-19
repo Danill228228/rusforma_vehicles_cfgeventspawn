@@ -1025,6 +1025,7 @@ async function mountGooglePay() {
       mode: "payment",
       amount: (gpayAmount() || 10) * 100,
       currency: GP.config.currency,
+      paymentMethodTypes: ["card"],      // как у платежа на сервере: Google Pay — это карта из кошелька
       appearance: { theme: "night" }
     });
     GP.elements = elements;

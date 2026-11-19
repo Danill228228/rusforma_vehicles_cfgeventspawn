@@ -131,6 +131,10 @@ async function paymentInfo(env) {
   return v !== null ? v : String(env.PAYMENT_INFO || "");
 }
 
+async function boostyUrl(env) {
+  return (await getSetting(env, "boosty_url")) || "";
+}
+
 async function adminClaimable(env) {
   return !!env.ADMIN_CLAIM_CODE && (await getSetting(env, "admin_claimed")) === null;
 }
@@ -395,7 +399,7 @@ async function createTopup(env, steamid, amount) {
   if (open && open.n >= 3) fail(429, "У тебя уже есть 3 заявки на проверке");
   const code = randomCode("TOP-", 5);
   const r = await env.DB.prepare(`INSERT INTO topups (steamid, amount, code, status, ts) VALUES (?1, ?2, ?3, 'pending', ?4)`).bind(steamid, amount, code, Date.now()).run();
-  return { id: r.meta.last_row_id, code, amount, info: await paymentInfo(env) };
+  return { id: r.meta.last_row_id, code, amount, info: await paymentInfo(env), boosty: await boostyUrl(env) };
 }
 
 async function myMoney(env, steamid) {
@@ -404,7 +408,7 @@ async function myMoney(env, steamid) {
   for (const r of open.results) { try { await confirmCard(env, steamid, r.session); } catch (e) { /* проверим в следующий раз */ } }
   const tx = await env.DB.prepare(`SELECT amount, kind, note, ts FROM transactions WHERE steamid = ?1 ORDER BY ts DESC LIMIT 50`).bind(steamid).all();
   const tp = await env.DB.prepare(`SELECT id, amount, code, status, ts FROM topups WHERE steamid = ?1 ORDER BY ts DESC LIMIT 20`).bind(steamid).all();
-  return { balance: await balanceOf(env, steamid), transactions: tx.results, topups: tp.results, info: await paymentInfo(env) };
+  return { balance: await balanceOf(env, steamid), transactions: tx.results, topups: tp.results, info: await paymentInfo(env), boosty: await boostyUrl(env) };
 }
 
 async function credit(env, steamid, amount, kind, note) {
@@ -597,7 +601,7 @@ async function adminOverview(env) {
   ]);
   const del = await env.DB.prepare(`SELECT mod, url, note FROM delivery`).all();
   const cards = await env.DB.prepare(`SELECT c.steamid, c.amount, c.ts, c.done_ts, u.name FROM card_payments c LEFT JOIN users u ON u.steamid = c.steamid WHERE c.status = 'done' ORDER BY c.done_ts DESC LIMIT 20`).all();
-  return { servers: servers.results, topups: topups.results, sales: sales.results, users: users.results[0].n, delivery: del.results, paymentInfo: await paymentInfo(env), cards: cards.results, cardPayments: !!env.STRIPE_SECRET_KEY };
+  return { servers: servers.results, topups: topups.results, sales: sales.results, users: users.results[0].n, delivery: del.results, paymentInfo: await paymentInfo(env), boosty: await boostyUrl(env), cards: cards.results, cardPayments: !!env.STRIPE_SECRET_KEY };
 }
 
 async function adminServer(env, b) {
@@ -732,7 +736,10 @@ async function route(request, env) {
     if (path === "/admin/refund" && M === "POST") return json(await adminRefund(env, b));
     if (path === "/admin/delivery" && M === "POST") return json(await adminDelivery(env, b));
     if (path === "/admin/settings" && M === "POST") {
+      const boosty = String(b.boosty || "").trim();
+      if (boosty && !/^https:\/\/boosty\.to\/[\w.-]+(\/[\w./?=&%-]*)?$/i.test(boosty)) fail(400, "Ссылка на Boosty должна быть вида https://boosty.to/твой_ник");
       await setSetting(env, "payment_info", String(b.paymentInfo || "").slice(0, 1000));
+      await setSetting(env, "boosty_url", boosty.slice(0, 300));
       return json({ ok: true });
     }
     if (path === "/ban" && M === "POST") return json(await ban(env, String(b.steamid || ""), !!b.removeAll));

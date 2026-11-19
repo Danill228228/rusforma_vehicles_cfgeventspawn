@@ -1045,6 +1045,7 @@
   .delivery { padding: 10px 0; border-top: 1px solid rgba(234, 88, 12, 0.14); }
   .delivery .field { margin: 8px 0; }
   .owner-link { text-align: center; margin-top: 6px; }
+  .boosty-btn { margin: 8px 0; background: #f15f2c; border-color: #f15f2c; }
   .claim summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: 14px; }
   .login-card .steam-btn { margin-top: 4px; }
 
@@ -2813,16 +2814,19 @@ function moneyCard(u) {
         ${u.cardPayments ? "" : quick}
         <div class="set-row">${amountInput}<button class="btn ${u.cardPayments ? "" : "primary "}small" type="submit">Создать заявку</button></div>
       </form>`;
-  const manual = !u.cardPayments ? manualForm
-    : (m && m.info ? `<details class="history"><summary>Другой способ: перевод по реквизитам</summary>${manualForm}</details>` : "");
+  const manualTitle = m && m.boosty ? "Другой способ: Boosty" + (m.info ? " или перевод" : "") : "Другой способ: перевод по реквизитам";
+  const manual = !u.cardPayments ? `${m && m.boosty ? `<p class="pc-hint">Пополнение через Boosty: создай заявку, задонать сумму и укажи код заявки в сообщении к донату.</p>` : ""}${manualForm}`
+    : (m && (m.info || m.boosty) ? `<details class="history"><summary>${esc(manualTitle)}</summary>${manualForm}</details>` : "");
   return `
     <section class="card cab-card">
       <div class="cab-head"><h2 class="sec-title">💳 Баланс</h2><span class="balance">${esc(rub(u.balance))}</span></div>
       ${r ? `
         <div class="notice">
           <b>Заявка на ${esc(rub(r.amount))} создана.</b> Код платежа: <button class="code" type="button" data-copy="${esc(r.code)}">${esc(r.code)}</button><br>
+          ${r.boosty ? `Задонать <b>${esc(rub(r.amount))}</b> на Boosty и напиши код <b>${esc(r.code)}</b> в сообщении к донату.<br>
+            <a class="btn primary small boosty-btn" href="${esc(safeUrl(r.boosty))}" target="_blank" rel="noopener">Оплатить на Boosty</a><br>` : ""}
           ${r.info ? `<span class="pre">${esc(r.info)}</span><br>` : ""}
-          Укажи код в комментарии к переводу. Деньги появятся на балансе, когда администратор подтвердит оплату.
+          ${r.boosty ? "" : "Укажи код в комментарии к переводу. "}Деньги появятся на балансе, когда администратор подтвердит оплату.
         </div>` : ""}
       ${card}
       ${manual}
@@ -2901,8 +2905,10 @@ function adminCard() {
         : a.cards.length ? `<ul class="rows">${a.cards.map(c => `<li><span>${who(c)}</span><span><b>${esc(rub(c.amount))}</b><br><span class="muted">${esc(fmtDate(c.done_ts, true))}</span></span></li>`).join("")}</ul>`
         : `<p class="pc-empty">Оплат пока нет.</p>`}
 
-      <h3 class="sub-title">Реквизиты для ручного пополнения</h3>
+      <h3 class="sub-title">Ручное пополнение: Boosty и реквизиты</h3>
       <form data-form="adm-settings">
+        <label class="field"><span>Ссылка на Boosty (страница доната)</span>
+        <input name="boosty" type="url" placeholder="https://boosty.to/твой_ник/donate" value="${esc(a.boosty || "")}"></label>
         <label class="field"><span>Этот текст игрок видит, когда создаёт заявку на пополнение</span>
         <textarea name="paymentInfo" placeholder="Например: перевод по номеру +7… (банк …). В комментарии к переводу укажи код заявки.">${esc(a.paymentInfo || "")}</textarea></label>
         <button class="btn small" type="submit">Сохранить</button>
@@ -3077,8 +3083,9 @@ async function shopForm(form) {
         await Steam.refresh(false);
         break;
       case "adm-settings":
-        await Steam.post("/admin/settings", { paymentInfo: f.paymentInfo });
-        toast("Реквизиты сохранены");
+        await Steam.post("/admin/settings", { paymentInfo: f.paymentInfo, boosty: f.boosty });
+        toast("Сохранено");
+        Steam.money = null;
         Steam.loadAdmin();
         break;
       case "adm-delivery":

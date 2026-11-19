@@ -507,6 +507,14 @@
 
   .cat-tab[aria-selected="true"] .cat-count { color: var(--accent-soft); }
 
+  .stage-tabs { grid-template-columns: repeat(3, 1fr); }
+
+  @media (min-width: 720px) {
+    .stage-tabs { grid-template-columns: repeat(6, 1fr); }
+  }
+
+  .cat-tab.done .cat-count { color: var(--accent-soft); font-weight: 600; }
+
   .mods {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
@@ -718,7 +726,8 @@
     </div>
   </header>
 
-  <main class="roadmap" id="roadmap"></main>
+  <div class="cat-tabs stage-tabs" role="tablist" aria-label="Этапы" id="stageTabs"></div>
+  <main class="roadmap" id="roadmap" role="tabpanel"></main>
 
   <div class="actions">
     <button class="btn" type="button" id="resetBtn">Сбросить прогресс</button>
@@ -759,6 +768,7 @@ const DISCORD_URL = "#";
 /*
   План развития. Каждый пункт — карточка:
     id    — уникальный ключ (латиницей), по нему сохраняется прогресс
+    menu  — короткое название кнопки в меню
     icon  — emoji
     title — заголовок
     note  — (необязательно) короткое пояснение под заголовком
@@ -770,6 +780,7 @@ const DISCORD_URL = "#";
 const ROADMAP = [
   {
     id: "minipc",
+    menu: "Сервер",
     icon: "🖥️",
     title: "Купить мини-ПК для DayZ-сервера",
     tasks: [
@@ -778,6 +789,7 @@ const ROADMAP = [
   },
   {
     id: "mods",
+    menu: "Моды",
     icon: "🛠️",
     title: "Написать свои моды для DayZ-сервера",
     tasks: [
@@ -789,6 +801,7 @@ const ROADMAP = [
   },
   {
     id: "hummer",
+    menu: "Хаммер",
     icon: "🚙",
     title: "Свой Хаммер с открывающимся люком",
     note: "Создаём свой Хаммер с люком, который открывается. Что осталось доделать:",
@@ -802,6 +815,7 @@ const ROADMAP = [
   },
   {
     id: "promo",
+    menu: "Реклама",
     icon: "🎬",
     title: "Пиар сервера и Discord",
     tasks: [
@@ -810,6 +824,7 @@ const ROADMAP = [
   },
   {
     id: "discord",
+    menu: "Discord",
     icon: "💬",
     title: "Сделать Discord-сервер",
     tasks: [
@@ -818,6 +833,7 @@ const ROADMAP = [
   },
   {
     id: "donate",
+    menu: "Сайт",
     icon: "💳",
     title: "Сайт сервера с автодонатом",
     tasks: [
@@ -897,14 +913,50 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+const STAGE_KEY = "dayz-roadmap-stage-v1";
+
+function loadStage() {
+  try {
+    const saved = localStorage.getItem(STAGE_KEY);
+    if (ROADMAP.some(item => item.id === saved)) return saved;
+  } catch (e) { /* нет доступа к хранилищу */ }
+  return ROADMAP[0].id;
+}
+
+let currentStage = loadStage();
+
+function stageStats(item) {
+  const done = item.tasks.filter(t => progress[t.id]).length;
+  return { done, total: item.tasks.length };
+}
+
+function renderStageTabs() {
+  document.getElementById("stageTabs").innerHTML = ROADMAP.map(item => {
+    const { done, total } = stageStats(item);
+    const complete = total > 0 && done === total;
+    const selected = item.id === currentStage;
+    return `
+      <button class="cat-tab${complete ? " done" : ""}" type="button" role="tab" id="stage-${escapeHtml(item.id)}"
+              aria-controls="roadmap" aria-selected="${selected}" tabindex="${selected ? 0 : -1}"
+              data-stage="${escapeHtml(item.id)}">
+        <span class="cat-icon" aria-hidden="true">${item.icon || "⭐"}</span>
+        <span class="cat-title">${escapeHtml(item.menu || item.title)}</span>
+        <span class="cat-count">${complete ? "✓ " : ""}${done}/${total}</span>
+      </button>`;
+  }).join("");
+}
+
 function render() {
   const root = document.getElementById("roadmap");
-  root.innerHTML = ROADMAP.map((item, i) => `
+  const index = Math.max(0, ROADMAP.findIndex(item => item.id === currentStage));
+  const item = ROADMAP[index];
+  root.setAttribute("aria-labelledby", `stage-${item.id}`);
+  root.innerHTML = `
     <section class="card reveal" data-card="${escapeHtml(item.id)}">
       <div class="card-head">
         <div class="icon" aria-hidden="true">${item.icon || "⭐"}</div>
         <div class="head-text">
-          <span class="num">Этап ${String(i + 1).padStart(2, "0")}</span>
+          <span class="num">Этап ${String(index + 1).padStart(2, "0")} из ${String(ROADMAP.length).padStart(2, "0")}</span>
           <h2 class="card-title">${escapeHtml(item.title)}</h2>
         </div>
         <span class="counter" data-counter></span>
@@ -922,7 +974,7 @@ function render() {
           </li>`).join("")}
       </ul>
     </section>
-  `).join("");
+  `;
 
   updateCounters();
   observeReveal();
@@ -933,23 +985,46 @@ function updateCounters() {
   let done = 0;
 
   ROADMAP.forEach(item => {
+    const stats = stageStats(item);
+    total += stats.total;
+    done += stats.done;
+
     const card = document.querySelector(`[data-card="${CSS.escape(item.id)}"]`);
     if (!card) return;
-    const cardDone = item.tasks.filter(t => progress[t.id]).length;
-    const cardTotal = item.tasks.length;
-    total += cardTotal;
-    done += cardDone;
-
-    card.querySelector("[data-counter]").textContent = `${cardDone}/${cardTotal}`;
-    card.querySelector("[data-mini]").style.width = cardTotal ? `${(cardDone / cardTotal) * 100}%` : "0";
-    card.classList.toggle("complete", cardTotal > 0 && cardDone === cardTotal);
+    card.querySelector("[data-counter]").textContent = `${stats.done}/${stats.total}`;
+    card.querySelector("[data-mini]").style.width = stats.total ? `${(stats.done / stats.total) * 100}%` : "0";
+    card.classList.toggle("complete", stats.total > 0 && stats.done === stats.total);
   });
+
+  renderStageTabs();
 
   const pct = total ? Math.round((done / total) * 100) : 0;
   document.getElementById("overallCount").textContent = `${done} / ${total} · ${pct}%`;
   document.getElementById("overallFill").style.width = `${pct}%`;
   document.getElementById("overallBar").setAttribute("aria-valuenow", String(pct));
 }
+
+function selectStage(id, focus) {
+  currentStage = id;
+  try { localStorage.setItem(STAGE_KEY, id); } catch (e) { /* не страшно */ }
+  render();
+  if (focus) document.getElementById(`stage-${id}`).focus();
+}
+
+document.getElementById("stageTabs").addEventListener("click", e => {
+  const tab = e.target.closest("[data-stage]");
+  if (tab) selectStage(tab.dataset.stage, false);
+});
+
+document.getElementById("stageTabs").addEventListener("keydown", e => {
+  const i = ROADMAP.findIndex(item => item.id === currentStage);
+  let next = null;
+  if (e.key === "ArrowRight") next = (i + 1) % ROADMAP.length;
+  if (e.key === "ArrowLeft") next = (i - 1 + ROADMAP.length) % ROADMAP.length;
+  if (next === null) return;
+  e.preventDefault();
+  selectStage(ROADMAP[next].id, true);
+});
 
 function observeReveal() {
   const cards = document.querySelectorAll(".reveal:not(.observed)");

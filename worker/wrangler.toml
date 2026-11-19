@@ -1,5 +1,5 @@
-# Настройки сервера комментариев DawnLine (Cloudflare Workers)
-name = "dawnline-comments"
+# Настройки сервера магазина DawnLine (Cloudflare Workers)
+name = "dawnline"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 

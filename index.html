@@ -262,9 +262,23 @@
   .sync-dot[data-state="local"]  { background: #a8a29e; }
 
   @media (max-width: 560px) {
-    .brand { display: none; }
-    .topnav-inner { gap: 6px; padding: 6px 10px; }
-    .seg { flex: 1; }
+    .topnav { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(18, 8, 4, 0.97); }
+    .topnav-inner { gap: 6px; padding: 6px 12px; }
+    .seg {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      gap: 2px;
+      padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
+      border: 0;
+      border-top: 1px solid var(--border);
+      border-radius: 0;
+      background: rgba(18, 8, 4, 0.97);
+    }
+    body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+    .toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
     .seg a { flex: 1; flex-direction: column; gap: 1px; padding: 5px 2px; font-size: 11.5px; }
     .seg a .ico { font-size: 17px; line-height: 1.1; }
     .seg .full { display: none; }
@@ -869,6 +883,190 @@
   .pc-empty { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
   .pc-hint { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
 
+  /* ---------- Магазин ---------- */
+  .shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .shop-grid > .empty { grid-column: 1 / -1; }
+
+  .shop-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .shop-cover {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: linear-gradient(160deg, #3a1a08, #1a0b04);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .shop-cover img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+  .shop-card:hover .shop-cover img { transform: scale(1.04); }
+  .shop-ph { position: absolute; inset: 0; display: grid; place-items: center; font-size: 46px; opacity: 0.85; }
+
+  .cover-badge, .cover-owned, .cover-status { position: absolute; top: 8px; }
+  .cover-badge { right: 8px; padding: 3px 9px; border-radius: 9px; background: rgba(10, 4, 2, 0.8); border: 1px solid var(--border); font-size: 12px; font-weight: 600; }
+  .cover-status { left: 8px; }
+  .cover-owned { left: 8px; bottom: 8px; top: auto; padding: 2px 9px; border-radius: 999px; background: var(--ok); color: #fff; font-size: 12px; font-weight: 700; }
+  .edit-fab { position: absolute; right: 6px; bottom: 6px; margin: 0; background: rgba(10, 4, 2, 0.85) !important; color: var(--accent-soft); }
+
+  .shop-body { flex: 1; padding: 12px 14px 4px; }
+  .shop-body .card-title { font-size: 16px; }
+
+  .shop-desc {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 13.5px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .shop-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 8px 14px 0;
+    padding: 10px 0 12px;
+    border-top: 1px solid rgba(234, 88, 12, 0.14);
+  }
+
+  .price { color: var(--accent-soft); font-weight: 800; font-size: 15.5px; }
+  .price.soon { color: var(--muted); font-weight: 600; font-size: 14px; }
+  .shop-meta { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+  .rate { color: #fbbf24; font-weight: 700; }
+  .likes { display: inline-flex; align-items: center; gap: 4px; }
+  .likes svg, .like-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .likes.on, .like-btn.on { color: #fb7185; }
+  .likes.on svg, .like-btn.on svg { fill: currentColor; }
+
+  @media (max-width: 340px) { .shop-grid { grid-template-columns: 1fr; } }
+
+  .section { margin-top: 28px; }
+  .section-title { text-align: center; font-size: clamp(20px, 4.5vw, 26px); font-weight: 800; margin-bottom: 14px; color: var(--accent-soft); }
+
+  .review-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+  .review-head { display: flex; align-items: center; gap: 10px; }
+  .review-name { color: var(--text); font-weight: 700; text-decoration: none; }
+  .review-name:hover { color: var(--accent-soft); }
+  .review-sub { color: var(--muted); font-size: 12.5px; }
+  .review-sub a { color: var(--accent-soft); }
+  .review-text { margin-top: 8px; font-size: 14.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .stars { color: #fbbf24; letter-spacing: 1px; white-space: nowrap; }
+  .stars .off { color: rgba(251, 191, 36, 0.25); }
+
+  .discord-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .discord-card svg { width: 26px; height: 26px; fill: #8b9cf6; flex: 0 0 auto; }
+  .discord-card span { flex: 1; min-width: 180px; font-weight: 600; }
+
+  /* ---------- Страница мода ---------- */
+  .head-gap { height: 16px; }
+  .back { color: var(--accent-soft); text-decoration: none; font-weight: 600; font-size: 14.5px; }
+  .back:hover { text-decoration: underline; }
+  .product-title { font-size: clamp(20px, 4.6vw, 26px); }
+
+  .buy-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--inset);
+  }
+
+  .buy-price { font-size: 22px; font-weight: 800; color: var(--accent-soft); margin-right: auto; }
+  .buy-price.ok { color: #86efac; }
+  .buy-note { width: 100%; color: var(--muted); font-size: 13.5px; }
+  .pre { white-space: pre-wrap; }
+  .product-sec .sec-title { margin-bottom: 10px; }
+  .sec-title { font-size: 17px; font-weight: 800; }
+  .sub-title { margin: 14px 0 6px; font-size: 14.5px; color: var(--accent-soft); }
+  .discuss.open { margin-top: 0; }
+  .like-btn { margin: 0; }
+
+  .review-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .review-form textarea { width: 100%; min-height: 80px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 10px; background: rgba(42, 20, 8, 0.9); font-size: 16px; resize: vertical; }
+  .star-pick { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; gap: 2px; }
+  .star-pick input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .star-pick span { font-size: 26px; color: rgba(251, 191, 36, 0.25); cursor: pointer; transition: color 0.15s ease; }
+  .star-pick label:hover span, .star-pick label:hover ~ label span,
+  .star-pick input:checked + span, .star-pick label:has(input:checked) ~ label span { color: #fbbf24; }
+  .star-pick input:focus-visible + span { outline: 2px solid var(--accent-soft); border-radius: 4px; }
+
+  /* ---------- Кабинет ---------- */
+  .cab-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .balance { font-size: 24px; font-weight: 800; color: var(--accent-soft); }
+  .profile { display: flex; align-items: center; gap: 12px; }
+  .profile .pc-ava { width: 48px; height: 48px; border-radius: 12px; font-size: 20px; }
+  .profile-name { font-size: 17px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+
+  .code {
+    padding: 1px 7px;
+    border: 1px dashed var(--accent);
+    border-radius: 7px;
+    background: rgba(234, 88, 12, 0.14);
+    color: var(--accent-soft);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .pill { padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: #57534e; color: #fff; }
+  .pill.ok { background: var(--ok); }
+  .pill.wait { background: #ca8a04; }
+  .pill.bad { background: var(--plan); }
+
+  .steps { margin: 6px 0 12px 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .quick .chip { padding: 5px 11px; font-size: 13.5px; }
+
+  .notice { margin: 8px 0 12px; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 12px; background: rgba(234, 88, 12, 0.1); font-size: 14px; }
+
+  .rows { list-style: none; display: flex; flex-direction: column; }
+  .rows li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(234, 88, 12, 0.14); font-size: 14px; flex-wrap: wrap; }
+  .rows li:first-child { border-top: 0; }
+  .rows a { color: var(--accent-soft); font-weight: 600; }
+  .plus { color: #86efac; font-weight: 700; white-space: nowrap; }
+  .minus { color: #fca5a5; font-weight: 700; white-space: nowrap; }
+  .history { margin-top: 10px; }
+  .history summary { cursor: pointer; color: var(--accent-soft); font-weight: 600; font-size: 14px; }
+  .delivery { padding: 10px 0; border-top: 1px solid rgba(234, 88, 12, 0.14); }
+  .delivery .field { margin: 8px 0; }
+  .owner-link { text-align: center; margin-top: 6px; }
+  .login-card .steam-btn { margin-top: 4px; }
+
+  .bal-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 12px 0 4px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: rgba(42, 20, 8, 0.7);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .bal-chip[hidden] { display: none; }
+  .bal-chip .pc-ava { width: 30px; height: 30px; border-radius: 8px; font-size: 13px; }
+  .bal-chip span:only-child { padding-left: 8px; }
+
   /* ---------- Новости ---------- */
   .news-item { display: flex; gap: 12px; align-items: flex-start; }
 
@@ -1431,8 +1629,10 @@
       <a href="#mods" data-view="mods"><span class="ico" aria-hidden="true">🎮</span><span class="full">DayZ Server</span><span class="short">Моды</span></a>
       <a href="#news" data-view="news"><span class="ico" aria-hidden="true">📰</span><span class="full">Что нового</span><span class="short">Новое</span></a>
       <a href="#map" data-view="map"><span class="ico" aria-hidden="true">🗺️</span><span class="full">Карта</span><span class="short">Карта</span></a>
+      <a href="#cabinet" data-view="cabinet"><span class="ico" aria-hidden="true">👤</span><span class="full">Кабинет</span><span class="short">Кабинет</span></a>
       <a href="#plan" data-view="plan" hidden><span class="ico" aria-hidden="true">📋</span><span class="full">Дорожная карта</span><span class="short">План</span></a>
     </div>
+    <a class="bal-chip" id="balChip" href="#cabinet" hidden></a>
     <button class="icon-btn" type="button" id="editBtn" aria-pressed="false" title="Режим правки" aria-label="Режим правки" hidden>✏️</button>
     <button class="icon-btn" type="button" id="accountBtn" title="Вход для администратора" aria-label="Вход для администратора">🔒<span class="sync-dot" id="syncDot" hidden></span></button>
   </div>
@@ -1443,12 +1643,40 @@
   <!-- ===== DayZ Server: моды ===== -->
   <div class="view" id="view-mods" hidden>
     <div class="head">
-      <h1>DayZ Server <span class="name" id="serverName">DawnLine</span></h1>
-      <p class="lead">Мои моды для сервера: транспорт, одежда и снаряжение.</p>
+      <h1>Моды <span class="name" id="serverName">DawnLine</span></h1>
+      <p class="lead">Мои моды для DayZ-серверов: транспорт, одежда и снаряжение.</p>
     </div>
     <div class="chips" role="tablist" aria-label="Категории модов" id="catTabs"></div>
     <div class="edit-only block" style="margin-bottom:12px"><button class="btn small" type="button" data-act="add-mod">＋ Добавить мод</button></div>
-    <section class="stack" role="tabpanel" id="modList"></section>
+    <section class="shop-grid" role="tabpanel" id="modList"></section>
+
+    <section id="latestReviews" class="section" hidden>
+      <h2 class="section-title">Отзывы покупателей</h2>
+      <div class="review-grid" id="latestList"></div>
+    </section>
+
+    <section class="section">
+      <div class="card discord-card">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.3 4.4A19.7 19.7 0 0 0 15.4 3l-.6 1.3a18.3 18.3 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.4C.6 9 -.3 13.6.2 18.1a19.8 19.8 0 0 0 6 3l1.3-2a12.8 12.8 0 0 1-2-1l.5-.4a14.1 14.1 0 0 0 12 0l.5.4c-.6.4-1.3.7-2 1l1.3 2a19.7 19.7 0 0 0 6-3c.6-5.2-.8-9.7-3.5-13.7ZM8.5 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Zm7 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Z"/></svg>
+        <span>Остались вопросы? Заходи в наш Discord!</span>
+        <a class="btn primary small" id="discordLink2" href="#">Присоединиться</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== Страница мода ===== -->
+  <div class="view" id="view-product" hidden>
+    <div class="head-gap"></div>
+    <div id="productView" class="stack"></div>
+  </div>
+
+  <!-- ===== Личный кабинет ===== -->
+  <div class="view" id="view-cabinet" hidden>
+    <div class="head">
+      <h1>Личный кабинет</h1>
+      <p class="lead">Баланс, проверка сервера и купленные моды.</p>
+    </div>
+    <div id="cabinetView" class="stack"></div>
   </div>
 
   <!-- ===== Что нового ===== -->
@@ -1537,7 +1765,7 @@ const CONFIG = {
   serverName: "DawnLine",
   discordUrl: "#",            // ссылка на Discord (пока заглушка)
   mapSize: 15360,             // размер карты в метрах
-  commentsApi: "",            // адрес сервера комментариев (Cloudflare Worker), например https://dawnline-comments.xxx.workers.dev
+  api: "",                    // адрес сервера магазина (Cloudflare Worker), например https://dawnline.xxx.workers.dev
   repo: {                     // куда сайт сохраняет данные (файл data.json)
     owner: "Danill228228",
     name: "rusforma_vehicles_cfgeventspawn",
@@ -1563,7 +1791,8 @@ const LS = {
   migrated: "dl-migrated-v1",
   oldProgress: "dayz-roadmap-progress-v1",
   oldComments: "dayz-comments-v1",
-  steam: "dl-steam-token"
+  steam: "dl-steam-token",
+  back: "dl-steam-back"
 };
 const PLAN_TAB = "plan";
 
@@ -2160,11 +2389,18 @@ function updateCounters() {
   $("overallBar").setAttribute("aria-valuenow", String(pct));
 }
 
-/* ---------- Моды ---------- */
+/* ---------- Магазин модов ---------- */
 
 let currentCategory = lsGet(LS.cat, null);
 
 function imgSrc(src) { return sessionImages[src] || safeUrl(src); }
+
+const rub = n => `${Number(n || 0).toLocaleString("ru-RU")} ₽`;
+const modPrice = m => (Number.isInteger(m.price) && m.price >= 0 ? m.price : null);
+const forSale = m => m.status === "ready" && modPrice(m) !== null;
+const modName = id => { const m = DATA.mods.find(x => x.id === id); return m ? m.name : id; };
+const stars = r => `<span class="stars" aria-label="Оценка ${r} из 5">${"★".repeat(r)}<span class="off">${"★".repeat(5 - r)}</span></span>`;
+const HEART_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.6C1.2 8.2 3 4.5 6.6 4.5c2.1 0 3.5 1.2 5.4 3.3 1.9-2.1 3.3-3.3 5.4-3.3 3.6 0 5.4 3.7 3.8 6.9C19 15.6 12 20 12 20z"/></svg>';
 
 function renderCategoryTabs() {
   if (!DATA.categories.some(c => c.id === currentCategory)) currentCategory = DATA.categories[0] && DATA.categories[0].id;
@@ -2180,58 +2416,191 @@ function renderCategoryTabs() {
   }).join("");
 }
 
+function priceLabel(mod) {
+  if (forSale(mod)) return modPrice(mod) === 0 ? "Бесплатно" : rub(modPrice(mod));
+  return mod.status === "wip" ? "Скоро" : "В планах";
+}
+
+function modCard(mod) {
+  const images = (mod.images || []).map(imgSrc).filter(Boolean);
+  const status = STATUS_LABELS[mod.status] ? mod.status : "plan";
+  const likes = Steam.stats.likes[mod.id] || 0;
+  const rev = Steam.stats.reviews[mod.id];
+  const owned = Steam.owned.has(mod.id);
+  return `
+    <article class="card shop-card reveal" data-open-mod="${esc(mod.id)}" tabindex="0" aria-label="${esc(mod.name)}">
+      <div class="shop-cover">
+        ${images.length ? `<img src="${esc(images[0])}" alt="" loading="lazy">` : `<span class="shop-ph" aria-hidden="true">${esc(mod.icon || "📦")}</span>`}
+        ${images.length > 1 ? `<span class="cover-badge">🖼 Галерея</span>` : ""}
+        ${status !== "ready" ? `<span class="status status-${status} cover-status">${STATUS_LABELS[status]}</span>` : ""}
+        ${owned ? `<span class="cover-owned">✓ Куплено</span>` : ""}
+        <button class="mini edit-only edit-fab" type="button" data-act="edit-mod" data-id="${esc(mod.id)}" aria-label="Изменить мод">${EDIT_SVG}</button>
+      </div>
+      <div class="shop-body">
+        <h2 class="card-title">${esc(mod.name)}</h2>
+        ${mod.description ? `<p class="shop-desc">${esc(mod.description)}</p>` : ""}
+      </div>
+      <div class="shop-foot">
+        <span class="price${forSale(mod) ? "" : " soon"}">${esc(priceLabel(mod))}</span>
+        <span class="shop-meta">${rev ? `<span class="rate">★ ${esc(rev.avg)}</span>` : ""}<span class="likes${Steam.likes.has(mod.id) ? " on" : ""}">${HEART_SVG}${likes}</span></span>
+      </div>
+    </article>`;
+}
+
+function reviewCard(r, withMod) {
+  return `
+    <article class="card review reveal">
+      <div class="review-head">
+        ${avatarHtml(r)}
+        <div class="head-text">
+          <a class="review-name" href="https://steamcommunity.com/profiles/${esc(r.steamid)}" target="_blank" rel="noopener">${esc(r.name || "Игрок")}</a>
+          <div class="review-sub">${esc(fmtDate(r.ts))}${withMod ? ` · <a href="#mod/${esc(r.mod)}">${esc(modName(r.mod))}</a>` : ""}</div>
+        </div>
+        ${stars(r.rating)}
+      </div>
+      <p class="review-text">${esc(r.text)}</p>
+    </article>`;
+}
+
 function renderMods() {
   renderCategoryTabs();
   const list = $("modList");
   list.setAttribute("aria-labelledby", `tab-${currentCategory}`);
   const mods = DATA.mods.filter(m => m.category === currentCategory);
-  if (!mods.length) {
-    list.innerHTML = `<div class="empty"><strong>Пока пусто</strong>Скоро здесь появятся мои моды для этого раздела.</div>`;
-    return;
-  }
-  list.innerHTML = mods.map(mod => {
-    const status = STATUS_LABELS[mod.status] ? mod.status : "plan";
-    const key = "mod:" + mod.id;
-    const images = (mod.images || []).map(imgSrc).filter(Boolean);
-    const features = (mod.features || []).filter(Boolean).map(f => `<li>${esc(f)}</li>`).join("");
-    const video = safeUrl(mod.video);
-    const gallery = images.length ? `
-      <div class="gallery">
-        <img class="gallery-main" src="${esc(images[0])}" alt="${esc(mod.name)}" loading="lazy" data-lightbox="${esc(mod.id)}" data-i="0">
-        ${images.length > 1 ? `<div class="thumbs">${images.slice(1).map((src, i) => `
-          <button type="button" data-lightbox="${esc(mod.id)}" data-i="${i + 1}" aria-label="Фото ${i + 2}"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join("")}</div>` : ""}
-      </div>` : "";
-    return `
-      <article class="card reveal">
-        ${gallery}
-        <div class="card-head">
-          <div class="icon" aria-hidden="true">${esc(mod.icon || "📦")}</div>
-          <div class="head-text">
-            <span class="status status-${status}">${STATUS_LABELS[status]}</span>
-            <h2 class="card-title">${esc(mod.name)}</h2>
-          </div>
-          <button class="mini edit-only" type="button" data-act="edit-mod" data-id="${esc(mod.id)}" aria-label="Изменить мод">${EDIT_SVG}</button>
-        </div>
-        ${mod.description ? `<p class="mod-desc">${esc(mod.description)}</p>` : ""}
-        ${features ? `<ul class="mod-features">${features}</ul>` : ""}
-        ${video || isAdmin() || CONFIG.commentsApi ? `<div class="mod-foot">
-          ${video ? `<a class="btn small" href="${esc(video)}" target="_blank" rel="noopener">▶ Смотреть видео</a>` : ""}
-          ${discussButton(mod.id)}
-          ${commentButton(key, "Заметки")}
-        </div>` : ""}
-        ${threadHtml(key)}
-        ${discussBox(mod.id)}
-      </article>`;
-  }).join("");
+  list.innerHTML = mods.length ? mods.map(modCard).join("")
+    : `<div class="empty"><strong>Пока пусто</strong>Скоро здесь появятся мои моды для этого раздела.</div>`;
+  const latest = Steam.latestReviews;
+  $("latestReviews").hidden = !latest.length;
+  $("latestList").innerHTML = latest.map(r => reviewCard(r, true)).join("");
   observeReveal();
 }
 
-/* ---------- Обсуждение под модами (вход через Steam) ---------- */
+/* ---------- Страница мода ---------- */
+
+function currentModId() {
+  const m = location.hash.match(/^#mod\/([\w-]+)/);
+  return m ? m[1] : null;
+}
+
+function buyBox(mod) {
+  const price = modPrice(mod);
+  const u = Steam.user;
+  const priceHtml = `<div class="buy-price">${esc(priceLabel(mod))}</div>`;
+  if (!forSale(mod)) return `${priceHtml}<p class="buy-note">Мод ещё в работе — следи за новостями.</p>`;
+  if (!CONFIG.api) return `${priceHtml}<button class="btn primary" type="button" disabled>Покупки откроются скоро</button>`;
+  if (!u) return `${priceHtml}<button class="steam-btn" type="button" data-act="steam-login">Войти через Steam, чтобы купить</button>`;
+  if (Steam.owned.has(mod.id)) {
+    const p = Steam.purchases.find(x => x.mod === mod.id) || {};
+    return `
+      <div class="buy-price ok">✓ Мод куплен</div>
+      ${p.url ? `<a class="btn primary" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">⬇ Скачать</a>` : ""}
+      ${p.note ? `<p class="buy-note pre">${esc(p.note)}</p>` : (!p.url ? `<p class="buy-note">Администратор скоро добавит ссылку на скачивание.</p>` : "")}`;
+  }
+  const s = u.server;
+  if (!s || s.status !== "verified") {
+    return `${priceHtml}<p class="buy-note">Купить мод может только владелец DayZ-сервера. Подтверди свой сервер в кабинете — это займёт пару минут.</p>
+      <a class="btn primary" href="#cabinet">Подтвердить сервер</a>`;
+  }
+  if (u.balance < price) {
+    return `${priceHtml}<p class="buy-note">На балансе ${esc(rub(u.balance))}, не хватает ${esc(rub(price - u.balance))}.</p>
+      <a class="btn primary" href="#cabinet">Пополнить баланс</a>`;
+  }
+  return `${priceHtml}<button class="btn primary" type="button" data-act="buy" data-id="${esc(mod.id)}">${price === 0 ? "Получить бесплатно" : `Купить за ${esc(rub(price))}`}</button>
+    <p class="buy-note">На балансе ${esc(rub(u.balance))}</p>`;
+}
+
+function reviewsBlock(mod) {
+  if (!CONFIG.api) return "";
+  const list = Steam.reviews[mod.id];
+  const u = Steam.user;
+  const mine = u && list && list.find(r => r.steamid === u.steamid);
+  let form = "";
+  if (u && Steam.owned.has(mod.id) && !u.banned) {
+    const rating = mine ? mine.rating : 5;
+    form = `
+      <form class="review-form" data-form="review" data-mod="${esc(mod.id)}">
+        <div class="star-pick" role="radiogroup" aria-label="Оценка">
+          ${[5, 4, 3, 2, 1].map(n => `<label><input type="radio" name="rating" value="${n}"${n === rating ? " checked" : ""}><span>★</span></label>`).join("")}
+        </div>
+        <textarea name="text" maxlength="1000" placeholder="Расскажи, как мод работает на твоём сервере" required>${esc(mine ? mine.text : "")}</textarea>
+        <div class="set-row"><button class="btn primary small" type="submit">${mine ? "Обновить отзыв" : "Оставить отзыв"}</button>
+        ${mine ? `<button class="btn small danger" type="button" data-act="del-review" data-id="${esc(mod.id)}">Удалить отзыв</button>` : ""}</div>
+      </form>`;
+  } else if (u && !Steam.owned.has(mod.id)) {
+    form = `<p class="pc-hint">Отзыв может оставить только покупатель мода.</p>`;
+  }
+  const items = list ? (list.length ? list.map(r => reviewCard(r, false)).join("") : `<p class="pc-empty">Отзывов пока нет.</p>`) : `<p class="pc-empty">Загружаю…</p>`;
+  return `<section class="card product-sec"><h2 class="sec-title">Отзывы покупателей</h2>${form}<div class="stack">${items}</div></section>`;
+}
+
+function renderProduct() {
+  const root = $("productView");
+  const mod = DATA.mods.find(m => m.id === currentModId());
+  if (!mod) {
+    root.innerHTML = `<a class="back" href="#mods">← Все моды</a><div class="empty"><strong>Мод не найден</strong>Возможно, его убрали из магазина.</div>`;
+    return;
+  }
+  const images = (mod.images || []).map(imgSrc).filter(Boolean);
+  const status = STATUS_LABELS[mod.status] ? mod.status : "plan";
+  const features = (mod.features || []).filter(Boolean).map(f => `<li>${esc(f)}</li>`).join("");
+  const video = safeUrl(mod.video);
+  const rev = Steam.stats.reviews[mod.id];
+  const key = "mod:" + mod.id;
+  const liked = Steam.likes.has(mod.id);
+  if (CONFIG.api) Steam.open.add(mod.id);
+  document.title = `${mod.name} · ${CONFIG.serverName}`;
+  root.innerHTML = `
+    <a class="back" href="#mods">← Все моды</a>
+    <article class="card product">
+      ${images.length ? `
+        <div class="gallery">
+          <img class="gallery-main" src="${esc(images[0])}" alt="${esc(mod.name)}" data-lightbox="${esc(mod.id)}" data-i="0">
+          ${images.length > 1 ? `<div class="thumbs">${images.slice(1).map((src, i) => `
+            <button type="button" data-lightbox="${esc(mod.id)}" data-i="${i + 1}" aria-label="Фото ${i + 2}"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join("")}</div>` : ""}
+        </div>` : ""}
+      <div class="card-head">
+        <div class="icon" aria-hidden="true">${esc(mod.icon || "📦")}</div>
+        <div class="head-text">
+          <span class="status status-${status}">${STATUS_LABELS[status]}</span>
+          <h1 class="card-title product-title">${esc(mod.name)}</h1>
+          <div class="review-sub">${rev ? `★ ${esc(rev.avg)} · ${plural(rev.n, "отзыв", "отзыва", "отзывов")}` : "Пока без отзывов"}</div>
+        </div>
+        <button class="mini edit-only" type="button" data-act="edit-mod" data-id="${esc(mod.id)}" aria-label="Изменить мод">${EDIT_SVG}</button>
+      </div>
+      <div class="buy-box">${buyBox(mod)}</div>
+      ${mod.description ? `<p class="mod-desc">${esc(mod.description)}</p>` : ""}
+      ${features ? `<ul class="mod-features">${features}</ul>` : ""}
+      <div class="mod-foot">
+        ${video ? `<a class="btn small" href="${esc(video)}" target="_blank" rel="noopener">▶ Смотреть видео</a>` : ""}
+        ${CONFIG.api ? `<button class="mini like-btn${liked ? " on" : ""}" type="button" data-act="like" data-id="${esc(mod.id)}" aria-pressed="${liked}">${HEART_SVG}<span>${Steam.stats.likes[mod.id] || 0}</span></button>` : ""}
+        ${commentButton(key, "Заметки")}
+      </div>
+      ${threadHtml(key)}
+    </article>
+    ${reviewsBlock(mod)}
+    ${CONFIG.api ? `<section class="card product-sec"><h2 class="sec-title">Обсуждение</h2>
+      <div class="discuss open" data-discuss-box="${esc(mod.id)}">${discussInner(mod.id)}</div></section>` : ""}`;
+  if (CONFIG.api) {
+    if (!Steam.cache[mod.id]) Steam.load(mod.id);
+    if (!Steam.reviews[mod.id]) Steam.loadReviews(mod.id);
+  }
+}
+
+/* ---------- Аккаунт Steam: вход, баланс, покупки ---------- */
 
 const Steam = {
   token: lsGet(LS.steam, ""),
   user: null,
-  counts: {},
+  stats: { comments: {}, likes: {}, reviews: {} },
+  likes: new Set(),
+  purchases: [],
+  owned: new Set(),
+  money: null,
+  admin: null,
+  adminUser: null,
+  topupResult: null,
+  latestReviews: [],
+  reviews: {},
   cache: {},
   open: new Set(),
   loading: new Set(),
@@ -2240,45 +2609,84 @@ const Steam = {
     const headers = { ...(opts.headers || {}) };
     if (this.token) headers["Authorization"] = `Bearer ${this.token}`;
     if (opts.body) headers["Content-Type"] = "application/json";
-    return fetch(CONFIG.commentsApi.replace(/\/+$/, "") + path, { ...opts, headers, cache: "no-store" })
+    return fetch(CONFIG.api.replace(/\/+$/, "") + path, { ...opts, headers, cache: "no-store" })
       .then(async res => {
         const data = await res.json().catch(() => ({}));
-        if (res.status === 401 && this.token) { this.logout(true); }
+        if (res.status === 401 && this.token) this.logout(true);
         if (!res.ok) throw new Error(data.error || `Ошибка ${res.status}`);
         return data;
       });
   },
 
-  // Возврат со страницы Steam: #mods&steam=ТОКЕН или #mods&steam_error=…
+  post(path, data) { return this.api(path, { method: "POST", body: JSON.stringify(data || {}) }); },
+
+  // Возврат со страницы Steam: #cabinet&steam=ТОКЕН или #cabinet&steam_error=…
   takeFromHash() {
     const h = location.hash;
     const tok = h.match(/[#&]steam=([\w.-]+)/);
     const err = h.match(/[#&]steam_error=(\w+)/);
     if (!tok && !err) return;
     if (tok) { this.token = tok[1]; lsSet(LS.steam, this.token); }
-    history.replaceState(null, "", location.pathname + location.search + "#mods");
+    const back = lsGet(LS.back, "#cabinet");
+    history.replaceState(null, "", location.pathname + location.search + (/^#[\w/-]+$/.test(back) ? back : "#cabinet"));
     if (err) toast(err[1] === "cancel" ? "Вход через Steam отменён" : "Не удалось войти через Steam");
   },
 
   async init() {
-    if (!CONFIG.commentsApi) return;
+    if (!CONFIG.api) { renderAccountUI(); return; }
     this.takeFromHash();
-    try { this.counts = (await this.api("/comments/counts")).counts || {}; } catch (e) { /* сервер недоступен */ }
-    if (this.token) {
-      try { this.user = await this.api("/me"); toast(`Ты вошёл как ${this.user.name}`); } catch (e) { /* токен устарел */ }
-    }
-    renderMods();
+    this.loadStats();
+    this.api("/reviews").then(d => { this.latestReviews = d.reviews || []; renderMods(); }).catch(() => {});
+    if (this.token) await this.refresh(true);
+    renderAccountUI();
+    showView();
+  },
+
+  async loadStats() {
+    try {
+      const s = await this.api("/stats");
+      this.stats = { comments: s.comments || {}, likes: s.likes || {}, reviews: s.reviews || {} };
+    } catch (e) { /* сервер недоступен */ }
+    rerenderShop();
+  },
+
+  async refresh(greet) {
+    if (!this.token) return;
+    try {
+      const [me, likes, purchases] = await Promise.all([this.api("/me"), this.api("/likes/mine"), this.api("/purchases")]);
+      this.user = me;
+      this.likes = new Set(likes.likes || []);
+      this.purchases = purchases.purchases || [];
+      this.owned = new Set(this.purchases.map(p => p.mod));
+      if (greet) toast(`Ты вошёл как ${me.name}`);
+      if (me.admin) this.loadAdmin();
+    } catch (e) { /* токен устарел */ }
+    renderAccountUI();
+    rerenderShop();
+  },
+
+  async loadMoney() {
+    try { this.money = await this.api("/money"); } catch (e) { toast(e.message); }
+    if (currentView() === "cabinet") renderCabinet();
+  },
+
+  async loadAdmin() {
+    try { this.admin = await this.api("/admin/overview"); } catch (e) { this.admin = null; }
+    if (currentView() === "cabinet") renderCabinet();
   },
 
   login() {
     lsSet(LS.cat, currentCategory);
-    location.href = CONFIG.commentsApi.replace(/\/+$/, "") + "/auth/steam";
+    lsSet(LS.back, location.hash || "#cabinet");
+    location.href = CONFIG.api.replace(/\/+$/, "") + "/auth/steam";
   },
 
   logout(silent) {
-    this.token = ""; this.user = null;
+    this.token = ""; this.user = null; this.likes = new Set(); this.purchases = []; this.owned = new Set();
+    this.money = null; this.admin = null; this.adminUser = null; this.topupResult = null;
     lsDel(LS.steam);
-    if (!silent) { toast("Ты вышел из Steam"); renderMods(); }
+    renderAccountUI();
+    if (!silent) { toast("Ты вышел из Steam"); rerenderShop(); }
   },
 
   async load(mod) {
@@ -2286,25 +2694,34 @@ const Steam = {
     refreshDiscuss(mod);
     try {
       this.cache[mod] = (await this.api(`/comments?mod=${encodeURIComponent(mod)}`)).comments || [];
-      this.counts[mod] = this.cache[mod].length;
+      this.stats.comments[mod] = this.cache[mod].length;
     } catch (e) {
       toast("Не удалось загрузить комментарии: " + e.message);
     }
     this.loading.delete(mod);
     refreshDiscuss(mod);
+  },
+
+  async loadReviews(mod) {
+    try { this.reviews[mod] = (await this.api(`/reviews?mod=${encodeURIComponent(mod)}`)).reviews || []; }
+    catch (e) { this.reviews[mod] = []; }
+    if (currentModId() === mod) renderProduct();
   }
 };
 
-function discussButton(modId) {
-  if (!CONFIG.commentsApi) return "";
-  const n = Steam.counts[modId] || 0;
-  return `<button class="mini${n ? " has" : ""}" type="button" data-discuss="${esc(modId)}" aria-expanded="${Steam.open.has(modId)}">${CHAT_SVG}<span>Обсуждение</span><span class="n">${n || ""}</span></button>`;
+function rerenderShop() {
+  const v = currentView();
+  if (v === "mods") renderMods();
+  if (v === "product") renderProduct();
+  if (v === "cabinet") renderCabinet();
 }
 
-function discussBox(modId) {
-  if (!CONFIG.commentsApi) return "";
-  const open = Steam.open.has(modId);
-  return `<div class="discuss" data-discuss-box="${esc(modId)}"${open ? "" : " hidden"}>${open ? discussInner(modId) : ""}</div>`;
+function renderAccountUI() {
+  const chip = $("balChip");
+  const u = Steam.user;
+  chip.hidden = !CONFIG.api;
+  chip.innerHTML = u ? `${avatarHtml(u)}<span>${esc(rub(u.balance))}</span>` : `<span>Войти</span>`;
+  chip.title = u ? `${u.name} · баланс ${rub(u.balance)}` : "Войти через Steam";
 }
 
 function avatarHtml(c) {
@@ -2312,6 +2729,8 @@ function avatarHtml(c) {
   return url ? `<img class="pc-ava" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
              : `<span class="pc-ava" aria-hidden="true">${esc((c.name || "?").slice(0, 1).toUpperCase())}</span>`;
 }
+
+/* ---------- Обсуждение под модом ---------- */
 
 function discussInner(modId) {
   if (Steam.loading.has(modId) && !Steam.cache[modId]) return `<p class="pc-empty">Загружаю…</p>`;
@@ -2339,27 +2758,322 @@ function discussInner(modId) {
   const form = me
     ? (me.banned
         ? `<p class="pc-hint">Ты не можешь оставлять комментарии.</p>`
-        : `<div class="pc-me">Ты вошёл как <b>${esc(me.name)}</b>${me.admin ? ` <span class="pc-admin">админ</span>` : ""}<button class="del" type="button" data-act="steam-logout">Выйти</button></div>
-           <form class="comment-form pc-form" data-mod="${esc(modId)}">
-             <textarea rows="1" maxlength="1000" placeholder="Что думаешь об этом моде?" aria-label="Комментарий"></textarea>
+        : `<form class="comment-form pc-form" data-mod="${esc(modId)}">
+             <textarea rows="1" maxlength="1000" placeholder="Задай вопрос или поделись мнением" aria-label="Комментарий"></textarea>
              <button class="send" type="submit" aria-label="Отправить" disabled>${SEND_SVG}</button>
            </form>`)
     : `<button class="steam-btn" type="button" data-act="steam-login">Войти через Steam</button>
-       <p class="pc-hint">Чтобы написать комментарий, войди через Steam. Сайт получит только твой Steam ID, ник и аватар — пароль остаётся у Steam.</p>`;
+       <p class="pc-hint">Читать может каждый, а писать — после входа через Steam. Сайт получит только твой Steam ID, ник и аватар — пароль остаётся у Steam.</p>`;
   return `${items ? `<ul class="pc-list">${items}</ul>` : `<p class="pc-empty">Комментариев пока нет — будь первым.</p>`}${form}`;
 }
 
 function refreshDiscuss(modId) {
-  document.querySelectorAll(`[data-discuss="${CSS.escape(modId)}"]`).forEach(btn => {
-    const n = Steam.counts[modId] || 0;
-    btn.classList.toggle("has", n > 0);
-    btn.querySelector(".n").textContent = n || "";
-    btn.setAttribute("aria-expanded", String(Steam.open.has(modId)));
-  });
   const box = document.querySelector(`[data-discuss-box="${CSS.escape(modId)}"]`);
-  if (!box) return;
-  box.hidden = !Steam.open.has(modId);
-  if (!box.hidden) box.innerHTML = discussInner(modId);
+  if (box) box.innerHTML = discussInner(modId);
+}
+
+/* ---------- Личный кабинет ---------- */
+
+const TX_KIND = { topup: "Пополнение", purchase: "Покупка", refund: "Возврат", admin: "Администратор" };
+const TOPUP_STATUS = { pending: "Ждёт подтверждения", done: "Зачислено", rejected: "Отклонено" };
+
+function serverCard(u) {
+  const s = u.server;
+  const editing = Steam.editServer || !s || s.status === "rejected";
+  const status = s ? s.status : "none";
+  const pill = {
+    none: `<span class="pill">Не подтверждён</span>`,
+    code: `<span class="pill wait">Ждёт проверки кода</span>`,
+    pending: `<span class="pill wait">На проверке у администратора</span>`,
+    verified: `<span class="pill ok">✓ Подтверждён</span>`,
+    rejected: `<span class="pill bad">Отклонён</span>`
+  }[status];
+  let body = "";
+  if (status === "verified" && !editing) {
+    body = `<p><b>${esc(s.name || "DayZ-сервер")}</b><br><span class="mono">${esc(s.ip)}:${esc(s.port)} · QPort ${esc(s.qport)}</span></p>
+      <p class="pc-hint">Код ${esc(s.code)} из названия сервера теперь можно убрать.</p>
+      <button class="btn small" type="button" data-act="server-edit">Указать другой сервер</button>`;
+  } else if ((status === "code" || status === "pending") && !editing) {
+    body = `
+      <p class="mono">${esc(s.ip)}:${esc(s.port)} · QPort ${esc(s.qport)}</p>
+      ${status === "code" ? `
+        <ol class="steps">
+          <li>Добавь код <button class="code" type="button" data-copy="${esc(s.code)}">${esc(s.code)}</button> в название сервера — параметр <span class="mono">hostname</span> в <span class="mono">serverDZ.cfg</span> или в панели хостинга.</li>
+          <li>Перезапусти сервер и подожди 1–2 минуты, пока Steam обновит название.</li>
+          <li>Нажми «Проверить».</li>
+        </ol>
+        ${s.note ? `<p class="err">${esc(s.note)}</p>` : ""}
+        <div class="set-row"><button class="btn primary small" type="button" data-act="server-check">Проверить</button>
+        <button class="btn small" type="button" data-act="server-edit">Изменить данные</button></div>
+        ${u.autoCheck ? "" : `<p class="pc-hint">Сейчас сервер проверяет администратор вручную: после нажатия «Проверить» заявка уйдёт ему.</p>`}`
+      : `<p class="pc-hint">Администратор проверит, что в названии сервера есть код <b>${esc(s.code)}</b>, и подтвердит заявку.</p>
+         <button class="btn small" type="button" data-act="server-edit">Изменить данные</button>`}`;
+  } else {
+    body = `
+      ${s && s.status === "rejected" && s.note ? `<p class="err">${esc(s.note)}</p>` : ""}
+      <p class="pc-hint">Купить мод может только владелец DayZ-сервера. Укажи адрес своего сервера — дальше сайт выдаст код для проверки.</p>
+      <form data-form="server" class="server-form">
+        <label class="field"><span>IP</span><input name="ip" inputmode="decimal" placeholder="123.45.67.89" value="${esc(s ? s.ip : "")}" required></label>
+        <div class="two">
+          <label class="field"><span>Port</span><input name="port" inputmode="numeric" placeholder="2302" value="${esc(s ? s.port : "")}" required></label>
+          <label class="field"><span>QPort</span><input name="qport" inputmode="numeric" placeholder="27016" value="${esc(s ? s.qport : "")}" required></label>
+        </div>
+        <p class="pc-hint">Port — игровой порт (обычно 2302), QPort — <span class="mono">steamQueryPort</span> из serverDZ.cfg (часто 27016).</p>
+        <div class="set-row"><button class="btn primary small" type="submit">Получить код</button>
+        ${s && s.status !== "rejected" ? `<button class="btn small" type="button" data-act="server-cancel">Отмена</button>` : ""}</div>
+      </form>`;
+  }
+  return `<section class="card cab-card"><div class="cab-head"><h2 class="sec-title">🖥️ Мой DayZ-сервер</h2>${pill}</div>${body}</section>`;
+}
+
+function moneyCard(u) {
+  const m = Steam.money;
+  const r = Steam.topupResult;
+  const topups = m ? m.topups.filter(t => t.status === "pending") : [];
+  return `
+    <section class="card cab-card">
+      <div class="cab-head"><h2 class="sec-title">💳 Баланс</h2><span class="balance">${esc(rub(u.balance))}</span></div>
+      ${r ? `
+        <div class="notice">
+          <b>Заявка на ${esc(rub(r.amount))} создана.</b> Код платежа: <button class="code" type="button" data-copy="${esc(r.code)}">${esc(r.code)}</button><br>
+          ${r.info ? `<span class="pre">${esc(r.info)}</span><br>` : ""}
+          Укажи код в комментарии к переводу. Деньги появятся на балансе, когда администратор подтвердит оплату.
+        </div>` : ""}
+      <form data-form="topup" class="topup-form">
+        <div class="quick">${[300, 500, 1000, 3000].map(v => `<button class="chip" type="button" data-amount="${v}">${esc(rub(v))}</button>`).join("")}</div>
+        <div class="set-row">
+          <label class="field" style="flex:1;margin:0"><input name="amount" type="number" min="50" max="100000" step="1" placeholder="Сумма, ₽" required aria-label="Сумма пополнения"></label>
+          <button class="btn primary small" type="submit">Пополнить</button>
+        </div>
+      </form>
+      ${topups.length ? `<h3 class="sub-title">Ждут подтверждения</h3><ul class="rows">${topups.map(t => `<li><span>${esc(rub(t.amount))} · <span class="mono">${esc(t.code)}</span></span><span class="muted">${esc(fmtDate(t.ts, true))}</span></li>`).join("")}</ul>` : ""}
+      ${m && m.transactions.length ? `<details class="history"><summary>История операций</summary><ul class="rows">${m.transactions.map(t => `
+        <li><span>${esc(TX_KIND[t.kind] || t.kind)}${t.note ? ` · ${esc(t.note)}` : ""}</span><span class="${t.amount < 0 ? "minus" : "plus"}">${t.amount > 0 ? "+" : ""}${esc(rub(t.amount))}</span></li>`).join("")}</ul></details>` : ""}
+    </section>`;
+}
+
+function purchasesCard() {
+  const list = Steam.purchases;
+  return `
+    <section class="card cab-card">
+      <h2 class="sec-title">📦 Мои моды</h2>
+      ${list.length ? `<ul class="rows">${list.map(p => `
+        <li class="purchase">
+          <span><a href="#mod/${esc(p.mod)}">${esc(modName(p.mod))}</a><br><span class="muted">${esc(fmtDate(p.ts))} · ${esc(rub(p.price))}</span></span>
+          ${p.url ? `<a class="btn small primary" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">⬇ Скачать</a>` : `<span class="muted">ссылка скоро</span>`}
+        </li>`).join("")}</ul>` : `<p class="pc-empty">Пока ничего не куплено. <a href="#mods">Перейти к модам →</a></p>`}
+    </section>`;
+}
+
+function adminCard() {
+  const a = Steam.admin;
+  if (!a) return `<section class="card cab-card"><h2 class="sec-title">🛡️ Админка</h2><p class="pc-empty">Загружаю…</p></section>`;
+  const who = r => `${esc(r.name || "Игрок")} <span class="muted mono">${esc(r.steamid)}</span>`;
+  const sale = DATA.mods.filter(forSale);
+  const delivery = Object.fromEntries(a.delivery.map(d => [d.mod, d]));
+  const au = Steam.adminUser;
+  return `
+    <section class="card cab-card admin">
+      <div class="cab-head"><h2 class="sec-title">🛡️ Админка</h2><span class="muted">${plural(a.users, "игрок", "игрока", "игроков")}</span></div>
+
+      <h3 class="sub-title">Проверка серверов (${a.servers.length})</h3>
+      ${a.servers.length ? `<ul class="rows">${a.servers.map(s => `
+        <li><span>${who(s)}<br><span class="mono">${esc(s.ip)}:${esc(s.port)} · QPort ${esc(s.qport)}</span> · код <b class="mono">${esc(s.code)}</b></span>
+        <span class="set-row"><button class="btn small primary" type="button" data-act="adm-server" data-steamid="${esc(s.steamid)}" data-do="approve">Подтвердить</button>
+        <button class="btn small danger" type="button" data-act="adm-server" data-steamid="${esc(s.steamid)}" data-do="reject">Отклонить</button></span></li>`).join("")}</ul>` : `<p class="pc-empty">Заявок нет.</p>`}
+
+      <h3 class="sub-title">Пополнения (${a.topups.length})</h3>
+      ${a.topups.length ? `<ul class="rows">${a.topups.map(t => `
+        <li><span>${who(t)}<br><b>${esc(rub(t.amount))}</b> · код <b class="mono">${esc(t.code)}</b> · ${esc(fmtDate(t.ts, true))}</span>
+        <span class="set-row"><button class="btn small primary" type="button" data-act="adm-topup" data-id="${esc(t.id)}" data-do="approve">Деньги пришли</button>
+        <button class="btn small danger" type="button" data-act="adm-topup" data-id="${esc(t.id)}" data-do="reject">Отклонить</button></span></li>`).join("")}</ul>` : `<p class="pc-empty">Заявок нет.</p>`}
+
+      <h3 class="sub-title">Игрок</h3>
+      <form data-form="adm-find" class="set-row">
+        <label class="field" style="flex:1;margin:0"><input name="steamid" inputmode="numeric" placeholder="Steam ID (17 цифр)" value="${esc(au ? au.steamid : "")}" required aria-label="Steam ID"></label>
+        <button class="btn small" type="submit">Найти</button>
+      </form>
+      ${au ? `
+        <div class="notice">
+          <b>${esc(au.name || "Игрок")}</b> · баланс <b>${esc(rub(au.balance))}</b>${au.banned ? " · <span class=\"err\">заблокирован</span>" : ""}<br>
+          Сервер: ${au.server ? `${esc(au.server.ip)}:${esc(au.server.port)} (${esc(au.server.status)})` : "нет"}
+          ${au.purchases.length ? `<ul class="rows">${au.purchases.map(p => `<li><span>${esc(modName(p.mod))} · ${esc(rub(p.price))}</span>
+            <button class="btn small danger" type="button" data-act="adm-refund" data-steamid="${esc(au.steamid)}" data-mod="${esc(p.mod)}">Вернуть деньги</button></li>`).join("")}</ul>` : ""}
+          <form data-form="adm-balance" class="set-row" style="margin-top:8px">
+            <input type="hidden" name="steamid" value="${esc(au.steamid)}">
+            <label class="field" style="width:120px;margin:0"><input name="amount" type="number" step="1" placeholder="±₽" required aria-label="Сумма"></label>
+            <label class="field" style="flex:1;margin:0;min-width:140px"><input name="note" placeholder="За что (необязательно)" aria-label="Комментарий"></label>
+            <button class="btn small" type="submit">Изменить баланс</button>
+          </form>
+        </div>` : ""}
+
+      <h3 class="sub-title">Выдача после покупки</h3>
+      ${sale.length ? sale.map(m => `
+        <form data-form="adm-delivery" data-mod="${esc(m.id)}" class="delivery">
+          <b>${esc(m.name)}</b> · ${esc(rub(modPrice(m)))}
+          <label class="field"><span>Ссылка на скачивание</span><input name="url" type="url" placeholder="https://…" value="${esc(delivery[m.id] ? delivery[m.id].url : "")}"></label>
+          <label class="field"><span>Инструкция для покупателя</span><textarea name="note" placeholder="Как установить мод">${esc(delivery[m.id] ? delivery[m.id].note : "")}</textarea></label>
+          <button class="btn small" type="submit">Сохранить</button>
+        </form>`).join("") : `<p class="pc-empty">Нет модов в продаже. Чтобы выставить мод, войди как владелец сайта (🔒), включи ✏️ и укажи у мода цену и статус «Готово».</p>`}
+
+      <h3 class="sub-title">Последние продажи</h3>
+      ${a.sales.length ? `<ul class="rows">${a.sales.map(s => `<li><span>${who(s)}<br>${esc(modName(s.mod))}</span><span>${esc(rub(s.price))}<br><span class="muted">${esc(fmtDate(s.ts))}</span></span></li>`).join("")}</ul>` : `<p class="pc-empty">Продаж пока нет.</p>`}
+    </section>`;
+}
+
+function renderCabinet() {
+  const root = $("cabinetView");
+  const u = Steam.user;
+  const owner = `<p class="owner-link"><button class="link-btn" type="button" data-act="${isAdmin() ? "owner-settings" : "login"}">${isAdmin() ? "⚙️ Настройки владельца сайта" : "🔒 Вход для владельца сайта"}</button></p>`;
+  if (!CONFIG.api) {
+    root.innerHTML = `<div class="empty"><strong>Личный кабинет скоро откроется</strong>Здесь будут вход через Steam, баланс и покупка модов.</div>${owner}`;
+    return;
+  }
+  if (!u) {
+    root.innerHTML = `
+      <section class="card cab-card login-card">
+        <h2 class="sec-title">Вход в кабинет</h2>
+        <ol class="steps">
+          <li>Войди через Steam</li>
+          <li>Подтверди свой DayZ-сервер: IP, Port и QPort</li>
+          <li>Пополни баланс</li>
+          <li>Купи мод и скачай его в кабинете</li>
+        </ol>
+        <button class="steam-btn" type="button" data-act="steam-login">Войти через Steam</button>
+        <p class="pc-hint">Сайт получит только твой Steam ID, ник и аватар — пароль остаётся у Steam.</p>
+      </section>${owner}`;
+    return;
+  }
+  if (!Steam.money) Steam.loadMoney();
+  root.innerHTML = `
+    <section class="card cab-card profile">
+      ${avatarHtml(u)}
+      <div class="head-text">
+        <b class="profile-name">${esc(u.name)}</b>${u.admin ? ` <span class="pc-admin">админ</span>` : ""}
+        <div class="muted mono">Steam ID: <button class="code" type="button" data-copy="${esc(u.steamid)}">${esc(u.steamid)}</button></div>
+      </div>
+      <button class="btn small" type="button" data-act="steam-logout">Выйти</button>
+    </section>
+    ${u.banned ? `<p class="err">Аккаунт заблокирован администратором.</p>` : ""}
+    ${moneyCard(u)}
+    ${serverCard(u)}
+    ${purchasesCard()}
+    ${u.admin ? adminCard() : ""}
+    ${owner}`;
+}
+
+async function shopAction(act, el) {
+  try {
+    switch (act) {
+      case "buy": {
+        const mod = DATA.mods.find(m => m.id === el.dataset.id);
+        if (!confirm(`Купить «${mod.name}» за ${rub(modPrice(mod))}?`)) return;
+        el.disabled = true;
+        await Steam.post("/buy", { mod: mod.id });
+        toast("Мод куплен! Ссылка на скачивание — на странице мода и в кабинете");
+        Steam.money = null;
+        await Steam.refresh(false);
+        Steam.loadReviews(mod.id);
+        break;
+      }
+      case "like": {
+        if (!Steam.user) { Steam.login(); return; }
+        const r = await Steam.post("/likes", { mod: el.dataset.id });
+        if (r.liked) Steam.likes.add(el.dataset.id); else Steam.likes.delete(el.dataset.id);
+        Steam.stats.likes[el.dataset.id] = Math.max(0, (Steam.stats.likes[el.dataset.id] || 0) + (r.liked ? 1 : -1));
+        renderProduct();
+        break;
+      }
+      case "del-review":
+        if (!confirm("Удалить твой отзыв?")) return;
+        await Steam.api(`/reviews/${encodeURIComponent(el.dataset.id)}`, { method: "DELETE" });
+        Steam.loadStats(); Steam.loadReviews(el.dataset.id);
+        break;
+      case "server-edit": Steam.editServer = true; renderCabinet(); break;
+      case "server-cancel": Steam.editServer = false; renderCabinet(); break;
+      case "server-check": {
+        el.disabled = true;
+        const r = await Steam.post("/server/check");
+        Steam.user.server = r.server;
+        toast(r.manual ? "Заявка отправлена администратору" : r.ok ? "Сервер подтверждён!" : "Проверка не прошла — смотри подсказку");
+        renderCabinet();
+        break;
+      }
+      case "adm-server":
+        await Steam.post("/admin/server", { steamid: el.dataset.steamid, action: el.dataset.do });
+        toast(el.dataset.do === "approve" ? "Сервер подтверждён" : "Заявка отклонена");
+        Steam.loadAdmin();
+        break;
+      case "adm-topup":
+        if (el.dataset.do === "approve" && !confirm("Ты получил эти деньги? Баланс игрока будет пополнен.")) return;
+        await Steam.post("/admin/topup", { id: Number(el.dataset.id), action: el.dataset.do });
+        toast(el.dataset.do === "approve" ? "Баланс пополнен" : "Заявка отклонена");
+        Steam.loadAdmin();
+        if (Steam.user) Steam.refresh(false);
+        break;
+      case "adm-refund":
+        if (!confirm("Вернуть деньги за этот мод? Покупка и отзыв игрока будут удалены.")) return;
+        await Steam.post("/admin/refund", { steamid: el.dataset.steamid, mod: el.dataset.mod });
+        toast("Деньги возвращены");
+        Steam.adminUser = await Steam.api(`/admin/user?steamid=${el.dataset.steamid}`);
+        Steam.loadAdmin();
+        break;
+    }
+  } catch (e) {
+    toast(e.message);
+    el.disabled = false;
+  }
+}
+
+async function shopForm(form) {
+  const f = Object.fromEntries(new FormData(form));
+  const btn = form.querySelector("[type=submit]");
+  if (btn) btn.disabled = true;
+  try {
+    switch (form.dataset.form) {
+      case "server": {
+        const r = await Steam.post("/server", { ip: f.ip.trim(), port: Number(f.port), qport: Number(f.qport) });
+        Steam.user.server = r.server;
+        Steam.editServer = false;
+        toast(r.server.status === "verified" ? "Этот сервер уже подтверждён" : "Код получен — добавь его в название сервера");
+        renderCabinet();
+        break;
+      }
+      case "topup": {
+        Steam.topupResult = await Steam.post("/topup", { amount: Number(f.amount) });
+        Steam.money = null;
+        Steam.loadMoney();
+        break;
+      }
+      case "review": {
+        await Steam.post("/reviews", { mod: form.dataset.mod, rating: Number(f.rating), text: f.text });
+        toast("Спасибо за отзыв!");
+        Steam.loadStats();
+        await Steam.loadReviews(form.dataset.mod);
+        Steam.api("/reviews").then(d => { Steam.latestReviews = d.reviews || []; }).catch(() => {});
+        break;
+      }
+      case "adm-find":
+        Steam.adminUser = await Steam.api(`/admin/user?steamid=${encodeURIComponent(f.steamid.trim())}`);
+        renderCabinet();
+        break;
+      case "adm-balance":
+        await Steam.post("/admin/balance", { steamid: f.steamid, amount: Number(f.amount), note: f.note });
+        toast("Баланс изменён");
+        Steam.adminUser = await Steam.api(`/admin/user?steamid=${f.steamid}`);
+        if (Steam.user && f.steamid === Steam.user.steamid) await Steam.refresh(false);
+        renderCabinet();
+        break;
+      case "adm-delivery":
+        await Steam.post("/admin/delivery", { mod: form.dataset.mod, url: f.url, note: f.note });
+        toast("Сохранено");
+        Steam.loadAdmin();
+        break;
+    }
+  } catch (e) {
+    toast(e.message);
+  }
+  if (btn && btn.isConnected) btn.disabled = false;
 }
 
 /* ---------- Новости ---------- */
@@ -2704,6 +3418,7 @@ function modForm(modId) {
       { name: "category", label: "Меню", type: "select", value: m ? m.category : currentCategory, options: DATA.categories.map(c => ({ value: c.id, label: `${c.icon} ${c.title}` })) },
       { name: "status", label: "Статус", type: "select", value: m ? m.status : "wip", options: [
         { value: "ready", label: "🟢 Готово" }, { value: "wip", label: "🟠 В разработке" }, { value: "plan", label: "🔴 В планах" }] },
+      { name: "price", label: "Цена, ₽ (пусто — не продаётся, 0 — бесплатно)", type: "number", value: m && Number.isInteger(m.price) ? String(m.price) : "", help: "Купить можно только мод со статусом «Готово»." },
       { name: "icon", label: "Значок (emoji)", value: m ? m.icon : "📦" },
       { name: "description", label: "Описание", type: "textarea", value: m ? m.description : "" },
       { name: "features", label: "Особенности — каждая с новой строки", type: "textarea", value: m ? (m.features || []).join("\n") : "" },
@@ -2712,8 +3427,11 @@ function modForm(modId) {
     ],
     onSubmit(v) {
       if (v.video && !/^https?:\/\//i.test(v.video)) return "Ссылка на видео должна начинаться с https://";
-      const data = { ...v, features: v.features.split("\n").map(x => x.trim()).filter(Boolean) };
-      if (m) Object.assign(m, data);
+      const price = v.price === "" ? null : Math.round(Number(v.price));
+      if (price !== null && !(price >= 0 && price <= 1000000)) return "Цена — целое число рублей от 0";
+      const data = { ...v, price, features: v.features.split("\n").map(x => x.trim()).filter(Boolean) };
+      if (price === null) delete data.price;
+      if (m) { Object.assign(m, data); if (price === null) delete m.price; }
       else { DATA.mods.push({ id: uid("m-"), ...data }); currentCategory = data.category; }
       change(m ? "Мод изменён" : "Мод добавлен");
     },
@@ -2918,13 +3636,8 @@ document.addEventListener("click", async e => {
     return;
   }
 
-  const disc = t.closest("[data-discuss]");
-  if (disc) {
-    const mod = disc.dataset.discuss;
-    if (Steam.open.has(mod)) Steam.open.delete(mod); else { Steam.open.add(mod); Steam.load(mod); }
-    refreshDiscuss(mod);
-    return;
-  }
+  const amount = t.closest("[data-amount]");
+  if (amount) { const inp = amount.closest("form").querySelector("[name=amount]"); inp.value = amount.dataset.amount; inp.focus(); return; }
 
   const pcDel = t.closest("[data-pc-del]");
   if (pcDel) {
@@ -2940,7 +3653,7 @@ document.addEventListener("click", async e => {
     if (!confirm("Заблокировать этого игрока? Он больше не сможет писать комментарии, а все его комментарии будут удалены.")) return;
     try { await Steam.api("/ban", { method: "POST", body: JSON.stringify({ steamid: pcBan.dataset.pcBan, removeAll: true }) }); toast("Игрок заблокирован"); }
     catch (err) { toast(err.message); }
-    Steam.counts = (await Steam.api("/comments/counts").catch(() => ({ counts: Steam.counts }))).counts || Steam.counts;
+    Steam.loadStats();
     Steam.load(pcBan.dataset.mod);
     return;
   }
@@ -2972,12 +3685,21 @@ document.addEventListener("click", async e => {
   if (catTab) { currentCategory = catTab.dataset.cat; lsSet(LS.cat, currentCategory); renderMods(); return; }
 
   const act = t.closest("[data-act]");
-  if (!act) return;
+  if (!act) {
+    const card = t.closest("[data-open-mod]");
+    if (card) location.hash = "#mod/" + card.dataset.openMod;
+    return;
+  }
+  if (["buy", "like", "del-review", "server-edit", "server-cancel", "server-check", "adm-server", "adm-topup", "adm-refund"].includes(act.dataset.act)) {
+    shopAction(act.dataset.act, act);
+    return;
+  }
   const id = act.dataset.id;
   switch (act.dataset.act) {
     case "login": loginForm(); break;
     case "steam-login": Steam.login(); break;
     case "steam-logout": Steam.logout(false); break;
+    case "owner-settings": settingsForm(); break;
     case "add-task": taskForm(act.dataset.stage, null); break;
     case "edit-task": e.preventDefault(); taskForm(null, id); break;
     case "add-stage": stageForm(null); break;
@@ -3020,6 +3742,8 @@ document.addEventListener("change", e => {
 });
 
 document.addEventListener("submit", async e => {
+  const shop = e.target.closest("form[data-form]");
+  if (shop) { e.preventDefault(); shopForm(shop); return; }
   const pc = e.target.closest(".pc-form");
   if (pc) {
     e.preventDefault();
@@ -3029,7 +3753,7 @@ document.addEventListener("submit", async e => {
     const mod = pc.dataset.mod;
     pc.querySelector(".send").disabled = true;
     try {
-      await Steam.api("/comments", { method: "POST", body: JSON.stringify({ mod, text }) });
+      await Steam.post("/comments", { mod, text });
       ta.value = "";
       await Steam.load(mod);
     } catch (err) {
@@ -3059,6 +3783,11 @@ document.addEventListener("input", e => {
 });
 
 document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-open-mod]")) {
+    e.preventDefault();
+    location.hash = "#mod/" + e.target.dataset.openMod;
+    return;
+  }
   if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target.matches(".comment-form textarea")) {
     e.preventDefault();
     e.target.form.requestSubmit();
@@ -3099,25 +3828,33 @@ function observeReveal() {
 
 /* ---------- Разделы ---------- */
 
-const VIEWS = ["mods", "news", "map", "plan"];
+const VIEWS = ["mods", "product", "news", "map", "cabinet", "plan"];
 
 function currentView() {
   const h = location.hash.replace("#", "").split("&")[0];
   if (h === "server") return "mods";
   if (h === "roadmap") return "plan";
-  return VIEWS.includes(h) ? h : "mods";
+  if (/^mod\/[\w-]+$/.test(h)) return "product";
+  return VIEWS.includes(h) && h !== "product" ? h : "mods";
 }
+
+let lastView = null;
 
 function showView() {
   const view = currentView();
   VIEWS.forEach(v => { $("view-" + v).hidden = v !== view; });
+  const tab = view === "product" ? "mods" : view;
   document.querySelectorAll("[data-view]").forEach(a => {
-    if (a.dataset.view === view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    if (a.dataset.view === tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
-  const titles = { mods: "DayZ Server", news: "Что нового", map: "Карта спавна", plan: "Дорожная карта" };
-  document.title = `${titles[view]} · ${CONFIG.serverName}`;
+  const titles = { mods: "Моды", news: "Что нового", map: "Карта спавна", cabinet: "Личный кабинет", plan: "Дорожная карта" };
+  if (titles[view]) document.title = `${titles[view]} · ${CONFIG.serverName}`;
   if (view === "map") MapView.draw();
-  window.scrollTo(0, 0);
+  if (view === "mods") renderMods();
+  if (view === "product") renderProduct();
+  if (view === "cabinet") { renderCabinet(); if (Steam.user && Steam.user.admin) Steam.loadAdmin(); }
+  if (view !== lastView || view === "product") window.scrollTo(0, 0);
+  lastView = view;
 }
 
 window.addEventListener("hashchange", showView);
@@ -3141,9 +3878,9 @@ function applyAdminUI() {
 }
 
 function renderAll() {
-  renderMods();
   renderNews();
   renderRoadmap();
+  rerenderShop();
 }
 
 /* ---------- Запуск ---------- */
@@ -3161,6 +3898,7 @@ function renderAll() {
 $("brandName").textContent = CONFIG.serverName;
 $("serverName").textContent = CONFIG.serverName;
 $("discordLink").href = CONFIG.discordUrl;
+$("discordLink2").href = CONFIG.discordUrl;
 $("footerText").textContent = `© ${new Date().getFullYear()} ${CONFIG.serverName} · DayZ-сервер`;
 
 (async function start() {

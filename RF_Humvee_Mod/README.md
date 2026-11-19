@@ -2,18 +2,19 @@
 
 Бронированный HMMWV с люком стрелка на крыше.
 
-Модель кузова, дверей и колёс основана на «Low Poly Humvee FREE» от MadTrollStudio, лицензия CC-BY-4.0.
+Модель кузова и дверей основана на «Low Poly Humvee FREE» от MadTrollStudio, лицензия CC-BY-4.0.
+Колёса — ванильные колёса M1025 из игры (модель берётся из файлов DayZ, в мод не копируется).
 При распространении мода указывайте автора, текст атрибуции лежит в `@RF_Humvee/CREDITS.txt`:
 
 > This work is based on "Low Poly Humvee FREE" (https://sketchfab.com/3d-models/low-poly-humvee-free-c0e2ddcc4ccf4d49a9303303a6307bcf) by MadTrollStudio (https://sketchfab.com/madtrollstudio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 
-Люк, стёкла, камуфляж, коллизия, LOD, анимации и скрипты написаны для мода (`RF_Humvee/source/lowpoly_humvee.py`).
+Люк, открывающиеся капот и багажник, стёкла, камуфляж, коллизия, LOD, анимации и скрипты написаны для мода (`RF_Humvee/source/lowpoly_humvee.py`).
 
 Мод состоит из двух аддонов, чтобы проверять по шагам:
 
 | PBO | Что делает |
 |---|---|
-| `RF_Humvee.pbo` | **шаг 1, машина в игре**: модель, колёса, 4 места, двигатель и физика (наследуются от Ada 4x4), повреждения, багажник, 2 окраски (`RF_Humvee`, `RF_Humvee_Desert`), колесо `RF_HumveeWheel`. Анимация люка уже в `model.cfg` |
+| `RF_Humvee.pbo` | **шаг 1, машина в игре**: модель, колёса, 4 места, двигатель и физика (наследуются от Ada 4x4), повреждения, капот (двигатель доступен, когда он открыт) и багажник (груз — когда открыт), 2 окраски (`RF_Humvee`, `RF_Humvee_Desert`), колесо `RF_HumveeWheel`. Анимация люка уже в `model.cfg` |
 | `RF_Humvee_Hatch.pbo` | **шаг 2, люк**: действия «Открыть люк» / «Закрыть люк» из салона и снаружи (с крыши), положение сохраняется после рестарта |
 
 ## Структура
@@ -27,9 +28,8 @@ RF_Humvee_Mod/
   src/RF_Humvee/           ← исходники аддона (для Addon Builder / P:\)
     config.cpp
     data/rf_humvee.p3d          машина (MLOD, открывается в Object Builder)
-    data/rf_humvee_wheel.p3d    колесо
     data/proxy/wheel_X_Y.p3d    прокси колёс
-    data/model.cfg              колёса, амортизаторы, руль, люк
+    data/model.cfg              колёса, амортизаторы, руль, двери, капот, багажник, люк
     data/rf_humvee_*_co.paa     камуфляж (DXT1)
     scripts/4_World/RF_Humvee/RF_Humvee.c
   src/RF_Humvee_Hatch/     ← исходники аддона люка
@@ -49,7 +49,7 @@ RF_Humvee_Mod/
    Есть админ-тулза (VPP, COT)? Тогда достаточно заспавнить `RF_Humvee` и прикрепить 4× `RF_HumveeWheel`,
    `CarBattery`, `CarRadiator`, `SparkPlug`.
 
-Что проверить: машина видна, стоит на колёсах, можно сесть на 4 места, двигатель заводится, машина едет и рулит.
+Что проверить: машина видна, стоит на колёсах, двери, капот и багажник открываются снаружи, на 4 места можно сесть через открытую дверь, двигатель заводится, машина едет и рулит.
 
 ## Шаг 2: люк
 

@@ -54,6 +54,10 @@ class RF_Humvee extends OffroadHatchback
 			case "seat_cargo2":
 			case "doors_cargo2":
 				return "DoorsCargo2";
+			case "doors_hood":
+				return "DoorsHood";
+			case "doors_trunk":
+				return "DoorsTrunk";
 		}
 
 		return "";
@@ -82,8 +86,44 @@ class RF_Humvee extends OffroadHatchback
 		return GetAnimSourceFromSelection(GetDoorSelectionNameFromSeatPos(posIdx));
 	}
 
+	// Ада двухдверная: её GetSeatIndexFromDoor не знает задних дверей, и они считались отсутствующими —
+	// на задние места садились через закрытую дверь. Здесь все 4 двери, как у ванильного Transport.
+	override int GetSeatIndexFromDoor(string pDoorSelection)
+	{
+		switch (pDoorSelection)
+		{
+			case "DoorsDriver":
+				return 0;
+			case "DoorsCoDriver":
+				return 1;
+			case "DoorsCargo1":
+				return 2;
+			case "DoorsCargo2":
+				return 3;
+		}
+
+		return -1;
+	}
+
+	// Состояние = фаза источника анимации. Скрипты Ады спрашивают по своим именам слотов: капот (доступ к двигателю),
+	// багажник (груз), передние двери (звук салона).
 	override int GetCarDoorsState(string slotType)
 	{
+		switch (slotType)
+		{
+			case "NivaHood":
+				return TranslateAnimationPhaseToCarDoorState("DoorsHood");
+			case "NivaTrunk":
+				return TranslateAnimationPhaseToCarDoorState("DoorsTrunk");
+			case "NivaDriverDoors":
+				return TranslateAnimationPhaseToCarDoorState("DoorsDriver");
+			case "NivaCoDriverDoors":
+				return TranslateAnimationPhaseToCarDoorState("DoorsCoDriver");
+			case "DoorsHood":
+			case "DoorsTrunk":
+				return TranslateAnimationPhaseToCarDoorState(slotType);
+		}
+
 		if (GetSeatIndexFromDoor(slotType) == -1)
 			return CarDoorState.DOORS_MISSING;
 
@@ -100,6 +140,9 @@ class RF_Humvee extends OffroadHatchback
 	{
 		super.SetActions();
 
+		// «Регулировать сиденье» Ады складывает спинку переднего сиденья. У нас его нет, а действие срабатывало
+		// на двери (их источник анимации) и закрывало собой «Открыть»
+		RemoveAction(ActionAnimateSeats);
 		AddAction(ActionRFOpenDoorOutside);
 		AddAction(ActionRFCloseDoorOutside);
 	}
@@ -128,9 +171,10 @@ class RF_Humvee extends OffroadHatchback
 		return true;
 	}
 
+	// из салона открывается только своя дверь, как у ванильного M1025
 	override bool CanReachDoorsFromSeat(string pDoorsSelection, int pCurrentSeat)
 	{
-		return true;
+		return GetSeatIndexFromDoor(pDoorsSelection) == pCurrentSeat;
 	}
 }
 

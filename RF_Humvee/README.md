@@ -3,7 +3,7 @@
 Армейский внедорожник в стиле HMMWV M1114 (бронированная крыша и двери с X-рёбрами, кенгурятник, жалюзи на капоте,
 лесной камуфляж) с круглым люком стрелка на крыше, который открывается и закрывается.
 
-**Модель в моде.** Кузов, двери и колёса мода `RF_Humvee_Mod` взяты из модели «Low Poly Humvee FREE»
+**Модель в моде.** Кузов, двери, капот и крышка багажника мода `RF_Humvee_Mod` взяты из модели «Low Poly Humvee FREE»
 (`source/low_poly_humvee/`, разбор и люк — `source/lowpoly_humvee.py`):
 
 > This work is based on "Low Poly Humvee FREE" (https://sketchfab.com/3d-models/low-poly-humvee-free-c0e2ddcc4ccf4d49a9303303a6307bcf) by MadTrollStudio (https://sketchfab.com/madtrollstudio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
@@ -21,7 +21,7 @@
 | `model/memory_points.json` | координаты memory-точек (ось люка, центры колёс) |
 | `preview/humvee_preview.html` | интерактивный 3D-просмотр (открыть в браузере): люк, окраска, камеры |
 | `source/generate_humvee.py` | генератор прежней модели (`python3 source/generate_humvee.py`, нужен только numpy) |
-| `source/lowpoly_humvee.py` | кузов мода: читает `source/low_poly_humvee/scene.gltf`, делит на кузов, салон, двери, колесо, вырезает люк, добавляет стёкла (`python3 source/lowpoly_humvee.py` — самопроверка) |
+| `source/lowpoly_humvee.py` | кузов мода: читает `source/low_poly_humvee/scene.gltf`, делит на кузов, салон, двери, капот и крышку багажника, вырезает люк, добавляет стёкла и моторный отсек (`python3 source/lowpoly_humvee.py` — самопроверка) |
 | `source/low_poly_humvee/` | модель «Low Poly Humvee FREE» (MadTrollStudio, CC-BY-4.0) с `license.txt` |
 | `../RF_Humvee_Mod/` | **готовый мод DayZ** (`@RF_Humvee`): P3D, текстуры, конфиги, скрипты, PBO — см. его README |
 

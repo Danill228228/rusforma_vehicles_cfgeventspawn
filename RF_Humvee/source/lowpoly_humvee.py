@@ -1,7 +1,8 @@
 """
 Кузов RF_Humvee из модели «Low Poly Humvee FREE» — MadTrollStudio, CC-BY-4.0 (low_poly_humvee/license.txt).
 
-Модель (glTF) разбирается на кузов, салон, 4 двери и колесо; сверху добавлены стёкла (в модели проёмы пустые)
+Модель (glTF) разбирается на кузов, салон, 4 двери, капот и крышку багажника (колёса модели в мод не идут:
+у мода ванильное колесо M1025); сверху добавлены стёкла (в модели проёмы пустые), моторный отсек
 и люк: в плите крыши и потолке вырезано отверстие, на крышу поставлено кольцо люка из generate_humvee.
 Всё остальное (помощники геометрии, материалы, крышка люка) берётся из generate_humvee; константы ниже
 заменяют его константы под эту модель, поэтому сборка мода импортирует этот модуль вместо генератора.
@@ -52,6 +53,11 @@ DOOR_XB = 1.14                      # ось петель — у наружно�
 DOOR_HINGE_Z = {front: z1 for front, (_, z1) in DOOR_Z.items()}
 SEAT_Y = 0.86                       # верх подушки сиденья
 SEATS = {"Driver": (0.685, 0.30), "CoDriver": (-0.685, 0.30), "Cargo1": (0.685, -0.58), "Cargo2": (-0.685, -0.58)}
+
+# Капот и крышка багажника вырезаны из сетки кузова. Селекция: (y, z оси петель вдоль X, угол открытия, рад).
+# Петли у передней кромки: капот наклоняется вперёд, как у настоящего HMMWV, крышка багажника поднимается
+# задней кромкой. У люка петли сзади и угол с плюсом, здесь задняя кромка идёт вверх, поэтому минус.
+LIDS = {"doors_hood": (1.08, 2.24, -1.31), "doors_trunk": (1.80, -0.80, -1.22)}
 
 # стёкла (в модели проёмы пустые): лобовое — наклонная плоскость z(y), окна дверей — плоскость x
 WINDSHIELD = [(0.055, 1.345), (1.022, 1.345), (0.986, 1.667), (0.942, 1.70), (0.87, 1.722), (0.055, 1.722)]
@@ -182,6 +188,26 @@ def _split():
         assert min(abs(c[2] - AXLE_F), abs(c[2] - AXLE_R)) < 0.01, c
     cz = T.mean(1)[:, 2]
     mat[(mat == "red") & (cz > 0)] = "dark"       # спереди тот же цвет — затемнённые фары
+
+    # капот и крышка багажника — части самой большой сетки кузова, вместе с подкладкой снизу
+    c, lo, hi = T.mean(1), T.min(1), T.max(1)
+    nrm = np.cross(T[:, 1] - T[:, 0], T[:, 2] - T[:, 0])
+    nrm /= np.maximum(np.linalg.norm(nrm, axis=1), 1e-12)[:, None]
+    shell = comp == np.bincount(comp[role == "body"]).argmax()
+    hood = shell & (lo[:, 2] > 0.93) & (
+        (lo[:, 1] > 1.05)                                                       # верх и крылья
+        | ((hi[:, 1] > 1.12) & (np.abs(nrm[:, 0]) > 0.9) & (np.abs(c[:, 0]) > 1.04))   # борта крыльев целиком
+        | ((c[:, 1] > 0.95) & (nrm[:, 1] < -0.9) & (np.abs(c[:, 0]) < 1.1)))    # подкладка капота
+    for r in np.unique(comp[(role == "body") & ~shell]):   # воздухозаборник с карманом и замки на капоте
+        m = comp == r
+        p = T[m].reshape(-1, 3)
+        if p[:, 2].min() > 1.2 and p[:, 1].max() > 1.15 and p[:, 2].max() < 2.21 and np.abs(p[:, 0]).max() < 0.6:
+            hood |= m
+    trunk = shell & (c[:, 2] < -0.86) & (hi[:, 2] < -0.70) & (lo[:, 1] > 1.38) & (
+        (nrm[:, 1] > 0.4) | ((nrm[:, 1] < -0.85) & (c[:, 1] > 1.35)))           # наклонная крыша и подкладка
+    role[hood], role[trunk] = "doors_hood", "doors_trunk"
+    for m, (n0, n1) in ((hood, (500, 800)), (trunk, (30, 60))):
+        assert n0 < m.sum() < n1, m.sum()
     return role, mat
 
 
@@ -209,7 +235,18 @@ def build_body():
     hatch_ring(parts, YT, HATCH_Z)
     for s in (1, -1):
         parts["glass"] += _pane([(s * x, y, windshield_z(y)) for x, y in WINDSHIELD], (0, 0, 1))
+    # моторный отсек (в модели под капотом пусто): блок двигателя ниже кармана воздухозаборника, радиатор, фильтр, аккумулятор
+    parts["dark"] += box(-0.26, 0.26, 0.50, 0.80, 1.15, 1.85)
+    parts["dark"] += box(-0.50, 0.50, 0.62, 1.00, 2.08, 2.14)
+    parts["dark"] += cbox(0.62, 0.84, 1.35, 0.26, 0.24, 0.36)
+    parts["dark"] += cbox(-0.62, 0.80, 1.25, 0.26, 0.20, 0.30)
     return parts
+
+
+def build_lids():
+    """Капот и крышка багажника: {селекция: части} в координатах кузова."""
+    role, mat = _split()
+    return {sel: _parts(role == sel, mat) for sel in LIDS}
 
 
 def build_interior():
@@ -228,25 +265,11 @@ def build_doors():
     return out
 
 
-def build_wheel():
-    """Левое переднее колесо модели с центром в начале координат; ось вдоль X, внешняя сторона = +X."""
-    T, N, _, _ = load()
-    role, mat = _split()
-    cc = T.mean(1)
-    k = np.array([r is not None and r.startswith("wheel:") for r in role]) & (cc[:, 0] > 0) & (cc[:, 2] > 0)
-    pts = T[k].reshape(-1, 3)
-    c = (pts.min(0) + pts.max(0)) / 2
-    mat = mat.copy()
-    rad = np.hypot(cc[k, 1] - c[1], cc[k, 2] - c[2])
-    mat[k] = np.where(rad < 0.30, "rim", "rubber")
-    return {m: Geo(g.P - c, g.N, g.I) for m, g in _parts(k, mat).items()}
-
-
 if __name__ == "__main__":
     T, N, mat, comp = load()
     role, mat = _split()
     print("треугольников", len(T), "кусков", len(set(comp)))
     for r in sorted(set(role)):
         print(" ", r, int((role == r).sum()))
-    for name, parts in (("кузов", build_body()), ("салон", build_interior()), ("колесо", build_wheel())):
+    for name, parts in (("кузов", build_body()), ("салон", build_interior()), *build_lids().items()):
         print(name, {m: len(g.I) for m, g in parts.items() if len(g.I)})

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Сборка мода @RF_Humvee:
-  1. P3D (MLOD) машины, колеса и прокси: кузов — модель «Low Poly Humvee FREE» (MadTrollStudio, CC-BY-4.0),
+  1. P3D (MLOD) машины и прокси колёс (колесо — ванильное M1025, см. config.cpp): кузов — модель «Low Poly Humvee FREE» (MadTrollStudio, CC-BY-4.0),
      её разбор и люк — RF_Humvee/source/lowpoly_humvee.py, помощники геометрии — generate_humvee.py
   2. текстуры PAA (лесной и пустынный камуфляж)
   3. model.cfg
@@ -34,7 +34,6 @@ OUT_ADDONS = os.path.join(MOD, "@RF_Humvee", "Addons")
 TEX_CAMO = r"rf_humvee\data\rf_humvee_woodland_co.paa"
 MAT_BODY = r"rf_humvee\data\rf_humvee_body.rvmat"   # пустынная окраска — только своя текстура в config.cpp
 SURFACES = {  # материал генератора: (цвет, rvmat) — грани с файловой текстурой обязаны иметь rvmat
-    "rubber": (r"rf_humvee\data\rf_humvee_rubber_co.paa", r"rf_humvee\data\rf_humvee_rubber.rvmat"),
     "dark": (r"rf_humvee\data\rf_humvee_metal_co.paa", r"rf_humvee\data\rf_humvee_metal.rvmat"),
 }
 
@@ -80,8 +79,10 @@ class LodBuilder:
         self._nrm = {}
         self.mass = []
 
-    def point(self, p, mass=0.0):
-        key = tuple(round(c, 4) for c in p)
+    def point(self, p, mass=0.0, group=""):
+        # group — своя подвижная деталь: её вершины не общие с кузовом, иначе анимация тянет и грани кузова
+        # (капот, вырезанный из сетки кузова, растягивал при открытии крылья и борта)
+        key = (group, *(round(c, 4) for c in p))
         if key not in self._pts:
             self._pts[key] = self.L.add_point(p)
             self.mass.append(0.0)
@@ -95,14 +96,14 @@ class LodBuilder:
             self._nrm[key] = self.L.add_normal(n)
         return self._nrm[key]
 
-    def add_geo(self, g, texture="", material="", selections=(), uv=True):
+    def add_geo(self, g, texture="", material="", selections=(), uv=True, group=""):
         """g — Geo в исходных координатах; грани/нормали переводятся в соглашения P3D."""
         if not len(g.I):
             return
         UV = G.compute_uv(g) if uv else np.zeros((len(g.P), 2))
         P = g.P * np.array([1.0, 1.0, -1.0])           # как to_p3d
         N = g.N * np.array([-1.0, -1.0, 1.0])         # отражённая нормаль, развернутая внутрь
-        pidx = [self.point(p) for p in P]
+        pidx = [self.point(p, group=group) for p in P]
         nidx = [self.normal(n) for n in N]
         f0 = len(self.L.faces)
         for a, b, c in g.I:
@@ -122,7 +123,7 @@ class LodBuilder:
             if extra_sel and mat in extra_sel:
                 sel += extra_sel[mat]
             # Грань с текстурой-файлом PAA без rvmat игра не рисует (кузов был невидим), процедурным цветам материал не нужен.
-            self.add_geo(g, texture_for(mat, camo), material_for(mat, camo), sel)
+            self.add_geo(g, texture_for(mat, camo), material_for(mat, camo), sel, group=",".join(selections))
 
     def add_component(self, g, mass, selections=()):
         """Выпуклое замкнутое тело для LOD геометрии."""
@@ -264,10 +265,28 @@ def collision_parts():
 
 
 def doors_parts():
+    """[(селекция места, селекция двери, коллайдер двери, зона места)]. Зона места — неподвижный блок в проёме:
+    закрытая дверь его закрывает (цель «Открыть»), открытая уходит в сторону, и в проёме цель «Сесть».
+    Раньше местом была сама дверь: открытая уходила вместе с ней, а проём закрывал блок салона — на передние
+    места сесть было нельзя, а на задние можно через закрытую дверь."""
     xa, xb = G.DOOR_X
     seat_of = {door: seat for seat, door in SEAT_DOOR.items()}
-    return [(seat_of[door], box_geo(side * xa, side * xb, *G.DOOR_Y, *G.DOOR_Z[front]))
-            for door, (side, front) in G.DOORS.items()]
+    out = []
+    for door, (side, front) in G.DOORS.items():
+        (y0, y1), (z0, z1) = G.DOOR_Y, G.DOOR_Z[front]
+        out.append((seat_of[door], door, box_geo(side * xa, side * xb, y0, y1, z0, z1),
+                    box_geo(side * 1.00, side * 1.10, y0 + 0.02, y1 - 0.02, z0 + 0.03, z1 - 0.03)))
+    return out
+
+
+def lids_parts():
+    """{селекция: коллайдер} капота и крышки багажника для View/Fire Geometry, поворачиваются вместе с ними.
+    Крышка багажника на 3–4 см выше наклонной крыши блока салона, иначе луч попадает в салон."""
+    hood = [(x, y, z) for x in (-G.FENDER_W, G.FENDER_W)
+            for z, y in ((G.HOOD_Z0, 1.06), (G.HOOD_Z0, 1.32), (2.22, 1.10), (2.24, 1.06))]
+    trunk = [(x, y, z) for x in (-1.10, 1.10)
+             for z, y in ((-0.80, 1.86), (-2.10, 1.51), (-2.19, 1.44), (-2.19, 1.36), (-0.80, 1.74))]
+    return {"doors_hood": convex_hull_geo(hood), "doors_trunk": convex_hull_geo(trunk)}
 
 
 def hatch_collider():
@@ -301,7 +320,7 @@ def build_car_p3d(path, camo=TEX_CAMO):
     interior = G.clean(G.build_interior())
     lid = G.clean(G.build_hatch_lid())
     lid_world = {m: g.transformed(G.T(0, G.HINGE_Y, G.HINGE_Z)) for m, g in lid.items()}
-    doors = {sel: G.clean(p) for sel, p in G.build_doors().items()}
+    doors = {sel: G.clean(p) for sel, p in {**G.build_doors(), **G.build_lids()}.items()}
 
     # LOD 0…2 — визуальная модель, дальние без мелких деталей
     lods = []
@@ -315,6 +334,11 @@ def build_car_p3d(path, camo=TEX_CAMO):
         for sel, p in doors.items():
             v.add_parts(cut(p), selections=[sel], extra_sel={"paint": ["camo"]}, camo=camo)
         add_proxies(v)
+        # самопроверка: вершины подвижной детали не принадлежат граням вне её (иначе анимация тянет кузов)
+        for sel in ["hatch_roof", *doors]:
+            pts, faces = v.L.selections[sel]
+            outside = {vt[0] for i, f in enumerate(v.L.faces) if i not in faces for vt in f["verts"]}
+            assert not pts & outside, (res, sel, len(pts & outside))
         lods.append(v.done(props=NO_SHADOW))
     # самый дальний LOD и источник тени: выпуклые блоки коллизии в камуфляже
     h = LodBuilder(HULL_LOD)
@@ -327,13 +351,22 @@ def build_car_p3d(path, camo=TEX_CAMO):
     # Geometry (масса), Geometry Phys, View/Fire geometry
     def geo_lod(res, with_doors, with_hatch, mass):
         b = LodBuilder(res)
-        for _, g, m, sel in collision_parts():
+        view_fire = res in (RES_VIEWGEO, RES_FIREGEO)
+        for name, g, m, sel in collision_parts():
+            if view_fire and name == "hood":
+                continue        # в View/Fire Geometry вместо него поворотный капот из lids_parts
             b.add_component(g, m, sel if res == RES_FIREGEO else ())
         if with_doors:
-            for sel, g in doors_parts():
-                # в View/Fire Geometry коллайдер двери поворачивается вместе с ней (цель «Сесть»/«Открыть» и попадания)
-                door = [SEAT_DOOR[sel]] if res in (RES_VIEWGEO, RES_FIREGEO) else []
-                b.add_component(g, 25 if mass else 0, [sel] + door)
+            for seat, door, g, seat_zone in doors_parts():
+                if view_fire:
+                    # коллайдер двери поворачивается вместе с ней (цель «Открыть/Закрыть» и попадания), место — в проёме
+                    b.add_component(g, 0, [door])
+                    b.add_component(seat_zone, 0, [seat])
+                else:
+                    b.add_component(g, 25 if mass else 0, [seat])
+            if view_fire:
+                for sel, g in lids_parts().items():
+                    b.add_component(g, 0, [sel] + (["dmgZone_engine"] if res == RES_FIREGEO and sel == "doors_hood" else []))
         if with_hatch:
             b.add_component(hatch_collider(), 15 if mass else 0, ["hatch_roof"])
         if res == RES_GEOMETRY:
@@ -364,14 +397,18 @@ def build_car_p3d(path, camo=TEX_CAMO):
             m.add_memory(name + "_steering_axis", (x, G.WHEEL_Y - 0.3, z), (x, G.WHEEL_Y + 0.3, z))
     for crew, (x, z) in G.SEATS.items():
         s, y = (1 if x > 0 else -1), G.SEAT_Y
-        zd = sum(G.DOOR_Z[z > 0]) / 2       # встать для посадки напротив середины своей двери
+        # встать для посадки у задней кромки проёма: открытая дверь (петли спереди) уходит вперёд и наружу,
+        # на прежних 1.85 м напротив середины двери стоял её край
+        zg = G.DOOR_Z[z > 0][0] + 0.25
         m.add_memory("crew" + crew, (x, y, z), (x, y + 2.0, z), (x, y, z + 1.0))
-        m.add_memory("pos_" + crew.lower(), (s * 1.85, 0.05, zd))
-        m.add_memory("pos_" + crew.lower() + "_dir", (s * 1.30, 0.05, zd))
+        m.add_memory("pos_" + crew.lower(), (s * 1.50, 0.05, zg))
+        m.add_memory("pos_" + crew.lower() + "_dir", (s * 1.10, 0.05, zg))
     m.add_memory("hatch_roof_axis", (-0.25, G.HINGE_Y, G.HINGE_Z), (0.25, G.HINGE_Y, G.HINGE_Z))
     for sel, (side, front) in G.DOORS.items():   # петли дверей: вертикальная ось по передней кромке
         x, z = side * G.DOOR_XB, G.DOOR_HINGE_Z[front]
         m.add_memory(sel + "_axis", (x, 0.65, z), (x, 1.75, z))
+    for sel, (y, z, _) in G.LIDS.items():      # петли капота и багажника: ось вдоль X
+        m.add_memory(sel + "_axis", (-0.5, y, z), (0.5, y, z))
     m.add_memory("hatch_roof_center", (0, G.RING_TOP, G.HATCH_Z))
     for name, p in {
         "light_1_1": (G.HEADLIGHT_X, G.HEADLIGHT_Y, G.FRONT_Z + 0.04), "light_2_1": (-G.HEADLIGHT_X, G.HEADLIGHT_Y, G.FRONT_Z + 0.04),
@@ -404,24 +441,6 @@ def build_car_p3d(path, camo=TEX_CAMO):
     lods.append(rw.done())
     P3D.write(path, lods)
     return lods
-
-
-def build_wheel_p3d(path):
-    wheel = G.clean(G.build_wheel())
-    lods = []
-    for res, min_size, _ in VISUAL_LODS:
-        v = LodBuilder(res)
-        v.add_parts(simplify(wheel, min_size) if min_size else wheel)
-        lods.append(v.done(props=NO_SHADOW))
-    cyl = G.lathe([(0.0, -0.18), (G.WHEEL_R, -0.18), (G.WHEEL_R, 0.18), (0.0, 0.18)], seg=12, smooth_deg=5)
-    h = LodBuilder(HULL_LOD)          # дальний LOD и тень колеса: 12-гранный цилиндр
-    h.add_geo(convex_hull_geo(cyl.P), texture_for("rubber"), material_for("rubber"), uv=False)
-    lods.append(h.done())
-    for res, mass in ((RES_GEOMETRY, True), (RES_VIEWGEO, False), (RES_FIREGEO, False)):
-        b = LodBuilder(res)
-        b.add_component(convex_hull_geo(cyl.P), 40 if mass else 0)
-        lods.append(b.done(with_mass=mass, props=[("autocenter", "0")] if mass else []))
-    P3D.write(path, lods)
 
 
 def build_proxy_p3d(path):
@@ -516,10 +535,10 @@ def surface_textures(base, dust, spec, gloss, n=1024, seed=3, scratches=0):
     if scratches:
         _scratches(scr, rng, scratches, 0.01 * n, 0.05 * n)
         img = img * (1 - 0.4 * scr[..., None]) + np.array([96, 96, 90.0]) * 0.4 * scr[..., None]
-    h = G.periodic_field(n, 1.0, rng) + 0.5 * G.periodic_field(n, 0.02 * n, rng) - scr
+    h = 0.3 * G.periodic_field(n, 1.0, rng) + 0.5 * G.periodic_field(n, 0.02 * n, rng) - scr
     sp = np.full((n, n), spec) + 0.3 * scr - 0.3 * dust_m[..., 0]
     gl = np.full((n, n), gloss) + 0.3 * scr
-    return np.clip(img, 0, 255).astype(np.uint8), _normal_map(h, 0.5), _smdi(sp, gl)
+    return np.clip(img, 0, 255).astype(np.uint8), _normal_map(h, 0.15), _smdi(sp, gl)
 
 
 def write_rvmat(path, nohq, smdi, specular, power):
@@ -547,7 +566,8 @@ SUSP_TRAVEL = 0.16
 DOOR_OPEN_RAD = 1.2   # ≈69°
 # Источники анимации дверей и места — как у ванили (Transport.GetSeatIndexFromDoor: DoorsDriver = 0 ... DoorsCargo2 = 3)
 DOOR_SOURCE = {"doors_driver": "DoorsDriver", "doors_codriver": "DoorsCoDriver",
-               "doors_cargo1": "DoorsCargo1", "doors_cargo2": "DoorsCargo2"}
+               "doors_cargo1": "DoorsCargo1", "doors_cargo2": "DoorsCargo2",
+               "doors_hood": "DoorsHood", "doors_trunk": "DoorsTrunk"}
 SEAT_DOOR = {"seat_driver": "doors_driver", "seat_codriver": "doors_codriver",
              "seat_cargo1": "doors_cargo1", "seat_cargo2": "doors_cargo2"}
 STEER_RAD = 0.5585   # 32° = maxSteeringAngle в config.cpp (было ±1 рад = 57°)
@@ -612,6 +632,18 @@ def model_cfg():
 				minValue = 0; maxValue = 1;
 				angle0 = 0; angle1 = {side * DOOR_OPEN_RAD};
 			}};""")
+    for sel, (_, _, angle) in G.LIDS.items():
+        bones.append('"%s",""' % sel)
+        anims.append(f"""			class {sel}
+			{{
+				type = "rotation";
+				source = "{DOOR_SOURCE[sel]}";
+				selection = "{sel}";
+				axis = "{sel}_axis";
+				memory = 1;
+				minValue = 0; maxValue = 1;
+				angle0 = 0; angle1 = {angle};
+			}};""")
     # Кости мест экипажа, как crewdriver/crewcodriver/crewcargo1/2 в скелете ванильной Ada: без них движок
     # не находит прокси экипажа ("Proxy with bone name 'crewDriver' was not found in view geometry").
     bones += ['"%s",""' % sel for sel, _, _, _ in CREW]
@@ -663,7 +695,6 @@ class CfgModels
 {anim_txt}
 		}};
 	}};
-	class rf_humvee_wheel: Default {{}};
 }};
 """
 
@@ -671,7 +702,6 @@ class CfgModels
 def main():
     os.makedirs(os.path.join(DATA, "proxy"), exist_ok=True)
     lods = build_car_p3d(os.path.join(DATA, "rf_humvee.p3d"))
-    build_wheel_p3d(os.path.join(DATA, "rf_humvee_wheel.p3d"))
     for name in WHEELS:
         build_proxy_p3d(os.path.join(DATA, "proxy", name + ".p3d"))
     # краска: лесная НАТО и пустынная, общие карты нормалей и бликов (одинаковый рисунок сколов, seed=7).
@@ -684,10 +714,10 @@ def main():
     paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"), co)
     write_rvmat(os.path.join(SRC, MAT_BODY), r"rf_humvee\data\rf_humvee_body_nohq.paa",
                 r"rf_humvee\data\rf_humvee_body_smdi.paa", 0.35, 25)
-    # резина и тёмный металл (рама, решётка, кенгурятник, петли)
-    for name, args, (spec, power) in (("rubber", ((36, 35, 33), (105, 96, 82), 0.12, 0.15), (0.12, 8)),
-                                      ("metal", ((46, 49, 42), (120, 112, 95), 0.35, 0.35), (0.5, 30))):
-        co, nohq, smdi = surface_textures(*args, scratches=0 if name == "rubber" else 300)
+    # тёмный металл и пластик (рама, решётка, сиденья, приборная панель): матовая краска. Прежние светлая пыль,
+    # царапины и сильный рельеф с бликом в игре выглядели как пупырчатый синеватый шум
+    for name, args, (spec, power) in (("metal", ((46, 49, 42), (66, 64, 56), 0.15, 0.25), (0.15, 12)),):
+        co, nohq, smdi = surface_textures(*args)
         for kind, img in (("co", co), ("nohq", nohq), ("smdi", smdi)):
             paa.write_paa(os.path.join(DATA, "rf_humvee_%s_%s.paa" % (name, kind)), img)
         write_rvmat(os.path.join(DATA, "rf_humvee_%s.rvmat" % name), r"rf_humvee\data\rf_humvee_%s_nohq.paa" % name,

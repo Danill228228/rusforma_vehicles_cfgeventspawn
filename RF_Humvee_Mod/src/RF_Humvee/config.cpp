@@ -56,7 +56,6 @@ class CfgVehicles
 {
 	// Цепочка классов как в ванильном DZ_Vehicles_Wheeled: без неё парсер не видит Axles/Front/Wheels/Left/Right
 	// ("Undefined base class 'Axles'").
-	class CarWheel;
 	class Car;
 	class CarScript: Car
 	{
@@ -110,17 +109,15 @@ class CfgVehicles
 	};
 
 	// ------------------------------------------------------------------ колесо
-	class RF_HumveeWheel: CarWheel
+	// Модель, материалы и повреждения — ванильного колеса M1025 (Offroad_02_Wheel, файл игры, в мод не копируется):
+	// колесо из модели Sketchfab выглядело мультяшным. Свои слоты и параметры шины под размеры нашей подвески.
+	class Offroad_02_Wheel;
+	class RF_HumveeWheel: Offroad_02_Wheel
 	{
 		scope = 2;
 		displayName = "Колесо Humvee";
 		descriptionShort = "Внедорожное колесо 37x12.5 R16.5.";
-		model = "\RF_Humvee\data\rf_humvee_wheel.p3d";
-		weight = 40000;
-		itemSize[] = {8, 8};
 		inventorySlot[] = {"RF_HumveeWheel_1_1", "RF_HumveeWheel_1_2", "RF_HumveeWheel_2_1", "RF_HumveeWheel_2_2"};
-		rotationFlags = 8;
-		physLayer = "item_large";
 		radiusByDamage[] = {0, 0.485, 0.3, 0.44, 0.9998, 0.36, 0.9999, 0.30};
 		radius = 0.485;
 		width = 0.36;
@@ -134,7 +131,7 @@ class CfgVehicles
 	class RF_HumveeWheel_Ruined: RF_HumveeWheel
 	{
 		displayName = "Колесо Humvee (разрушено)";
-		weight = 30000;
+		model = "\DZ\vehicles\wheeled\Offroad_02\proxy\Offroad_02_Wheel_destroyed.p3d";
 		radius = 0.3;
 		tyreRollResistance = 0.3;
 		tyreOffroadResistance = 0.1;
@@ -236,6 +233,15 @@ class CfgVehicles
 			class DoorsCoDriver: DoorsDriver {};
 			class DoorsCargo1: DoorsDriver {};
 			class DoorsCargo2: DoorsDriver {};
+			// Капот и багажник: как у Ады, двигатель (аккумулятор, радиатор, свеча) доступен при открытом капоте,
+			// груз — при открытом багажнике
+			class DoorsHood
+			{
+				source = "user";
+				animPeriod = 1.0;
+				initPhase = 0;
+			};
+			class DoorsTrunk: DoorsHood {};
 		};
 
 		class Crew

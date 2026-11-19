@@ -618,10 +618,9 @@ def build_doors():
     return out
 
 
-def roof_with_hole(y, hint, rect=(-CAB_W, CAB_W, Z_ROOF_R, ZF_T), cz=HATCH_Z):
-    """Прямоугольник крыши rect = (xmin, xmax, zmin, zmax) с круглым отверстием (лента между окружностью и контуром)."""
+def roof_with_hole(y, hint, rect=(-CAB_W, CAB_W, Z_ROOF_R, ZF_T), cz=HATCH_Z, cx=0.0, r=HATCH_HOLE_R):
+    """Прямоугольник крыши rect = (xmin, xmax, zmin, zmax) с круглым отверстием радиуса r в (cx, cz)."""
     xmin, xmax, zmin, zmax = rect
-    cx = 0.0
     corners = [(xmax, zmax), (xmin, zmax), (xmin, zmin), (xmax, zmin)]
     angs = set(math.atan2(z - cz, x - cx) % (2 * math.pi) for x, z in corners)
     n = 72
@@ -642,8 +641,8 @@ def roof_with_hole(y, hint, rect=(-CAB_W, CAB_W, Z_ROOF_R, ZF_T), cz=HATCH_Z):
     for i in range(len(angs)):
         a, b = angs[i], angs[(i + 1) % len(angs)]
         oa, ob = outer(a), outer(b)
-        ia = (cx + HATCH_HOLE_R * math.cos(a), cz + HATCH_HOLE_R * math.sin(a))
-        ib = (cx + HATCH_HOLE_R * math.cos(b), cz + HATCH_HOLE_R * math.sin(b))
+        ia = (cx + r * math.cos(a), cz + r * math.sin(a))
+        ib = (cx + r * math.cos(b), cz + r * math.sin(b))
         g += face([(ia[0], y, ia[1]), (oa[0], y, oa[1]), (ob[0], y, ob[1]), (ib[0], y, ib[1])], hint)
     return g
 

@@ -1,274 +1,125 @@
-// Машина: посадка экипажа, анимации сидений, камера.
-// Скрипт наследует OffroadHatchback (как и config.cpp): оттуда аккумулятор как источник питания, звуки двигателя, фары, гудок.
-// Действия с люком добавляет отдельный аддон RF_Humvee_Hatch (modded class RF_Humvee).
+// Машина: ванильный M1025 (Offroad_02) с люком стрелка. Двери, капот, багажник, места, колёса — ванильные.
+// Люк — деталь RF_HumveeHatch (кольцо, крышка, тёмный проём): у каждого клиента своя локальная,
+// прикреплена к машине, как ванильный свет фар. Открыт ли люк, сервер передаёт синхронизируемой переменной;
+// действия и сохранение положения — в аддоне RF_Humvee_Hatch.
 
-class RF_Humvee extends OffroadHatchback
+class RF_Humvee extends Offroad_02
 {
-	override int GetAnimInstance()
+	static const string HATCH_SOURCE = "HatchRoof";
+	// центр кольца люка на крыше в координатах модели M1025 (см. build_mod.py: HATCH_X/HATCH_Z, ROOF_Y)
+	static const vector HATCH_POS = "-0.12 1.84 -0.30";
+
+	protected bool m_RF_HatchOpen;
+	protected EntityAI m_RF_Hatch;
+
+	void RF_Humvee()
 	{
-		return VehicleAnimInstances.HATCHBACK;
+		RegisterNetSyncVariableBool("m_RF_HatchOpen");
 	}
 
-	override float GetTransportCameraDistance()
+	string RF_HatchType()
 	{
-		return 5.5;
+		return "RF_HumveeHatch";
 	}
 
-	override vector GetTransportCameraOffset()
+	override void EEInit()
 	{
-		return "0 1.6 0";
+		super.EEInit();
+
+		if (!g_Game.IsDedicatedServer())
+			RF_CreateHatch();
 	}
 
-	override int GetSeatAnimationType(int posIdx)
+	override void EEDelete(EntityAI parent)
 	{
-		switch (posIdx)
-		{
-			case 0:
-				return DayZPlayerConstants.VEHICLESEAT_DRIVER;
-			case 1:
-				return DayZPlayerConstants.VEHICLESEAT_CODRIVER;
-			case 2:
-				return DayZPlayerConstants.VEHICLESEAT_PASSENGER_L;
-			case 3:
-				return DayZPlayerConstants.VEHICLESEAT_PASSENGER_R;
-		}
+		super.EEDelete(parent);
+
+		if (m_RF_Hatch)
+			m_RF_Hatch.Delete();
+	}
+
+	protected void RF_CreateHatch()
+	{
+		m_RF_Hatch = EntityAI.Cast(g_Game.CreateObjectEx(RF_HatchType(), GetPosition(), ECE_LOCAL));
+		if (!m_RF_Hatch)
+			return;
+
+		// Модель машины игра разворачивает на 180° относительно файла P3D (водитель на -X, перёд на +Z), а прикреплённую
+		// деталь — нет: без разворота крышка люка открывалась петлями вперёд и стояла не над ванильной крышкой.
+		// Если движок сместил начало модели детали к центру её рамки, точка rf_origin (начало модели) покажет сдвиг.
+		vector origin = m_RF_Hatch.GetMemoryPointPos("rf_origin");
+		m_RF_Hatch.SetOrientation("180 0 0");
+		m_RF_Hatch.SetPosition(Vector(origin[0], -origin[1], origin[2]));
+		AddChild(m_RF_Hatch, -1);
+		Update();
+		m_RF_Hatch.SetAnimationPhaseNow(HATCH_SOURCE, RF_HatchPhase());
+	}
+
+	protected float RF_HatchPhase()
+	{
+		if (m_RF_HatchOpen)
+			return 1;
 
 		return 0;
 	}
 
-	// Двери — анимированные части кузова, не аттачменты. Состояние двери = фаза её источника анимации,
-	// тогда ванильные «Открыть/Закрыть» из салона (ActionOpenCarDoors) работают через эти методы.
-	override string GetAnimSourceFromSelection(string selection)
+	override void OnVariablesSynchronized()
 	{
-		switch (selection)
-		{
-			case "seat_driver":
-			case "doors_driver":
-				return "DoorsDriver";
-			case "seat_codriver":
-			case "doors_codriver":
-				return "DoorsCoDriver";
-			case "seat_cargo1":
-			case "doors_cargo1":
-				return "DoorsCargo1";
-			case "seat_cargo2":
-			case "doors_cargo2":
-				return "DoorsCargo2";
-			case "doors_hood":
-				return "DoorsHood";
-			case "doors_trunk":
-				return "DoorsTrunk";
-		}
+		super.OnVariablesSynchronized();
 
-		return "";
+		if (m_RF_Hatch)
+			m_RF_Hatch.SetAnimationPhase(HATCH_SOURCE, RF_HatchPhase());
 	}
 
-	override string GetDoorSelectionNameFromSeatPos(int posIdx)
+	bool RF_IsHatchOpen()
 	{
-		switch (posIdx)
-		{
-			case 0:
-				return "doors_driver";
-			case 1:
-				return "doors_codriver";
-			case 2:
-				return "doors_cargo1";
-			case 3:
-				return "doors_cargo2";
-		}
-
-		return "";
+		return m_RF_HatchOpen;
 	}
 
-	// «Слот» двери для GetCarDoorsState: у нас это имя источника анимации
-	override string GetDoorInvSlotNameFromSeatPos(int posIdx)
+	// Вызывать только на сервере.
+	void RF_SetHatchOpen(bool open)
 	{
-		return GetAnimSourceFromSelection(GetDoorSelectionNameFromSeatPos(posIdx));
+		m_RF_HatchOpen = open;
+		SetSynchDirty();
 	}
 
-	// Ада двухдверная: её GetSeatIndexFromDoor не знает задних дверей, и они считались отсутствующими —
-	// на задние места садились через закрытую дверь. Здесь все 4 двери, как у ванильного Transport.
-	override int GetSeatIndexFromDoor(string pDoorSelection)
+	// игрок стоит на крыше рядом с люком: снаружи люк открывают и закрывают с крыши
+	bool RF_IsAtHatch(PlayerBase player)
 	{
-		switch (pDoorSelection)
-		{
-			case "DoorsDriver":
-				return 0;
-			case "DoorsCoDriver":
-				return 1;
-			case "DoorsCargo1":
-				return 2;
-			case "DoorsCargo2":
-				return 3;
-		}
-
-		return -1;
-	}
-
-	// Состояние = фаза источника анимации. Скрипты Ады спрашивают по своим именам слотов: капот (доступ к двигателю),
-	// багажник (груз), передние двери (звук салона).
-	override int GetCarDoorsState(string slotType)
-	{
-		switch (slotType)
-		{
-			case "NivaHood":
-				return TranslateAnimationPhaseToCarDoorState("DoorsHood");
-			case "NivaTrunk":
-				return TranslateAnimationPhaseToCarDoorState("DoorsTrunk");
-			case "NivaDriverDoors":
-				return TranslateAnimationPhaseToCarDoorState("DoorsDriver");
-			case "NivaCoDriverDoors":
-				return TranslateAnimationPhaseToCarDoorState("DoorsCoDriver");
-			case "DoorsHood":
-			case "DoorsTrunk":
-				return TranslateAnimationPhaseToCarDoorState(slotType);
-		}
-
-		if (GetSeatIndexFromDoor(slotType) == -1)
-			return CarDoorState.DOORS_MISSING;
-
-		return TranslateAnimationPhaseToCarDoorState(slotType);
-	}
-
-	// Как у ванили: сесть и выйти можно только через открытую дверь.
-	override bool CrewCanGetThrough(int posIdx)
-	{
-		return GetCarDoorsState(GetDoorInvSlotNameFromSeatPos(posIdx)) != CarDoorState.DOORS_CLOSED;
-	}
-
-	override void SetActions()
-	{
-		super.SetActions();
-
-		// «Регулировать сиденье» Ады складывает спинку переднего сиденья. У нас его нет, а действие срабатывало
-		// на двери (их источник анимации) и закрывало собой «Открыть»
-		RemoveAction(ActionAnimateSeats);
-		AddAction(ActionRFOpenDoorOutside);
-		AddAction(ActionRFCloseDoorOutside);
-	}
-
-	// Где надо стоять, чтобы сесть (ActionGetInTransport -> CanReachSeatFromDoors). Ада ищет seat_con_*,
-	// в нашей модели у дверей стоят pos_*: без этого действие «Сесть» не появляется.
-	override string GetDoorConditionPointFromSelection(string selection)
-	{
-		switch (selection)
-		{
-			case "seat_driver":
-				return "pos_driver";
-			case "seat_codriver":
-				return "pos_codriver";
-			case "seat_cargo1":
-				return "pos_cargo1";
-			case "seat_cargo2":
-				return "pos_cargo2";
-		}
-
-		return "";
-	}
-
-	override bool CanReachSeatFromSeat(int currentSeat, int nextSeat)
-	{
-		return true;
-	}
-
-	// из салона открывается только своя дверь, как у ванильного M1025
-	override bool CanReachDoorsFromSeat(string pDoorsSelection, int pCurrentSeat)
-	{
-		return GetSeatIndexFromDoor(pDoorsSelection) == pCurrentSeat;
-	}
-}
-
-class RF_Humvee_Desert extends RF_Humvee {}
-
-// «Открыть/Закрыть дверь» снаружи. Ванильные ActionCarDoorsOutside работают только с дверями-аттачментами
-// (target — CarDoor), у нас же цель — сама машина, компонент двери seat_* в View Geometry.
-class ActionRFDoorOutsideBase: ActionInteractBase
-{
-	protected bool m_RF_Open;
-
-	void ActionRFDoorOutsideBase()
-	{
-		m_CommandUID = DayZPlayerConstants.CMD_ACTIONMOD_OPENDOORFW;
-		m_StanceMask = DayZPlayerConstants.STANCEMASK_CROUCH | DayZPlayerConstants.STANCEMASK_ERECT;
-	}
-
-	override void CreateConditionComponents()
-	{
-		m_ConditionItem = new CCINone;
-		m_ConditionTarget = new CCTCursor(UAMaxDistances.DEFAULT);
-	}
-
-	// источник анимации двери под курсором, "" — если смотрим не на дверь
-	protected string RF_DoorSource(ActionTarget target)
-	{
-		RF_Humvee car = RF_Humvee.Cast(target.GetObject());
-		if (!car)
-			return "";
-
-		TStringArray selections = new TStringArray;
-		car.GetActionComponentNameList(target.GetComponentIndex(), selections);
-		foreach (string selection : selections)
-		{
-			string source = car.GetAnimSourceFromSelection(selection);
-			if (source != "")
-				return source;
-		}
-
-		return "";
-	}
-
-	override bool ActionCondition(PlayerBase player, ActionTarget target, ItemBase item)
-	{
-		if (player.GetCommand_Vehicle())
+		vector p = WorldToModel(player.GetPosition());
+		if (p[1] < HATCH_POS[1] - 0.3)
 			return false;
 
-		string source = RF_DoorSource(target);
-		if (source == "")
-			return false;
-
-		bool isOpen = RF_Humvee.Cast(target.GetObject()).GetAnimationPhase(source) > 0.5;
-		return isOpen != m_RF_Open;
-	}
-
-	override void OnStartServer(ActionData action_data)
-	{
-		string source = RF_DoorSource(action_data.m_Target);
-		if (source == "")
-			return;
-
-		float phase = 0;
-		if (m_RF_Open)
-			phase = 1;
-
-		RF_Humvee.Cast(action_data.m_Target.GetObject()).SetAnimationPhase(source, phase);
+		return vector.Distance(Vector(p[0], 0, p[2]), Vector(HATCH_POS[0], 0, HATCH_POS[2])) < 1.5;
 	}
 }
 
-class ActionRFOpenDoorOutside: ActionRFDoorOutsideBase
+class RF_Humvee_Desert extends RF_Humvee
 {
-	void ActionRFOpenDoorOutside()
+	override string RF_HatchType()
 	{
-		m_RF_Open = true;
-		m_Text = "#open";
+		return "RF_HumveeHatch_Desert";
 	}
-}
 
-class ActionRFCloseDoorOutside: ActionRFDoorOutsideBase
-{
-	void ActionRFCloseDoorOutside()
+	// детали бежевой окраски, как у ванильного Offroad_02_Beige
+	override void OnDebugSpawn()
 	{
-		m_RF_Open = false;
-		m_Text = "#close";
-	}
-}
+		SpawnUniversalParts();
+		SpawnAdditionalItems();
+		FillUpCarFluids();
 
-modded class ActionConstructor
-{
-	override void RegisterActions(TTypenameArray actions)
-	{
-		super.RegisterActions(actions);
+		GameInventory inventory = GetInventory();
+		for (int i = 0; i < 4; i++)
+			inventory.CreateInInventory("Offroad_02_Wheel");
 
-		actions.Insert(ActionRFOpenDoorOutside);
-		actions.Insert(ActionRFCloseDoorOutside);
+		inventory.CreateInInventory("Offroad_02_Door_1_1_Beige");
+		inventory.CreateInInventory("Offroad_02_Door_1_2_Beige");
+		inventory.CreateInInventory("Offroad_02_Door_2_1_Beige");
+		inventory.CreateInInventory("Offroad_02_Door_2_2_Beige");
+		inventory.CreateInInventory("Offroad_02_Trunk_Beige");
+		inventory.CreateInInventory("Offroad_02_Hood_Beige");
+
+		inventory.CreateInInventory("Offroad_02_Wheel");
+		inventory.CreateInInventory("Offroad_02_Wheel");
 	}
 }

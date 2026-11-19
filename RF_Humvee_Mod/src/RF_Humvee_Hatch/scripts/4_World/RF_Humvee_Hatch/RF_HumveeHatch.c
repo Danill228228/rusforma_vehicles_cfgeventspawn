@@ -1,13 +1,8 @@
-// Люк на крыше. Положение люка = фаза источника анимации "HatchRoof"
-// (source = "user" в config.cpp RF_Humvee — движок сам синхронизирует её с клиентами).
+// Люк на крыше: действия и сохранение положения. Состояние m_RF_HatchOpen и деталь люка — в основном аддоне
+// (RF_Humvee.RF_SetHatchOpen передаёт его клиентам).
 
 modded class RF_Humvee
 {
-	static const string HATCH_SOURCE = "HatchRoof";
-	static const string HATCH_SELECTION = "hatch_roof";
-
-	protected bool m_RF_HatchOpen;
-
 	override void SetActions()
 	{
 		super.SetActions();
@@ -16,23 +11,6 @@ modded class RF_Humvee
 		AddAction(ActionRFCloseHatchInVehicle);
 		AddAction(ActionRFOpenHatchOutside);
 		AddAction(ActionRFCloseHatchOutside);
-	}
-
-	bool RF_IsHatchOpen()
-	{
-		return GetAnimationPhase(HATCH_SOURCE) > 0.5;
-	}
-
-	// Вызывать только на сервере.
-	void RF_SetHatchOpen(bool open)
-	{
-		m_RF_HatchOpen = open;
-
-		float phase = 0;
-		if (open)
-			phase = 1;
-
-		SetAnimationPhase(HATCH_SOURCE, phase);
 	}
 
 	override void OnStoreSave(ParamsWriteContext ctx)
@@ -56,12 +34,6 @@ modded class RF_Humvee
 	{
 		super.AfterStoreLoad();
 		RF_SetHatchOpen(m_RF_HatchOpen);
-
-		// после рестарта люк сразу стоит как был, а не открывается заново на глазах
-		float phase = 0;
-		if (m_RF_HatchOpen)
-			phase = 1;
-		SetAnimationPhaseNow(HATCH_SOURCE, phase);
 	}
 }
 

@@ -14,23 +14,10 @@
 			return;
 		}
 
-		car.SetOrientation(player.GetOrientation());
-
-		EntityAI e = car;
-		e.GetInventory().CreateAttachment("RF_HumveeWheel");
-		e.GetInventory().CreateAttachment("RF_HumveeWheel");
-		e.GetInventory().CreateAttachment("RF_HumveeWheel");
-		e.GetInventory().CreateAttachment("RF_HumveeWheel");
-		e.GetInventory().CreateAttachment("CarBattery");
-		e.GetInventory().CreateAttachment("CarRadiator");
-		e.GetInventory().CreateAttachment("SparkPlug");
-		e.GetInventory().CreateAttachment("HeadlightH7");
-		e.GetInventory().CreateAttachment("HeadlightH7");
-
-		car.Fill(CarFluid.FUEL, car.GetFluidCapacity(CarFluid.FUEL));
-		car.Fill(CarFluid.OIL, car.GetFluidCapacity(CarFluid.OIL));
-		car.Fill(CarFluid.BRAKE, car.GetFluidCapacity(CarFluid.BRAKE));
-		car.Fill(CarFluid.COOLANT, car.GetFluidCapacity(CarFluid.COOLANT));
+		// Поворот после создания (SetOrientation) до клиента не доходит: машина у игрока и на сервере стоит по-разному,
+		// и сервер отменяет посадку. Машина ставится как есть.
+		// Колёса, двери, капот, багажник, аккумулятор, свечи, фары и жидкости — как у ванильного M1025.
+		car.OnDebugSpawn();
 
 		Print("[RF_Humvee] Тестовая машина создана в " + pos.ToString());
 	}

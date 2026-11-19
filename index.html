@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Дорожная карта сервера</title>
+<title>Дорожная карта сервера DawnLine</title>
 <meta name="theme-color" content="#0d0618">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Дорожная карта">
+<meta name="apple-mobile-web-app-title" content="DawnLine">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -277,6 +277,13 @@
     color: #fff;
   }
 
+  .card-note {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 15px;
+    text-wrap: pretty;
+  }
+
   .mini-bar {
     margin: 16px 0 6px;
     height: 4px;
@@ -491,7 +498,7 @@
    ===================================================================== */
 
 // Название сервера (подставляется в заголовок и подвал)
-const SERVER_NAME = "[НАЗВАНИЕ]";
+const SERVER_NAME = "DawnLine";
 
 // Ссылка на Discord (пока заглушка)
 const DISCORD_URL = "#";
@@ -501,6 +508,7 @@ const DISCORD_URL = "#";
     id    — уникальный ключ (латиницей), по нему сохраняется прогресс
     icon  — emoji
     title — заголовок
+    note  — (необязательно) короткое пояснение под заголовком
     tasks — подпункты: { id: "уникальный-ключ", text: "текст" }
 
   Чтобы добавить пункт — скопируй блок { ... } и поменяй id и текст.
@@ -521,10 +529,22 @@ const ROADMAP = [
     title: "Написать свои моды для DayZ-сервера",
     tasks: [
       { id: "mods-car-shooting", text: "Стрельба из автомобилей" },
-      { id: "mods-hummer-hatch", text: "Сделать Хаммер с люком, чтобы из него можно было стрелять" },
       { id: "mods-nobuild",      text: "Зоны запрета строительства на карте" },
       { id: "mods-player-map",   text: "Интерактивная веб-карта для игроков: все ивенты и спавн игроков" },
       { id: "mods-admin-map",    text: "Такая же карта для админов, но обновляющаяся в реальном времени" }
+    ]
+  },
+  {
+    id: "hummer",
+    icon: "🚙",
+    title: "Свой Хаммер с открывающимся люком",
+    note: "Создаём свой Хаммер с люком, который открывается. Что осталось доделать:",
+    tasks: [
+      { id: "hummer-texture",  text: "Доделать текстуру Хаммера" },
+      { id: "hummer-paint",    text: "Переделать покраску: сейчас она слишком выделяется на фоне игры" },
+      { id: "hummer-polish",   text: "Немного доработать сам Хаммер" },
+      { id: "hummer-test",     text: "Проверить в работе: как ездит и как работают анимации" },
+      { id: "hummer-shooting", text: "Если всё работает хорошо — сделать стрельбу из Хаммера" }
     ]
   },
   {
@@ -598,6 +618,7 @@ function render() {
         </div>
         <span class="counter" data-counter></span>
       </div>
+      ${item.note ? `<p class="card-note">${escapeHtml(item.note)}</p>` : ""}
       <div class="mini-bar"><div class="mini-fill" data-mini></div></div>
       <ul class="tasks">
         ${item.tasks.map(task => `

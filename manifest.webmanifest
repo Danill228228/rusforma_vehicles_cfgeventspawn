@@ -1,6 +1,6 @@
 {
-  "name": "Дорожная карта сервера",
-  "short_name": "Дорожная карта",
+  "name": "Дорожная карта DawnLine",
+  "short_name": "DawnLine",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

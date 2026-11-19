@@ -1474,7 +1474,7 @@
   let seen = false;
   try { seen = sessionStorage.getItem("dl-intro") === "1"; } catch (e) { /* без хранилища — показываем */ }
   // Не показываем повторно в той же вкладке и после возврата со страницы входа Steam
-  if (seen || /steam/.test(location.hash)) { intro.classList.add("off"); return; }
+  if (seen || /steam|topup/.test(location.hash)) { intro.classList.add("off"); return; }
   try { sessionStorage.setItem("dl-intro", "1"); } catch (e) { /* ничего */ }
   document.documentElement.classList.add("intro-on");
 
@@ -1695,6 +1695,7 @@
 const CONFIG = {
   serverName: "DawnLine",
   discordUrl: "#",            // ссылка на Discord (пока заглушка)
+  currencySign: "zł",         // валюта магазина (злотые: BLIK работает только в них)
   api: "https://dawnline.rpor87707.workers.dev", // адрес сервера магазина (Cloudflare Worker), например https://dawnline.xxx.workers.dev
   repo: {                     // куда сайт сохраняет данные (файл data.json)
     owner: "Danill228228",
@@ -2326,7 +2327,7 @@ let currentCategory = lsGet(LS.cat, null);
 
 function imgSrc(src) { return sessionImages[src] || safeUrl(src); }
 
-const rub = n => `${Number(n || 0).toLocaleString("ru-RU")} ₽`;
+const rub = n => `${Number(n || 0).toLocaleString("ru-RU")} ${CONFIG.currencySign}`;
 const modPrice = m => (Number.isInteger(m.price) && m.price >= 0 ? m.price : null);
 const forSale = m => m.status === "ready" && modPrice(m) !== null;
 const modName = id => { const m = DATA.mods.find(x => x.id === id); return m ? m.name : id; };
@@ -2563,12 +2564,30 @@ const Steam = {
     if (err) toast(err[1] === "cancel" ? "Вход через Steam отменён" : "Не удалось войти через Steam");
   },
 
+  // Возврат со страницы оплаты: #cabinet&topup=success&session=… или #cabinet&topup=cancel
+  async takeTopupFromHash() {
+    const h = location.hash;
+    const st = h.match(/[#&]topup=(success|cancel)/);
+    if (!st) return;
+    const session = (h.match(/[#&]session=(cs_\w+)/) || [])[1];
+    history.replaceState(null, "", location.pathname + location.search + "#cabinet");
+    if (st[1] === "cancel") { toast("Оплата отменена"); return; }
+    if (!session || !this.token) return;
+    try {
+      const r = await this.post("/topup/confirm", { session });
+      toast(r.paid ? `Баланс пополнен на ${rub(r.amount)}` : "Оплата ещё обрабатывается — баланс обновится сам");
+    } catch (e) { toast(e.message); }
+    this.money = null;
+    await this.refresh(false);
+  },
+
   async init() {
     if (!CONFIG.api) { renderAccountUI(); return; }
     this.takeFromHash();
     this.loadStats();
     this.api("/reviews").then(d => { this.latestReviews = d.reviews || []; renderMods(); }).catch(() => {});
-    if (this.token) await this.refresh(true);
+    if (this.token) await this.refresh(!/[#&]topup=/.test(location.hash));
+    await this.takeTopupFromHash();
     renderAccountUI();
     showView();
   },
@@ -2781,6 +2800,21 @@ function moneyCard(u) {
   const m = Steam.money;
   const r = Steam.topupResult;
   const topups = m ? m.topups.filter(t => t.status === "pending") : [];
+  const quick = `<div class="quick">${[20, 50, 100, 200].map(v => `<button class="chip" type="button" data-amount="${v}">${esc(rub(v))}</button>`).join("")}</div>`;
+  const amountInput = `<label class="field" style="flex:1;margin:0"><input name="amount" type="number" min="5" max="5000" step="1" placeholder="Сумма, ${esc(CONFIG.currencySign)}" required aria-label="Сумма пополнения"></label>`;
+  const card = u.cardPayments ? `
+      <form data-form="topup-card" class="topup-form">
+        ${quick}
+        <div class="set-row">${amountInput}<button class="btn primary small" type="submit">Оплатить</button></div>
+        <p class="pc-hint">BLIK, Google Pay или банковская карта. Оплата проходит на защищённой странице Stripe, баланс пополнится сразу после оплаты.</p>
+      </form>` : "";
+  const manualForm = `
+      <form data-form="topup" class="topup-form">
+        ${u.cardPayments ? "" : quick}
+        <div class="set-row">${amountInput}<button class="btn ${u.cardPayments ? "" : "primary "}small" type="submit">Создать заявку</button></div>
+      </form>`;
+  const manual = !u.cardPayments ? manualForm
+    : (m && m.info ? `<details class="history"><summary>Другой способ: перевод по реквизитам</summary>${manualForm}</details>` : "");
   return `
     <section class="card cab-card">
       <div class="cab-head"><h2 class="sec-title">💳 Баланс</h2><span class="balance">${esc(rub(u.balance))}</span></div>
@@ -2790,13 +2824,8 @@ function moneyCard(u) {
           ${r.info ? `<span class="pre">${esc(r.info)}</span><br>` : ""}
           Укажи код в комментарии к переводу. Деньги появятся на балансе, когда администратор подтвердит оплату.
         </div>` : ""}
-      <form data-form="topup" class="topup-form">
-        <div class="quick">${[300, 500, 1000, 3000].map(v => `<button class="chip" type="button" data-amount="${v}">${esc(rub(v))}</button>`).join("")}</div>
-        <div class="set-row">
-          <label class="field" style="flex:1;margin:0"><input name="amount" type="number" min="50" max="100000" step="1" placeholder="Сумма, ₽" required aria-label="Сумма пополнения"></label>
-          <button class="btn primary small" type="submit">Пополнить</button>
-        </div>
-      </form>
+      ${card}
+      ${manual}
       ${topups.length ? `<h3 class="sub-title">Ждут подтверждения</h3><ul class="rows">${topups.map(t => `<li><span>${esc(rub(t.amount))} · <span class="mono">${esc(t.code)}</span></span><span class="muted">${esc(fmtDate(t.ts, true))}</span></li>`).join("")}</ul>` : ""}
       ${m && m.transactions.length ? `<details class="history"><summary>История операций</summary><ul class="rows">${m.transactions.map(t => `
         <li><span>${esc(TX_KIND[t.kind] || t.kind)}${t.note ? ` · ${esc(t.note)}` : ""}</span><span class="${t.amount < 0 ? "minus" : "plus"}">${t.amount > 0 ? "+" : ""}${esc(rub(t.amount))}</span></li>`).join("")}</ul></details>` : ""}
@@ -2852,7 +2881,7 @@ function adminCard() {
             <button class="btn small danger" type="button" data-act="adm-refund" data-steamid="${esc(au.steamid)}" data-mod="${esc(p.mod)}">Вернуть деньги</button></li>`).join("")}</ul>` : ""}
           <form data-form="adm-balance" class="set-row" style="margin-top:8px">
             <input type="hidden" name="steamid" value="${esc(au.steamid)}">
-            <label class="field" style="width:120px;margin:0"><input name="amount" type="number" step="1" placeholder="±₽" required aria-label="Сумма"></label>
+            <label class="field" style="width:120px;margin:0"><input name="amount" type="number" step="1" placeholder="± zł" required aria-label="Сумма"></label>
             <label class="field" style="flex:1;margin:0;min-width:140px"><input name="note" placeholder="За что (необязательно)" aria-label="Комментарий"></label>
             <button class="btn small" type="submit">Изменить баланс</button>
           </form>
@@ -2867,7 +2896,12 @@ function adminCard() {
           <button class="btn small" type="submit">Сохранить</button>
         </form>`).join("") : `<p class="pc-empty">Нет модов в продаже. Чтобы выставить мод, войди как владелец сайта (🔒), включи ✏️ и укажи у мода цену и статус «Готово».</p>`}
 
-      <h3 class="sub-title">Реквизиты для пополнения</h3>
+      <h3 class="sub-title">Оплаты через Stripe</h3>
+      ${!a.cardPayments ? `<p class="pc-hint">Не подключено: нужен ключ Stripe на сервере.</p>`
+        : a.cards.length ? `<ul class="rows">${a.cards.map(c => `<li><span>${who(c)}</span><span><b>${esc(rub(c.amount))}</b><br><span class="muted">${esc(fmtDate(c.done_ts, true))}</span></span></li>`).join("")}</ul>`
+        : `<p class="pc-empty">Оплат пока нет.</p>`}
+
+      <h3 class="sub-title">Реквизиты для ручного пополнения</h3>
       <form data-form="adm-settings">
         <label class="field"><span>Этот текст игрок видит, когда создаёт заявку на пополнение</span>
         <textarea name="paymentInfo" placeholder="Например: перевод по номеру +7… (банк …). В комментарии к переводу укажи код заявки.">${esc(a.paymentInfo || "")}</textarea></label>
@@ -3005,6 +3039,12 @@ async function shopForm(form) {
         toast(r.server.status === "verified" ? "Этот сервер уже подтверждён" : "Код получен — добавь его в название сервера");
         renderCabinet();
         break;
+      }
+      case "topup-card": {
+        const r = await Steam.post("/topup/card", { amount: Number(f.amount) });
+        lsSet(LS.back, "#cabinet");
+        location.href = r.url;
+        return;
       }
       case "topup": {
         Steam.topupResult = await Steam.post("/topup", { amount: Number(f.amount) });
@@ -3238,7 +3278,7 @@ function modForm(modId) {
       { name: "category", label: "Меню", type: "select", value: m ? m.category : currentCategory, options: DATA.categories.map(c => ({ value: c.id, label: `${c.icon} ${c.title}` })) },
       { name: "status", label: "Статус", type: "select", value: m ? m.status : "wip", options: [
         { value: "ready", label: "🟢 Готово" }, { value: "wip", label: "🟠 В разработке" }, { value: "plan", label: "🔴 В планах" }] },
-      { name: "price", label: "Цена, ₽ (пусто — не продаётся, 0 — бесплатно)", type: "number", value: m && Number.isInteger(m.price) ? String(m.price) : "", help: "Купить можно только мод со статусом «Готово»." },
+      { name: "price", label: `Цена, ${CONFIG.currencySign} (пусто — не продаётся, 0 — бесплатно)`, type: "number", value: m && Number.isInteger(m.price) ? String(m.price) : "", help: "Купить можно только мод со статусом «Готово»." },
       { name: "icon", label: "Значок (emoji)", value: m ? m.icon : "📦" },
       { name: "description", label: "Описание", type: "textarea", value: m ? m.description : "" },
       { name: "features", label: "Особенности — каждая с новой строки", type: "textarea", value: m ? (m.features || []).join("\n") : "" },
@@ -3248,7 +3288,7 @@ function modForm(modId) {
     onSubmit(v) {
       if (v.video && !/^https?:\/\//i.test(v.video)) return "Ссылка на видео должна начинаться с https://";
       const price = v.price === "" ? null : Math.round(Number(v.price));
-      if (price !== null && !(price >= 0 && price <= 1000000)) return "Цена — целое число рублей от 0";
+      if (price !== null && !(price >= 0 && price <= 1000000)) return "Цена — целое число от 0";
       const data = { ...v, price, features: v.features.split("\n").map(x => x.trim()).filter(Boolean) };
       if (price === null) delete data.price;
       if (m) { Object.assign(m, data); if (price === null) delete m.price; }

@@ -32,10 +32,24 @@
    | `ADMIN_CLAIM_CODE` | **Secret** | одноразовый код: кто введёт его в кабинете, станет администратором |
    | `STEAM_API_KEY` | **Secret** | необязательно, см. ниже |
    | `ADMIN_STEAM_IDS` | Text | необязательно: Steam ID администраторов через запятую |
+   | `STRIPE_SECRET_KEY` | **Secret** | ключ Stripe для оплаты BLIK, Google Pay и картой, см. ниже |
 
 Реквизиты для пополнения задаются прямо на сайте: кабинет → «Админка» → «Реквизиты для пополнения».
 
 Адрес воркера (`https://dawnline.<поддомен>.workers.dev`) вписывается в `index.html` → `CONFIG.api`.
+
+### Оплата через Stripe: BLIK, Google Pay, карты
+
+Магазин работает в злотых (PLN), потому что BLIK принимает только их.
+
+1. Зарегистрируйся на https://dashboard.stripe.com/register. Страна — Польша, тип — частное лицо (Individual). Пройди проверку личности и укажи банковский счёт для выплат.
+2. **Settings → Payment methods:** включи **BLIK** и **Google Pay**. Карты включены по умолчанию.
+3. **Developers → API keys → Create restricted key.** Права: **Checkout Sessions — Write**, остальное — None. Скопируй ключ `rk_live_…`.
+4. Cloudflare → Workers & Pages → `dawnline` → **Settings → Variables and Secrets → Add** → тип **Secret**, имя `STRIPE_SECRET_KEY`, значение — этот ключ → **Deploy**.
+
+После этого в кабинете появится кнопка «Оплатить» (BLIK, Google Pay, карта). Баланс пополняется только после того, как Stripe подтвердил оплату. Если игрок закрыл страницу сразу после оплаты, сервер сам проверит её при следующем входе в кабинет.
+
+Для проверки без настоящих денег можно сначала вставить тестовый ключ `rk_test_…` из режима Test mode.
 
 ### Где взять Steam ID
 

@@ -8,17 +8,20 @@
 //   SESSION_SECRET   — секрет (Secret): длинная случайная строка для подписи входа
 //   ADMIN_CLAIM_CODE — (Secret) одноразовый код: кто введёт его в кабинете, станет администратором
 //   STEAM_API_KEY    — (Secret, необязательно) ключ Steam Web API: ники и автоматическая проверка серверов
-//   PAYMENT_INFO     — (необязательно) текст «как оплатить»; его же можно задать в админке
+//   PAYMENT_INFO     — (необязательно) текст «как оплатить» вручную; его же можно задать в админке
+//   STRIPE_SECRET_KEY — (Secret) ключ Stripe: пополнение через BLIK, Google Pay и карты
+//   CURRENCY         — валюта магазина (по умолчанию pln), CURRENCY_SIGN — её знак (по умолчанию zł)
 
 const STEAM_OPENID = "https://steamcommunity.com/openid/login";
 const STEAM_API = "https://api.steampowered.com";
+const STRIPE_API = "https://api.stripe.com";
 const DAYZ_APPID = 221100;
 const SESSION_DAYS = 30;
 const MAX_TEXT = 1000;
 const COOLDOWN_SEC = 20;
 const CHECK_COOLDOWN_SEC = 30;
-const TOPUP_MIN = 50;
-const TOPUP_MAX = 100000;
+const TOPUP_MIN = 5;
+const TOPUP_MAX = 5000;
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, mod TEXT NOT NULL, steamid TEXT NOT NULL, text TEXT NOT NULL, ts INTEGER NOT NULL)`,
@@ -35,7 +38,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS likes (steamid TEXT NOT NULL, mod TEXT NOT NULL, PRIMARY KEY (steamid, mod))`,
   `CREATE TABLE IF NOT EXISTS delivery (mod TEXT PRIMARY KEY, url TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '')`,
   `CREATE TABLE IF NOT EXISTS admins (steamid TEXT PRIMARY KEY, ts INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`
+  `CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS card_payments (session TEXT PRIMARY KEY, steamid TEXT NOT NULL, amount INTEGER NOT NULL, status TEXT NOT NULL, ts INTEGER NOT NULL, done_ts INTEGER)`
 ];
 
 let schemaReady = false;
@@ -277,6 +281,8 @@ async function me(env, steamid) {
     balance: await balanceOf(env, steamid),
     server: await serverOf(env, steamid),
     autoCheck: !!env.STEAM_API_KEY,
+    cardPayments: !!env.STRIPE_SECRET_KEY,
+    currency: currency(env),
     adminClaimable: !isAdmin(env, steamid) && (await adminClaimable(env))
   };
 }
@@ -384,7 +390,7 @@ async function myPurchases(env, steamid) {
 
 async function createTopup(env, steamid, amount) {
   amount = Math.round(Number(amount));
-  if (!Number.isFinite(amount) || amount < TOPUP_MIN || amount > TOPUP_MAX) fail(400, `Сумма от ${TOPUP_MIN} до ${TOPUP_MAX} ₽`);
+  if (!Number.isFinite(amount) || amount < TOPUP_MIN || amount > TOPUP_MAX) fail(400, `Сумма от ${TOPUP_MIN} до ${TOPUP_MAX} ${sign(env)}`);
   const open = await env.DB.prepare(`SELECT COUNT(*) AS n FROM topups WHERE steamid = ?1 AND status = 'pending'`).bind(steamid).first();
   if (open && open.n >= 3) fail(429, "У тебя уже есть 3 заявки на проверке");
   const code = randomCode("TOP-", 5);
@@ -393,6 +399,9 @@ async function createTopup(env, steamid, amount) {
 }
 
 async function myMoney(env, steamid) {
+  // Если игрок закрыл страницу сразу после оплаты — проверяем недавние оплаты сами
+  const open = await env.DB.prepare(`SELECT session FROM card_payments WHERE steamid = ?1 AND status = 'pending' AND ts > ?2 ORDER BY ts DESC LIMIT 3`).bind(steamid, Date.now() - 2 * 86400000).all();
+  for (const r of open.results) { try { await confirmCard(env, steamid, r.session); } catch (e) { /* проверим в следующий раз */ } }
   const tx = await env.DB.prepare(`SELECT amount, kind, note, ts FROM transactions WHERE steamid = ?1 ORDER BY ts DESC LIMIT 50`).bind(steamid).all();
   const tp = await env.DB.prepare(`SELECT id, amount, code, status, ts FROM topups WHERE steamid = ?1 ORDER BY ts DESC LIMIT 20`).bind(steamid).all();
   return { balance: await balanceOf(env, steamid), transactions: tx.results, topups: tp.results, info: await paymentInfo(env) };
@@ -404,6 +413,83 @@ async function credit(env, steamid, amount, kind, note) {
     env.DB.prepare(`UPDATE balances SET balance = balance + ?2 WHERE steamid = ?1`).bind(steamid, amount),
     env.DB.prepare(`INSERT INTO transactions (steamid, amount, kind, note, ts) VALUES (?1, ?2, ?3, ?4, ?5)`).bind(steamid, amount, kind, note, Date.now())
   ]);
+}
+
+/* ---------- оплата через Stripe: BLIK, Google Pay, карты ---------- */
+
+const currency = env => String(env.CURRENCY || "pln").toLowerCase();
+const sign = env => String(env.CURRENCY_SIGN || "zł");
+
+async function stripe(env, method, path, form) {
+  const res = await fetch(`${env.STRIPE_API_URL || STRIPE_API}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {})
+    },
+    body: form ? new URLSearchParams(form).toString() : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new HttpError(502, data.error && data.error.message ? `Stripe: ${data.error.message}` : "Платёжный сервис не ответил");
+  return data;
+}
+
+async function cardCheckout(env, steamid, amount) {
+  if (!env.STRIPE_SECRET_KEY) fail(400, "Оплата картой пока не подключена");
+  amount = Math.round(Number(amount));
+  if (!Number.isFinite(amount) || amount < TOPUP_MIN || amount > TOPUP_MAX) fail(400, `Сумма от ${TOPUP_MIN} до ${TOPUP_MAX} ${sign(env)}`);
+  const recent = await env.DB.prepare(`SELECT COUNT(*) AS n FROM card_payments WHERE steamid = ?1 AND ts > ?2`).bind(steamid, Date.now() - 3600000).first();
+  if (recent && recent.n >= 10) fail(429, "Слишком много попыток оплаты, попробуй через час");
+  const site = siteUrl(env);
+  const base = `${site.origin}${site.pathname}`;
+  const cur = currency(env);
+  const form = {
+    mode: "payment",
+    "line_items[0][quantity]": "1",
+    "line_items[0][price_data][currency]": cur,
+    "line_items[0][price_data][unit_amount]": String(amount * 100),
+    "line_items[0][price_data][product_data][name]": `Пополнение баланса DawnLine: ${amount} ${sign(env)}`,
+    "payment_method_types[0]": "card",
+    success_url: `${base}#cabinet&topup=success&session={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${base}#cabinet&topup=cancel`,
+    client_reference_id: steamid,
+    "metadata[steamid]": steamid,
+    "metadata[amount]": String(amount),
+    locale: "auto"
+  };
+  if (cur === "pln") form["payment_method_types[1]"] = "blik"; // BLIK работает только в злотых
+  const session = await stripe(env, "POST", "/v1/checkout/sessions", form);
+  await env.DB.prepare(`INSERT INTO card_payments (session, steamid, amount, status, ts) VALUES (?1, ?2, ?3, 'pending', ?4)`)
+    .bind(session.id, steamid, amount, Date.now()).run();
+  return { url: session.url };
+}
+
+// Баланс пополняется только после того, как сам Stripe подтвердил оплату
+async function confirmCard(env, steamid, sessionId) {
+  if (!/^cs_[\w]{10,200}$/.test(sessionId || "")) fail(400, "Неверный номер оплаты");
+  const row = await env.DB.prepare(`SELECT steamid, amount, status FROM card_payments WHERE session = ?1`).bind(sessionId).first();
+  if (!row) fail(404, "Оплата не найдена");
+  if (row.steamid !== steamid && !isAdmin(env, steamid)) fail(403, "Это не твоя оплата");
+  if (row.status === "done") return { paid: true, already: true, amount: row.amount };
+  if (row.status !== "pending") return { paid: false, status: row.status };
+  const s = await stripe(env, "GET", `/v1/checkout/sessions/${encodeURIComponent(sessionId)}`);
+  const good = s.payment_status === "paid" && s.amount_total === row.amount * 100 &&
+               String(s.currency).toLowerCase() === currency(env) && s.client_reference_id === row.steamid;
+  if (good) {
+    const note = `Оплата через Stripe (${sessionId.slice(-8)})`;
+    await env.DB.batch([
+      env.DB.prepare(`INSERT OR IGNORE INTO balances (steamid, balance) VALUES (?1, 0)`).bind(row.steamid),
+      env.DB.prepare(`UPDATE card_payments SET status = 'done', done_ts = ?2 WHERE session = ?1 AND status = 'pending'`).bind(sessionId, Date.now()),
+      env.DB.prepare(`UPDATE balances SET balance = balance + ?2 WHERE steamid = ?1 AND changes() = 1`).bind(row.steamid, row.amount),
+      env.DB.prepare(`INSERT INTO transactions (steamid, amount, kind, note, ts) SELECT ?1, ?2, 'topup', ?3, ?4 WHERE changes() = 1`).bind(row.steamid, row.amount, note, Date.now())
+    ]);
+    return { paid: true, amount: row.amount };
+  }
+  if (s.status === "expired") {
+    await env.DB.prepare(`UPDATE card_payments SET status = 'expired' WHERE session = ?1 AND status = 'pending'`).bind(sessionId).run();
+    return { paid: false, status: "expired" };
+  }
+  return { paid: false, status: "pending" };
 }
 
 /* ---------- отзывы, лайки, комментарии ---------- */
@@ -510,7 +596,8 @@ async function adminOverview(env) {
     env.DB.prepare(`SELECT COUNT(*) AS n FROM users`)
   ]);
   const del = await env.DB.prepare(`SELECT mod, url, note FROM delivery`).all();
-  return { servers: servers.results, topups: topups.results, sales: sales.results, users: users.results[0].n, delivery: del.results, paymentInfo: await paymentInfo(env) };
+  const cards = await env.DB.prepare(`SELECT c.steamid, c.amount, c.ts, c.done_ts, u.name FROM card_payments c LEFT JOIN users u ON u.steamid = c.steamid WHERE c.status = 'done' ORDER BY c.done_ts DESC LIMIT 20`).all();
+  return { servers: servers.results, topups: topups.results, sales: sales.results, users: users.results[0].n, delivery: del.results, paymentInfo: await paymentInfo(env), cards: cards.results, cardPayments: !!env.STRIPE_SECRET_KEY };
 }
 
 async function adminServer(env, b) {
@@ -629,6 +716,8 @@ async function route(request, env) {
   if (path === "/purchases" && M === "GET") return json(await myPurchases(env, need()));
   if (path === "/money" && M === "GET") return json(await myMoney(env, need()));
   if (path === "/topup" && M === "POST") return json(await createTopup(env, need(), (await body(request)).amount), 201);
+  if (path === "/topup/card" && M === "POST") return json(await cardCheckout(env, need(), (await body(request)).amount), 201);
+  if (path === "/topup/confirm" && M === "POST") return json(await confirmCard(env, need(), String((await body(request)).session || "")));
 
   if (path === "/admin/claim" && M === "POST") return json(await claimAdmin(env, need(), (await body(request)).code));
 

@@ -7,8 +7,8 @@ workers_dev = true
 [vars]
 SITE_URL = "https://danill228228.github.io/rusforma_vehicles_cfgeventspawn/"
 ADMIN_STEAM_IDS = ""
-CURRENCY = "pln"
-CURRENCY_SIGN = "zł"
+CURRENCY = "usd"
+CURRENCY_SIGN = "$"
 
 # Данные магазина: SQLite внутри Durable Object (есть на бесплатном тарифе)
 [[durable_objects.bindings]]

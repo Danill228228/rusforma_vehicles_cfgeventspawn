@@ -1,5 +1,5 @@
 // DawnLine — сервер магазина модов DayZ.
-// Вход через Steam, товары и фото, верификация покупателей, баланс (Stripe: BLIK, Google Pay, карты;
+// Вход через Steam, товары и фото, верификация покупателей, баланс (онлайн: Google Pay через Stripe;
 // вручную: Boosty и реквизиты), покупки с выдачей ссылки, отзывы и лайки, админка.
 // Cloudflare Worker; данные хранятся в Durable Object со встроенной SQLite.
 //
@@ -9,15 +9,16 @@
 //   ADMIN_CLAIM_CODE  — (Secret) одноразовый код: кто введёт его в кабинете, станет администратором
 //   ADMIN_STEAM_IDS   — (необязательно) Steam ID администраторов через запятую
 //   STEAM_API_KEY     — (Secret, необязательно) ключ Steam Web API для ников и аватаров
-//   STRIPE_SECRET_KEY — (Secret, необязательно) ключ Stripe для оплаты BLIK, Google Pay и картой
-//   CURRENCY          — валюта (по умолчанию pln), CURRENCY_SIGN — её знак (по умолчанию zł)
+//   STRIPE_SECRET_KEY      — (Secret) секретный ключ Stripe (права: PaymentIntents — Write) для оплаты Google Pay
+//   STRIPE_PUBLISHABLE_KEY — (Text) публичный ключ Stripe pk_… — нужен странице, чтобы показать кнопку Google Pay
+//   CURRENCY          — валюта (по умолчанию usd), CURRENCY_SIGN — её знак (по умолчанию $)
 
 const STEAM_OPENID = "https://steamcommunity.com/openid/login";
 const STEAM_API = "https://api.steampowered.com";
 const STRIPE_API = "https://api.stripe.com";
 const SESSION_DAYS = 30;
-const TOPUP_MIN = 5;
-const TOPUP_MAX = 5000;
+const TOPUP_MIN = 1;
+const TOPUP_MAX = 1000;
 const MAX_IMAGE_BYTES = 1500000;
 
 const SCHEMA = [
@@ -148,8 +149,9 @@ async function claimAdmin(env, steamid, code) {
   return { ok: true };
 }
 
-const currency = env => String(env.CURRENCY || "pln").toLowerCase();
-const sign = env => String(env.CURRENCY_SIGN || "zł");
+const currency = env => String(env.CURRENCY || "usd").toLowerCase();
+const sign = env => String(env.CURRENCY_SIGN || "$");
+const googlePayReady = env => !!(env.STRIPE_SECRET_KEY && env.STRIPE_PUBLISHABLE_KEY);
 
 /* ---------- Steam: вход ---------- */
 
@@ -260,7 +262,7 @@ async function me(env, steamid) {
     banned: await banned(env, steamid),
     balance: await balanceOf(env, steamid),
     verification: await verificationOf(env, steamid),
-    cardPayments: !!env.STRIPE_SECRET_KEY,
+    googlePay: googlePayReady(env),
     currency: currency(env),
     adminClaimable: !isAdmin(env, steamid) && (await adminClaimable(env))
   };
@@ -422,7 +424,7 @@ async function credit(env, steamid, amount, kind, note) {
 
 function checkAmount(env, amount) {
   amount = Math.round(Number(amount));
-  if (!Number.isFinite(amount) || amount < TOPUP_MIN || amount > TOPUP_MAX) fail(400, `Сумма от ${TOPUP_MIN} до ${TOPUP_MAX} ${sign(env)}`);
+  if (!Number.isFinite(amount) || amount < TOPUP_MIN || amount > TOPUP_MAX) fail(400, `Сумма от ${sign(env)}${TOPUP_MIN} до ${sign(env)}${TOPUP_MAX}`);
   return amount;
 }
 
@@ -441,7 +443,7 @@ async function createTopup(env, steamid, amount) {
 
 async function myMoney(env, steamid) {
   // Если игрок закрыл страницу сразу после оплаты — проверяем недавние оплаты сами
-  const open = await env.DB.prepare(`SELECT session FROM card_payments WHERE steamid = ?1 AND status = 'pending' AND ts > ?2 ORDER BY ts DESC LIMIT 3`).bind(steamid, Date.now() - 2 * 86400000).all();
+  const open = await env.DB.prepare(`SELECT session FROM card_payments WHERE steamid = ?1 AND status = 'pending' AND session LIKE 'pi_%' AND ts > ?2 ORDER BY ts DESC LIMIT 3`).bind(steamid, Date.now() - 2 * 86400000).all();
   for (const r of open.results) { try { await confirmCard(env, steamid, r.session); } catch (e) { /* проверим позже */ } }
   const tx = await env.DB.prepare(`SELECT amount, kind, note, ts FROM transactions WHERE steamid = ?1 ORDER BY ts DESC LIMIT 50`).bind(steamid).all();
   const tp = await env.DB.prepare(`SELECT amount, code, status, ts FROM topups WHERE steamid = ?1 ORDER BY ts DESC LIMIT 20`).bind(steamid).all();
@@ -459,57 +461,49 @@ async function stripe(env, method, path, form) {
   return data;
 }
 
-async function cardCheckout(env, steamid, amount) {
-  if (!env.STRIPE_SECRET_KEY) fail(400, "Оплата картой пока не подключена");
+// Платёж Google Pay: страница показывает кнопку Google Pay (Stripe Express Checkout),
+// а сервер создаёт PaymentIntent на нужную сумму
+async function googlePayIntent(env, steamid, amount) {
+  if (!googlePayReady(env)) fail(400, "Оплата через Google Pay пока не подключена");
   amount = checkAmount(env, amount);
   const recent = await env.DB.prepare(`SELECT COUNT(*) AS n FROM card_payments WHERE steamid = ?1 AND ts > ?2`).bind(steamid, Date.now() - 3600000).first();
   if (recent && recent.n >= 10) fail(429, "Слишком много попыток оплаты, попробуй через час");
-  const site = siteUrl(env);
-  const base = `${site.origin}${site.pathname}`;
-  const cur = currency(env);
-  const form = {
-    mode: "payment",
-    "line_items[0][quantity]": "1",
-    "line_items[0][price_data][currency]": cur,
-    "line_items[0][price_data][unit_amount]": String(amount * 100),
-    "line_items[0][price_data][product_data][name]": `Пополнение баланса DawnLine: ${amount} ${sign(env)}`,
-    "payment_method_types[0]": "card",
-    success_url: `${base}#/ucp?topup=success&session={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${base}#/ucp?topup=cancel`,
-    client_reference_id: steamid,
+  const pi = await stripe(env, "POST", "/v1/payment_intents", {
+    amount: String(amount * 100),
+    currency: currency(env),
+    "payment_method_types[0]": "card",            // Google Pay в Stripe — это карта из кошелька
+    description: `Пополнение баланса DAWNLINE: ${sign(env)}${amount}`,
     "metadata[steamid]": steamid,
-    locale: "auto"
-  };
-  if (cur === "pln") form["payment_method_types[1]"] = "blik"; // BLIK работает только в злотых
-  const session = await stripe(env, "POST", "/v1/checkout/sessions", form);
-  await env.DB.prepare(`INSERT INTO card_payments (session, steamid, amount, status, ts) VALUES (?1, ?2, ?3, 'pending', ?4)`).bind(session.id, steamid, amount, Date.now()).run();
-  return { url: session.url };
+    "metadata[amount]": String(amount)
+  });
+  await env.DB.prepare(`INSERT INTO card_payments (session, steamid, amount, status, ts) VALUES (?1, ?2, ?3, 'pending', ?4)`).bind(pi.id, steamid, amount, Date.now()).run();
+  return { id: pi.id, clientSecret: pi.client_secret };
 }
 
 // Баланс пополняется только после того, как сам Stripe подтвердил оплату
-async function confirmCard(env, steamid, sessionId) {
-  if (!/^cs_\w{10,200}$/.test(sessionId || "")) fail(400, "Неверный номер оплаты");
-  const row = await env.DB.prepare(`SELECT steamid, amount, status FROM card_payments WHERE session = ?1`).bind(sessionId).first();
+async function confirmCard(env, steamid, paymentId) {
+  if (!/^pi_\w{10,200}$/.test(paymentId || "")) fail(400, "Неверный номер оплаты");
+  const row = await env.DB.prepare(`SELECT steamid, amount, status FROM card_payments WHERE session = ?1`).bind(paymentId).first();
   if (!row) fail(404, "Оплата не найдена");
   if (row.steamid !== steamid && !isAdmin(env, steamid)) fail(403, "Это не твоя оплата");
   if (row.status === "done") return { paid: true, already: true, amount: row.amount };
   if (row.status !== "pending") return { paid: false, status: row.status };
-  const s = await stripe(env, "GET", `/v1/checkout/sessions/${encodeURIComponent(sessionId)}`);
-  const good = s.payment_status === "paid" && s.amount_total === row.amount * 100 &&
-               String(s.currency).toLowerCase() === currency(env) && s.client_reference_id === row.steamid;
+  const pi = await stripe(env, "GET", `/v1/payment_intents/${encodeURIComponent(paymentId)}`);
+  const good = pi.status === "succeeded" && pi.amount_received === row.amount * 100 &&
+               String(pi.currency).toLowerCase() === currency(env) && pi.metadata && pi.metadata.steamid === row.steamid;
   if (good) {
     await env.DB.batch([
       env.DB.prepare(`INSERT OR IGNORE INTO balances (steamid, balance) VALUES (?1, 0)`).bind(row.steamid),
-      env.DB.prepare(`UPDATE card_payments SET status = 'done', done_ts = ?2 WHERE session = ?1 AND status = 'pending'`).bind(sessionId, Date.now()),
+      env.DB.prepare(`UPDATE card_payments SET status = 'done', done_ts = ?2 WHERE session = ?1 AND status = 'pending'`).bind(paymentId, Date.now()),
       env.DB.prepare(`UPDATE balances SET balance = balance + ?2 WHERE steamid = ?1 AND changes() = 1`).bind(row.steamid, row.amount),
       env.DB.prepare(`INSERT INTO transactions (steamid, amount, kind, note, ts) SELECT ?1, ?2, 'topup', ?3, ?4 WHERE changes() = 1`)
-        .bind(row.steamid, row.amount, `Оплата онлайн (${sessionId.slice(-8)})`, Date.now())
+        .bind(row.steamid, row.amount, `Google Pay (${paymentId.slice(-8)})`, Date.now())
     ]);
     return { paid: true, amount: row.amount };
   }
-  if (s.status === "expired") {
-    await env.DB.prepare(`UPDATE card_payments SET status = 'expired' WHERE session = ?1 AND status = 'pending'`).bind(sessionId).run();
-    return { paid: false, status: "expired" };
+  if (pi.status === "canceled") {
+    await env.DB.prepare(`UPDATE card_payments SET status = 'canceled' WHERE session = ?1 AND status = 'pending'`).bind(paymentId).run();
+    return { paid: false, status: "canceled" };
   }
   return { paid: false, status: "pending" };
 }
@@ -561,7 +555,7 @@ async function adminOverview(env) {
   const del = await env.DB.prepare(`SELECT mod, url, note FROM delivery`).all();
   return {
     verifications: ver.results, topups: topups.results, sales: sales.results, users: users.results[0].n, cards: cards.results,
-    delivery: del.results, cardPayments: !!env.STRIPE_SECRET_KEY, ...(await manualInfo(env)), ...(await listProducts(env, true))
+    delivery: del.results, googlePay: googlePayReady(env), ...(await manualInfo(env)), ...(await listProducts(env, true))
   };
 }
 
@@ -674,8 +668,9 @@ async function route(request, env) {
   if (path === "/purchases" && M === "GET") return json(await myPurchases(env, need()));
   if (path === "/money" && M === "GET") return json(await myMoney(env, need()));
   if (path === "/topup" && M === "POST") return json(await createTopup(env, need(), (await body(request)).amount), 201);
-  if (path === "/topup/card" && M === "POST") return json(await cardCheckout(env, need(), (await body(request)).amount), 201);
-  if (path === "/topup/confirm" && M === "POST") return json(await confirmCard(env, need(), String((await body(request)).session || "")));
+  if (path === "/pay/config" && M === "GET") return json({ googlePay: googlePayReady(env), publishableKey: googlePayReady(env) ? String(env.STRIPE_PUBLISHABLE_KEY) : "", currency: currency(env), sign: sign(env), min: TOPUP_MIN, max: TOPUP_MAX });
+  if (path === "/topup/gpay" && M === "POST") return json(await googlePayIntent(env, need(), (await body(request)).amount), 201);
+  if (path === "/topup/confirm" && M === "POST") return json(await confirmCard(env, need(), String((await body(request)).payment || "")));
   if (path === "/admin/claim" && M === "POST") return json(await claimAdmin(env, need(), (await body(request)).code));
 
   if (path.startsWith("/admin/")) {

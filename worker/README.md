@@ -6,7 +6,7 @@
 - **вход через Steam**: проверяет ответ Steam, чтобы вход нельзя было подделать;
 - **продукты мастерской**: название, описание, цена, фото, ссылка на скачивание. Всё это добавляется в админке на сайте;
 - **верификацию покупателей**: название проекта, Discord ID, IP, Port, QPort и рассказ о проекте. Заявку одобряет администратор;
-- **баланс**: онлайн через Stripe (BLIK, Google Pay, карты) или вручную по заявке (Boosty или перевод);
+- **баланс**: онлайн через Google Pay (Stripe) или вручную по заявке (Boosty или перевод);
 - **покупки**: деньги списываются одной транзакцией, ссылку на скачивание видят только покупатели;
 - **отзывы** (только от покупателей) и **лайки**;
 - **админку**: верификация, пополнения, продукты, игроки, возвраты, блокировка.
@@ -18,21 +18,27 @@
 | `SITE_URL` | Text | `https://danill228228.github.io/rusforma_vehicles_cfgeventspawn/` |
 | `SESSION_SECRET` | Secret | длинная случайная строка (не короче 24 символов) |
 | `ADMIN_CLAIM_CODE` | Secret | одноразовый код администратора: вводится в кабинете → «Я владелец магазина» |
-| `STRIPE_SECRET_KEY` | Secret | ключ Stripe для BLIK, Google Pay и карт, см. ниже |
+| `STRIPE_SECRET_KEY` | Secret | ключ Stripe с правами PaymentIntents: Write, см. ниже |
+| `STRIPE_PUBLISHABLE_KEY` | Text | публичный ключ Stripe `pk_…` для кнопки Google Pay |
 | `STEAM_API_KEY` | Secret | необязательно: ник и аватар игрока подтягиваются надёжнее |
 | `ADMIN_STEAM_IDS` | Text | необязательно: Steam ID администраторов через запятую |
-| `CURRENCY` / `CURRENCY_SIGN` | Text | `pln` / `zł`. BLIK работает только в злотых |
+| `CURRENCY` / `CURRENCY_SIGN` | Text | `usd` / `$` |
 
 Привязка хранилища: Durable Object `SHOP` → класс `Shop` (SQLite).
 
-## Подключить оплату через Stripe (BLIK, Google Pay, карты)
+## Подключить оплату через Google Pay (Stripe)
 
-1. Зарегистрируйся на https://dashboard.stripe.com/register: страна Польша, тип Individual. Укажи счёт для выплат.
-2. **Settings → Payment methods**: включи **BLIK** и **Google Pay**.
-3. **Developers → API keys → Create restricted key**: права **Checkout Sessions: Write**, остальное None.
-4. Cloudflare → Workers & Pages → `dawnline` → **Settings → Variables and Secrets → Add → Secret** `STRIPE_SECRET_KEY` → **Deploy**.
+Магазин работает в долларах (USD). Онлайн-оплата — только через Google Pay: в кабинете показывается кнопка Google Pay, формы для ввода карты нет.
 
-После этого в кабинете появится кнопка «Оплатить». Баланс пополнится только после того, как Stripe подтвердит оплату.
+1. Зарегистрируйся на https://dashboard.stripe.com/register, укажи свою страну и счёт для выплат.
+2. **Settings → Payment methods → Google Pay**: включи.
+3. **Settings → Payment methods → Payment method domains → Add domain**: `danill228228.github.io`. Без этого кнопка Google Pay на сайте не появится.
+4. **Developers → API keys**:
+   - **Publishable key** (`pk_live_…`) — публичный ключ, его не нужно скрывать. Добавь в Cloudflare как **Text**-переменную `STRIPE_PUBLISHABLE_KEY`.
+   - **Create restricted key**: права **PaymentIntents: Write**, остальное None. Ключ `rk_live_…` добавь в Cloudflare как **Secret** `STRIPE_SECRET_KEY`.
+5. Cloudflare → Workers & Pages → `dawnline` → **Settings → Variables and Secrets** → **Deploy**.
+
+Баланс пополняется только после того, как Stripe подтвердил оплату. Google Pay доступен в Chrome на Android и на компьютере, если в аккаунте Google сохранена карта. На iPhone кнопки не будет: там вместо Google Pay работает Apple Pay.
 
 ## Ручное пополнение (Boosty или перевод)
 

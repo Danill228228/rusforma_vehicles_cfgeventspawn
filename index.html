@@ -1591,7 +1591,7 @@
     </div>
     <a class="bal-chip" id="balChip" href="#cabinet" hidden></a>
     <button class="icon-btn" type="button" id="editBtn" aria-pressed="false" title="Режим правки" aria-label="Режим правки" hidden>✏️</button>
-    <button class="icon-btn" type="button" id="accountBtn" title="Вход для администратора" aria-label="Вход для администратора">🔒<span class="sync-dot" id="syncDot" hidden></span></button>
+    <button class="icon-btn" type="button" id="accountBtn" title="Вход для администратора" aria-label="Вход для администратора" hidden>🔒<span class="sync-dot" id="syncDot" hidden></span></button>
   </div>
 </nav>
 
@@ -1722,6 +1722,7 @@ const LS = {
   oldProgress: "dayz-roadmap-progress-v1",
   oldComments: "dayz-comments-v1",
   steam: "dl-steam-token",
+  ownerDevice: "dl-owner-device",
   back: "dl-steam-back"
 };
 const PLAN_TAB = "plan";
@@ -2646,7 +2647,27 @@ function rerenderShop() {
   if (v === "cabinet") renderCabinet();
 }
 
+// Кнопку входа владельца (🔒) видит только владелец: на его устройстве,
+// после входа по паролю, у Steam-админа или по секретной ссылке …#owner
+function ownerEntryVisible() {
+  return isAdmin() || !!lsGet(LS.pass, null) || !!lsGet(LS.ownerDevice, false) || !!(Steam.user && Steam.user.admin);
+}
+
+function updateOwnerEntry() {
+  $("accountBtn").hidden = !ownerEntryVisible();
+}
+
+function takeOwnerHash() {
+  if (location.hash !== "#owner") return false;
+  lsSet(LS.ownerDevice, true);
+  history.replaceState(null, "", location.pathname + location.search + "#mods");
+  updateOwnerEntry();
+  if (!isAdmin()) loginForm();
+  return true;
+}
+
 function renderAccountUI() {
+  updateOwnerEntry();
   const chip = $("balChip");
   const u = Steam.user;
   chip.hidden = !CONFIG.api;
@@ -2861,7 +2882,7 @@ function adminCard() {
 function renderCabinet() {
   const root = $("cabinetView");
   const u = Steam.user;
-  const owner = `<p class="owner-link"><button class="link-btn" type="button" data-act="${isAdmin() ? "owner-settings" : "login"}">${isAdmin() ? "⚙️ Настройки владельца сайта" : "🔒 Вход для владельца сайта"}</button></p>`;
+  const owner = !ownerEntryVisible() ? "" : `<p class="owner-link"><button class="link-btn" type="button" data-act="${isAdmin() ? "owner-settings" : "login"}">${isAdmin() ? "⚙️ Настройки владельца сайта" : "🔒 Вход для владельца сайта"}</button></p>`;
   if (!CONFIG.api) {
     root.innerHTML = `<div class="empty"><strong>Личный кабинет скоро откроется</strong>Здесь будут вход через Steam, баланс и покупка модов.</div>${owner}`;
     return;
@@ -3655,12 +3676,14 @@ function showView() {
   lastView = view;
 }
 
-window.addEventListener("hashchange", showView);
+window.addEventListener("hashchange", () => { if (takeOwnerHash()) return; showView(); });
 
 function applyAdminUI() {
   const admin = isAdmin();
   document.querySelector('[data-view="plan"]').hidden = !admin;
   $("editBtn").hidden = !admin;
+  if (admin) lsSet(LS.ownerDevice, true);
+  updateOwnerEntry();
   $("accountBtn").firstChild.textContent = admin ? "⚙️" : "🔒";
   $("accountBtn").setAttribute("aria-label", admin ? "Настройки администратора" : "Вход для администратора");
   $("syncDot").hidden = !admin;
@@ -3701,10 +3724,12 @@ $("footerText").textContent = `© ${new Date().getFullYear()} ${CONFIG.serverNam
 
 (async function start() {
   await loadData();
+  const ownerLink = location.hash === "#owner";
   renderAll();
   applyAdminUI();
   showView();
   Steam.init();
+  if (ownerLink) takeOwnerHash();
   const saved = lsGet(LS.pass, null);
   if (saved) {
     try { await unlock(saved, true); } catch (e) { lsDel(LS.pass); }

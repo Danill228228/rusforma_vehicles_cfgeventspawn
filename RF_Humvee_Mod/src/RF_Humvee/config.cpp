@@ -1,4 +1,4 @@
-// RF_Humvee — свой HMMWV M1025 с открываемым люком стрелка. Модель своя (RF_Humvee/source/m1025.py, по образцу
+// RF_Humvee — свой HMMWV M1025 с открываемым люком на крыше. Модель своя (RF_Humvee/source/m1025.py, по образцу
 // ванильного M1025), а двигатель, коробка, подвеска, звуки, места экипажа и колёса — от ванильного Offroad_02
 // (наследование, файлы игры не копируются). Окраска — своя текстура с износом (RF_Humvee_Mod/tools/texture_atlas.py).
 // Действия «Открыть/Закрыть люк» — в отдельном аддоне RF_Humvee_Hatch.
@@ -40,8 +40,8 @@ class CfgVehicles
 	class RF_Humvee: Offroad_02
 	{
 		scope = 2;
-		displayName = "Humvee M1114";
-		descriptionShort = "Армейский HMMWV с открываемым люком стрелка на крыше.";
+		displayName = "Humvee M1025";
+		descriptionShort = "Армейский HMMWV с открываемым люком на крыше.";
 		model = "\RF_Humvee\data\rf_humvee.p3d";
 
 		// Двери, капот и багажник — части модели (не аттачменты). Колёса — ванильные колёса M1025 в своих слотах.
@@ -196,7 +196,7 @@ class CfgVehicles
 
 	class RF_Humvee_Desert: RF_Humvee
 	{
-		displayName = "Humvee M1114 (пустынный)";
+		displayName = "Humvee M1025 (пустынный)";
 		hiddenSelectionsTextures[] = {"", "", "", "", "", "", "", "", "", "\RF_Humvee\data\rf_humvee_desert_co.paa"};
 	};
 };

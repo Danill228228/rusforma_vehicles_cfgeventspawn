@@ -276,6 +276,7 @@ class Atlas:
         if self.AO is None:
             self.AO = self._ambient_occlusion(wheels)
             self.SEAM = self._seams()
+            self.FILLET = self._fillets()
             self.RIVET, self.RSTREAK = self._rivets()
             self.MARK = np.zeros(len(self.P), np.float32)
             for text, center, normal, width in markings:
@@ -302,6 +303,44 @@ class Atlas:
             out[b[many[g]]] = True
         print(f"    стыков {out.sum()} пикс. из {len(b)} краевых")
         return out
+
+    def _fillets(self, r=6, cell=0.012):
+        """Скругление выпуклых рёбер в рельефе: край куска, за которым соседний кусок уходит вниз под углом
+        (сгиб листа наружу), получает спад высоты на r пикселей — ребро ловит свет, как у загнутого листа, а не
+        как у пластилинового бруска. Вогнутые углы не трогает (их темнит затенение). Возвращает (1 - E/r)² на
+        пиксель выпуклой кромки, 0 — в остальных."""
+        S = self.size
+        b = np.nonzero(self.E < 1)[0]
+        k = self.pid[self.pix][b]
+        P, N = self.P[b], self.N[b]
+        C = np.array([p["o"] + p["q"][..., 0].mean() * p["u"] + p["q"][..., 1].mean() * p["v"] for p in self.patches])
+        convex = np.zeros(len(b), bool)
+        for off in (0.0, cell / 2):
+            key = np.floor((P + off) / cell).astype(np.int64)
+            _, g = np.unique(key, axis=0, return_inverse=True)
+            g = g.ravel()
+            order = np.lexsort((k, g))                                       # по ячейке, внутри — по куску
+            gs = g[order]
+            first = np.empty(g.max() + 1, np.int64)
+            last = np.empty(g.max() + 1, np.int64)
+            first[gs[::-1]] = order[::-1]
+            last[gs] = order
+            other = np.where(k[first[g]] != k, first[g], last[g])            # пиксель другого куска в ячейке
+            diff = k[other] != k
+            bent = np.abs((N * N[other]).sum(1)) < 0.95                       # не в одной плоскости (это стык)
+            s = ((C[k[other]] - C[k]) * (N - N[other])).sum(1)               # < 0: куски уходят друг под друга
+            convex |= diff & bent & (s < 0)
+        F = np.zeros((S, S), bool)
+        F[self.pix[0][b[convex]], self.pix[1][b[convex]]] = True
+        edge = self.edge
+        for d in range(1, r):                                                # вглубь куска от выпуклой кромки
+            grow = np.zeros_like(F)
+            for sh, ax in ((1, 0), (-1, 0), (1, 1), (-1, 1)):
+                grow |= np.roll(F, sh, ax) & (np.roll(self.pid, sh, ax) == self.pid) & (np.roll(edge, sh, ax) == d - 1)
+            F |= grow & (edge == d)
+        out = F[self.pix] * np.clip(1 - self.E / r, 0, 1) ** 2
+        print(f"    выпуклых кромок {convex.sum()} пикс. из {len(b)} краевых")
+        return out.astype(np.float32)
 
     def _ambient_occlusion(self, wheels, h=0.03, sigmas=(0.03, 0.08, 0.20), strength=(0.50, 0.30, 0.15)):
         """Затенение по объёму: поверхности модели (и колёса-прокси) — в воксели 3 см, размытие гауссом на трёх
@@ -516,7 +555,7 @@ class Atlas:
         seam = self.SEAM & (paint | interior)
         col[seam] *= 0.55
         height[seam] -= 1.0
-        height -= 0.5 * smoothstep(2.5, 0.0, E) * (paint | interior | dark)
+        height -= 7.0 * self.FILLET * (paint | interior | dark)                # скруглённые выпуклые рёбра
 
         # 4. запечённое затенение и копоть в углублениях (в салоне мягче — его ещё затеняет движок)
         ao = np.where(interior | seat, 1 - 0.6 * (1 - self.AO), self.AO)

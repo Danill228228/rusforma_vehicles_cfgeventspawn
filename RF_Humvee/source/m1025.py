@@ -15,8 +15,8 @@ import math
 import numpy as np
 
 from generate_humvee import (AX_TO_Y, AX_TO_Z, MATERIALS, MIRROR_X, Geo, Rx, Ry, T, box, cbox, chain, clean,  # noqa: F401
-                             compute_uv, cylinder_x, extrude_x2, face, lathe, periodic_field, plane_quad, roof_with_hole,
-                             tube)
+                             compute_uv, cylinder_x, extrude_x2, face, fix_winding, lathe, periodic_field, plane_quad,
+                             roof_with_hole, tube)
 from generate_humvee import _area2
 
 # ---------------------------------------------------------------- размеры (м), сняты с ванильного M1025
@@ -50,6 +50,8 @@ SH_X_IN, SH_X_OUT = 0.74, 1.08
 SH_Z0, SH_Z1, SH_Z_END = -1.05, -2.42, -2.47
 TAIL_Y = 1.414                         # верх наплывов у торца
 SH_SLOPE = (YT - TAIL_Y) / (ROOF_Z0 - SH_Z1)
+SH_R_OUT, SH_R_IN, ROLL_R = 0.11, 0.04, 0.09   # скругления наплывов (снаружи, у крышки) и катаной кромки кормы
+TG_Y0, TG_Y1, TG_D = 0.72, 1.18, 0.035  # задний борт: низ, верх, глубина ниши в задней стенке
 
 # люк стрелка
 HATCH_Z = -0.30
@@ -110,6 +112,115 @@ def _new():
     return {m: Geo() for m in MATERIALS}
 
 
+# ---------------------------------------------------------------- скруглённые формы
+def fillet2d(pts, radii, seg=6, closed=False):
+    """Скругляет углы ломаной в плоскости дугами радиуса radii[i] (0 — острый угол). Радиус уменьшается, если
+    дуга не помещается на соседних отрезках; число точек от радиуса не зависит (сечения для loft совпадают)."""
+    P = [np.asarray(p, float) for p in pts]
+    n = len(P)
+    out = []
+    for i in range(n):
+        if radii[i] <= 0 or (not closed and i in (0, n - 1)):
+            out.append(P[i])
+            continue
+        a, b, c = P[i - 1], P[i], P[(i + 1) % n]
+        u1, u2 = a - b, c - b
+        l1, l2 = np.linalg.norm(u1), np.linalg.norm(u2)
+        u1, u2 = u1 / l1, u2 / l2
+        th = math.acos(float(np.clip(u1 @ u2, -1, 1)))
+        if th > math.pi - 1e-3:                                  # отрезки на одной прямой
+            out += [b] * (seg + 1)
+            continue
+        tl = min(radii[i] / math.tan(th / 2), 0.45 * l1, 0.45 * l2)
+        r = tl * math.tan(th / 2)
+        cen = b + (u1 + u2) / np.linalg.norm(u1 + u2) * (r / math.sin(th / 2))
+        p1, p2 = b + u1 * tl, b + u2 * tl
+        a1, a2 = math.atan2(p1[1] - cen[1], p1[0] - cen[0]), math.atan2(p2[1] - cen[1], p2[0] - cen[0])
+        d = (a2 - a1 + math.pi) % (2 * math.pi) - math.pi        # короткая дуга
+        out += [cen + r * np.array([math.cos(a1 + d * k / seg), math.sin(a1 + d * k / seg)]) for k in range(seg + 1)]
+    return [tuple(p) for p in out]
+
+
+def loft(rows, inside, closed=False, smooth_deg=40.0):
+    """Поверхность по рядам точек одинаковой длины: четырёхугольники между соседними рядами. Нормали — наружу от
+    inside (точка или функция от точки), гладкие между гранями с углом меньше smooth_deg: скругления выглядят
+    скруглёнными, а не гранёными."""
+    R = np.asarray(rows, float)
+    nr, m = R.shape[:2]
+    mj = m if closed else m - 1
+    ins = inside if callable(inside) else (lambda p, q=np.asarray(inside, float): q)
+    Nq = np.zeros((nr - 1, mj, 3))
+    ok = np.zeros((nr - 1, mj), bool)
+    for i in range(nr - 1):
+        for j in range(mj):
+            j1 = (j + 1) % m
+            a, b, c, d = R[i, j], R[i, j1], R[i + 1, j1], R[i + 1, j]
+            n = np.cross(c - a, d - b)
+            ln = np.linalg.norm(n)
+            if ln < 1e-10:
+                continue
+            n /= ln
+            ctr = (a + b + c + d) / 4
+            Nq[i, j] = n if n @ (ctr - np.asarray(ins(ctr), float)) >= 0 else -n
+            ok[i, j] = True
+    cos_t = math.cos(math.radians(smooth_deg))
+    g = Geo()
+    for i in range(nr - 1):
+        for j in range(mj):
+            if not ok[i, j]:
+                continue
+            j1 = (j + 1) % m
+            P, N = [], []
+            for vi, vj in ((i, j), (i, j1), (i + 1, j1), (i + 1, j)):
+                acc = np.zeros(3)
+                for qi in (vi - 1, vi):
+                    for qj in (((vj - 1) % m, vj) if closed else (vj - 1, vj)):
+                        if 0 <= qi < nr - 1 and 0 <= qj < mj and ok[qi, qj] and Nq[qi, qj] @ Nq[i, j] > cos_t:
+                            acc += Nq[qi, qj]
+                P.append(R[vi, vj])
+                N.append(acc / np.linalg.norm(acc))
+            g += Geo(P, N, [(0, 1, 2), (0, 2, 3)])
+    return fix_winding(g)
+
+
+def sweep_tube(path, r, ring=8, closed_path=False):
+    """Труба радиуса r вдоль ломаной path (пружины, рычаги-дуги, серьги) с гладкими нормалями."""
+    path = [np.asarray(p, float) for p in path]
+    rows, ref = [], np.array([0.0, 1.0, 0.0])
+    for k, p in enumerate(path):
+        t = path[min(k + 1, len(path) - 1)] - path[max(k - 1, 0)]
+        t /= np.linalg.norm(t)
+        u = np.cross(t, ref)
+        if np.linalg.norm(u) < 1e-6:
+            u = np.cross(t, np.array([1.0, 0, 0]))
+        u /= np.linalg.norm(u)
+        v = np.cross(t, u)
+        rows.append([p + r * (math.cos(a) * u + math.sin(a) * v) for a in np.linspace(0, 2 * math.pi, ring, endpoint=False)])
+    P = np.array(path)
+    return loft(rows, lambda c: P[np.argmin(np.linalg.norm(P - c, axis=1))], closed=True, smooth_deg=70)
+
+
+def d_ring(c, R=0.045, a=0.011, axis_z=False):
+    """Серьга: полукольцо вниз в плоскости YZ (или XY при axis_z) и палец между ушками."""
+    c = np.asarray(c, float)
+    pts = []
+    for t in np.linspace(0, math.pi, 10):
+        q = np.array([0.0, -R * math.sin(t), R * math.cos(t)])
+        pts.append(c + (q[[2, 1, 0]] if axis_z else q))
+    g = sweep_tube(pts, a, ring=8)
+    e0, e1 = pts[0], pts[-1]
+    d = (e1 - e0) / np.linalg.norm(e1 - e0)
+    g += tube(e0 - d * 0.015, e1 + d * 0.015, a * 0.8, 8)
+    return g
+
+
+def coil_spring(x, z, y0, y1, R=0.07, wire=0.011, turns=6):
+    k = int(turns * 12)
+    path = [(x + R * math.cos(2 * math.pi * turns * i / k), y0 + (y1 - y0) * i / k, z + R * math.sin(2 * math.pi * turns * i / k))
+            for i in range(k + 1)]
+    return sweep_tube(path, wire, ring=6)
+
+
 # ---------------------------------------------------------------- кузов
 def build_body():
     p = _new()
@@ -123,15 +234,20 @@ def build_body():
     p["paint"] += both(g)
     p["dark"] += both(d)
 
-    # центральная «ванна»: пол салона и грузового отсека, задний борт
-    tub = [(HOOD_Z0, BOT_Y), (HOOD_Z0, 1.10), (HOOD_Z0 - 0.04, FLOOR_Y), (Z_REAR + 0.06, FLOOR_Y + 0.25),
-           (Z_REAR + 0.02, BELT_Y), (Z_REAR, BELT_Y), (Z_REAR, 0.62), (Z_REAR + 0.05, BOT_Y)]
+    # центральная «ванна»: пол салона и грузового отсека, задний борт — утоплен в стенку, как у M1025
+    tub = [(HOOD_Z0, BOT_Y), (HOOD_Z0, 1.10), (HOOD_Z0 - 0.04, FLOOR_Y), (Z_REAR + 0.07, FLOOR_Y + 0.25),
+           (Z_REAR + 0.07, BELT_Y), (Z_REAR, BELT_Y), (Z_REAR, TG_Y1 + 0.02), (Z_REAR + TG_D, TG_Y1),
+           (Z_REAR + TG_D, TG_Y0), (Z_REAR, TG_Y0 - 0.02), (Z_REAR, 0.62), (Z_REAR + 0.05, BOT_Y)]
     g, d = extrude_x2(tub, -INNER_X, INNER_X)
     p["paint"] += g
     p["dark"] += d
-    # задняя стенка между наплывами до крышки багажника
-    p["paint"] += face([(SH_X_IN, BELT_Y, Z_REAR), (-SH_X_IN, BELT_Y, Z_REAR), (-SH_X_IN, TAIL_Y - 0.03, Z_REAR),
-                        (SH_X_IN, TAIL_Y - 0.03, Z_REAR)], (0, 0, -1))
+    # задний борт: петли снизу, замки по углам сверху, поперечное ребро
+    for s in (1, -1):
+        p["dark"] += tube((s * 0.30, TG_Y0 + 0.03, Z_REAR + TG_D - 0.012), (s * 0.48, TG_Y0 + 0.03, Z_REAR + TG_D - 0.012),
+                          0.014, 8)
+        p["dark"] += cbox(s * 0.56, TG_Y1 - 0.05, Z_REAR + TG_D - 0.01, 0.07, 0.05, 0.02)
+        p["dark"] += cbox(s * 0.56, TG_Y1 - 0.05, Z_REAR + TG_D - 0.025, 0.025, 0.07, 0.02)
+    p["paint"] += cbox(0, (TG_Y0 + TG_Y1) / 2, Z_REAR + TG_D - 0.008, 2 * INNER_X - 0.06, 0.04, 0.016)
 
     # борт за передней аркой до передней двери (выше — крыло откидывающегося капота)
     for s in (1, -1):
@@ -219,15 +335,41 @@ def build_body():
         # порог-подножка под дверями
         p["dark"] += box(min(s * (HALF_W - 0.02), s * (HALF_W + 0.04)), max(s * (HALF_W - 0.02), s * (HALF_W + 0.04)),
                          0.45, 0.50, DOOR_Z[False][0], DOOR_Z[True][1])
+        # боковой габарит у кормы, основание антенны с пружиной на наплыве
+        p["dark"] += cbox(s * (HALF_W + 0.003), 1.06, Z_REAR + 0.16, 0.006, 0.055, 0.09)
+        p["red"] += cbox(s * (HALF_W + 0.007), 1.06, Z_REAR + 0.16, 0.004, 0.04, 0.07)
+        za = Z_REAR + 0.34
+        xa, ya = s * (SH_X_IN + SH_X_OUT) / 2, sh_top(za) - 0.003
+        base = lathe([(0.0, 0.0), (0.055, 0.0), (0.055, 0.03), (0.035, 0.04), (0.035, 0.11), (0.02, 0.12), (0.0, 0.12)],
+                     seg=16, smooth_deg=30)
+        p["dark"] += base.transformed(chain(T(xa, ya - 0.01, za), AX_TO_Y))
+        p["chassis"] += coil_spring(xa, za, ya + 0.11, ya + 0.21, R=0.018, wire=0.005, turns=7)
+    # горловина бака справа (по ванили) под трафаретом топлива
+    cap = lathe([(0.0, 0.0), (0.062, 0.0), (0.062, 0.012), (0.048, 0.02), (0.0, 0.022)], seg=20, smooth_deg=30)
+    p["dark"] += cap.transformed(chain(T(-HALF_W, 1.03, -1.30), Ry(math.pi)))
 
-    # задняя панель: фонари, бампер, фаркоп, петли заднего борта
+    # корма: фонари в корпусах по углам (круглые красные в ободках, отражатель), бампер-швеллер с упорами,
+    # серьги и фаркоп
     for s in (1, -1):
-        p["red"] += cbox(s * 0.86, 1.08, Z_REAR - 0.012, 0.16, 0.10, 0.02)
-        p["amber"] += cbox(s * 0.86, 0.97, Z_REAR - 0.012, 0.16, 0.06, 0.02)
-        p["metal"] += cbox(s * 0.62, 0.50, Z_REAR - 0.14, 0.05, 0.10, 0.06)
+        xh = s * 0.86
+        p["dark"] += cbox(xh, 1.03, Z_REAR - 0.03, 0.17, 0.40, 0.06)
+        p["dark"] += cbox(xh, 1.03, Z_REAR - 0.062, 0.19, 0.42, 0.006)                    # рамка корпуса
+        for yl in (1.13, 1.00):
+            M = chain(T(xh, yl, Z_REAR - 0.065), Ry(math.pi), AX_TO_Z)                    # ось лампы — назад
+            p["metal"] += lathe([(0.056, -0.01), (0.056, 0.012), (0.046, 0.016)], seg=24).transformed(M)
+            p["red"] += lathe([(0.046, 0.010), (0.030, 0.018), (0.0, 0.020)], seg=24).transformed(M)
+        p["red"] += cbox(xh, 0.88, Z_REAR - 0.068, 0.10, 0.05, 0.008)                    # отражатель
+        p["dark"] += box(min(s * 0.95, s * 1.06), max(s * 0.95, s * 1.06), 0.46, 0.66, Z_REAR - 0.155, Z_REAR - 0.12)
+        p["dark"] += cbox(s * 0.60, 0.455, Z_REAR - 0.13, 0.03, 0.05, 0.07)                  # ушко серьги
+        p["chassis"] += d_ring((s * 0.60, 0.44, Z_REAR - 0.13), R=0.045)
     p["paint"] += box(-HALF_W + 0.02, HALF_W - 0.02, 0.48, 0.64, Z_REAR - 0.12, Z_REAR)
-    p["dark"] += box(-0.16, 0.16, 0.44, 0.56, Z_REAR - 0.18, Z_REAR - 0.12)
-    p["dark"] += box(-0.55, 0.55, 1.18, 1.24, Z_REAR - 0.006, Z_REAR + 0.001)
+    for y0, y1 in ((0.475, 0.495), (0.625, 0.645)):                                       # полки швеллера
+        p["paint"] += box(-0.92, 0.92, y0, y1, Z_REAR - 0.145, Z_REAR - 0.12)
+    p["dark"] += box(-0.10, 0.10, 0.42, 0.58, Z_REAR - 0.20, Z_REAR - 0.12)                # плита фаркопа
+    hook = [(0.0, 0.50 + 0.04 * math.sin(t), Z_REAR - 0.29 - 0.04 * math.cos(t))
+            for t in np.linspace(math.pi, 2 * math.pi + 0.6, 12)]                       # крюк фаркопа, зев вверх
+    p["chassis"] += sweep_tube(hook, 0.016, ring=8)
+    p["chassis"] += tube((0, 0.50, Z_REAR - 0.20), (0, 0.50, Z_REAR - 0.25), 0.02, 8)
 
     # передний бампер и кенгурятник
     p["paint"] += box(-1.10, 1.10, 0.48, 0.66, FRONT_Z, FRONT_Z + 0.14)
@@ -238,7 +380,8 @@ def build_body():
     p["dark"] += tube((-1.00, 0.86, gz - 0.02), (1.00, 0.86, gz - 0.02), 0.024)
     for s in (1, -1):
         p["dark"] += cbox(s * 0.46, 0.64, FRONT_Z + 0.16, 0.10, 0.05, 0.10)
-        p["metal"] += cbox(s * 0.66, 0.54, FRONT_Z + 0.16, 0.05, 0.11, 0.06)
+        p["dark"] += cbox(s * 0.66, 0.56, FRONT_Z + 0.16, 0.08, 0.06, 0.05)                # ушки буксирной серьги
+        p["chassis"] += d_ring((s * 0.66, 0.55, FRONT_Z + 0.17), R=0.045, axis_z=True)
 
     # рама, мосты, редукторы, карданы, выхлоп
     for s in (1, -1):
@@ -251,25 +394,42 @@ def build_body():
             p["dark"] += tube((s * 0.56, WHEEL_Y + 0.10, zc + 0.10 * s), (s * 0.30, 0.86, zc), 0.035)
     p["dark"] += tube((0, 0.42, AXLE_R + 0.2), (0, 0.42, AXLE_F - 0.2), 0.04)
     p["metal"] += tube(EXHAUST_START, EXHAUST_END, 0.04)
+    # подвеска в колёсных нишах: пружины, амортизаторы, нижние рычаги (видны за колёсами, как у ванили)
+    for zc in (AXLE_F, AXLE_R):
+        for s in (1, -1):
+            p["chassis"] += coil_spring(s * 0.70, zc - 0.16, 0.50, 0.98)
+            p["chassis"] += tube((s * 0.70, 0.46, zc + 0.16), (s * 0.67, 0.98, zc + 0.20), 0.022, 8)
+            p["metal"] += tube((s * 0.69, 0.62, zc + 0.165), (s * 0.67, 0.98, zc + 0.20), 0.012, 6)
+            for dz in (-0.28, 0.28):
+                p["chassis"] += tube((s * 0.72, 0.44, zc), (s * 0.42, 0.42, zc + dz), 0.022, 8)
+            p["chassis"] += cbox(s * 0.70, 0.47, zc - 0.16, 0.18, 0.03, 0.18)                # чашка пружины
     return p
 
 
+def tail_line(y_front, z_front, z_end, r=ROLL_R, seg=8):
+    """Профиль (z, y) верха кормы: скат вдоль наплывов и катаная кромка дугой вниз; последняя точка — конец дуги,
+    где она становится вертикальной (на плоскости z_end)."""
+    yc = y_front - SH_SLOPE * (z_front - z_end)
+    return fillet2d([(z_front, y_front), (z_end, yc), (z_end, yc - 1.0)], [0, r, 0], seg=seg)[:-1]
+
+
 def _shoulder(s):
-    """Задний наплыв с борта s: вытянут по z, верх скатывается назад, торец со скосом верхней кромки."""
+    """Задний наплыв с борта s: сечение со скруглёнными верхними кромками, верх скатывается назад и у кормы
+    загибается дугой вниз (как катаные наплывы ванильного M1025); нормали гладкие."""
     def section(top):
-        return [(s * SH_X_IN, BELT_Y), (s * SH_X_OUT, BELT_Y), (s * (SH_X_OUT - 0.005), top - 0.14),
-                (s * (SH_X_OUT - 0.035), top - 0.045), (s * (SH_X_OUT - 0.09), top), (s * (SH_X_IN + 0.03), top),
-                (s * SH_X_IN, top - 0.03)]
-    zs = [SH_Z0, ROOF_Z0, SH_Z1, SH_Z_END]
-    tops = [sh_top(SH_Z0), sh_top(ROOF_Z0), sh_top(SH_Z1), sh_top(SH_Z1) - 0.07]
-    secs = [[(x, y, z) for x, y in section(t)] for z, t in zip(zs, tops)]
-    n = len(secs[0])
-    g = Geo()
-    for a, b in zip(secs[:-1], secs[1:]):
-        cx, cy = np.mean([q[0] for q in a]), np.mean([q[1] for q in a])
-        for i in range(n):
-            j = (i + 1) % n
-            g += face([a[i], a[j], b[j], b[i]], ((a[i][0] + a[j][0]) / 2 - cx, (a[i][1] + a[j][1]) / 2 - cy, 0))
+        h = top - BELT_Y
+        pts = [(SH_X_IN, BELT_Y), (SH_X_OUT, BELT_Y), (SH_X_OUT, top), (SH_X_IN, top)]
+        r_out, r_in = min(SH_R_OUT, 0.8 * h), min(SH_R_IN, 0.3 * h)
+        return [(s * x, y) for x, y in fillet2d(pts, [0, 0, r_out, r_in], seg=6, closed=True)]
+    y0 = YT - 0.003                                         # чуть ниже крыши: там, где наплыв заходит под неё
+    prof = [(SH_Z0, y0)] + tail_line(y0, ROOF_Z0, Z_REAR)
+    secs = [[(x, y, z) for x, y in section(t)] for z, t in prof]
+    zs, tops = np.array([z for z, _ in prof]), np.array([t for _, t in prof])
+
+    def inside(c):                                          # середина сечения на этом z
+        top = np.interp(c[2], zs[::-1], tops[::-1])
+        return (s * (SH_X_IN + SH_X_OUT) / 2, BELT_Y + 0.45 * (top - BELT_Y), c[2])
+    g = loft(secs, inside, closed=True)
     g += face(secs[0], (0, 0, 1))
     g += face(secs[-1], (0, 0, -1))
     return g
@@ -299,22 +459,43 @@ def build_lids():
         hood["amber"] += cbox(s * 0.88, 0.86, FRONT_Z + 0.012, 0.10, 0.06, 0.024)          # поворотники
         hood["dark"] += cbox(s * 0.88, 0.95, FRONT_Z + 0.012, 0.08, 0.05, 0.024)           # маскировочные фары
         hood["dark"] += cbox(s * (FENDER_W + 0.008), 0.99, 2.02, 0.016, 0.14, 0.035)       # резиновые замки
+        hood["amber"] += cbox(s * (FENDER_W + 0.004), 0.95, 2.16, 0.008, 0.04, 0.07)       # боковые габариты
         hood["dark"] += tube((s * INNER_X, hood_y(HOOD_Z0) - 0.02, HOOD_Z0 + 0.02),
                              (s * INNER_X, hood_y(2.16) - 0.02, 2.16), 0.008, 6)            # стыки капота и крыльев
 
     trunk = _new()
-    t = 0.03
-    z0, z1, y0, y1 = ROOF_Z0 - 0.01, SH_Z1 + 0.02, YT - 0.015, TAIL_Y - 0.02
-    top = [(TRUNK_X, y0, z0), (-TRUNK_X, y0, z0), (-TRUNK_X, y1, z1), (TRUNK_X, y1, z1)]
-    bot = [(x, y - t, z) for x, y, z in top]
-    trunk["paint"] += face(top, (0, 1, 0.3))
-    trunk["interior"] += face(bot, (0, -1, -0.3))
-    for i in range(4):
-        j = (i + 1) % 4
-        mid = np.mean([top[i], top[j]], axis=0)
-        trunk["paint"] += face([top[i], top[j], bot[j], bot[i]], (mid[0], 0, mid[2] - (z0 + z1) / 2))
-    zh = z1 + 0.18
-    trunk["dark"] += cbox(0, sh_top(zh) + 0.01, zh, 0.30, 0.025, 0.05)                       # ручка
+    t, xw, crown = 0.03, TRUNK_X - 0.006, 0.022
+    # линия крышки по центру: скат и катаная кромка до задней стенки; поперёк — выпуклость crown
+    line = [np.array(q) for q in tail_line(YT - 0.015, ROOF_Z0 - 0.01, Z_REAR + 0.012)]
+    line.append(np.array([Z_REAR + 0.012, BELT_Y + 0.012]))
+    nrm = []
+    for k in range(len(line)):
+        d = line[min(k + 1, len(line) - 1)] - line[max(k - 1, 0)]
+        nrm.append(np.array([d[1], -d[0]]) / np.linalg.norm(d))              # (z, y) наружу: вверх и назад
+    xs = np.linspace(-xw, xw, 15)
+
+    def surf(off):
+        return [[(x, q[1] + n[1] * (crown * (1 - (x / xw) ** 2) + off), q[0] + n[0] * (crown * (1 - (x / xw) ** 2) + off))
+                 for q, n in zip(line, nrm)] for x in xs]
+    top, bot = surf(0.0), surf(-t)
+    trunk["paint"] += loft(top, (0, 0.9, -1.7))
+    trunk["interior"] += loft(bot, (0, 3.0, -3.0))
+    for k in (0, -1):                                                         # боковые кромки
+        trunk["paint"] += loft([top[k], bot[k]], lambda c: (0, c[1], c[2]))
+    for k in (0, -1):                                                         # передняя кромка и низ загиба
+        q = [top[0][k], top[-1][k], bot[-1][k], bot[0][k]]
+        trunk["paint"] += face(q, (0, 0, 1) if k == 0 else (0, -1, 0))
+    # замок с ручкой на скате у кормы, петли у крыши
+    zh = Z_REAR + 0.42
+    yh = YT - 0.015 - SH_SLOPE * (ROOF_Z0 - 0.01 - zh) + crown
+    tilt = math.atan(SH_SLOPE)
+    M = chain(T(0, yh, zh), Rx(-tilt))                                        # локальный верх — по нормали ската
+    trunk["dark"] += cbox(0, 0.004, 0, 0.26, 0.008, 0.10).transformed(M)
+    trunk["dark"] += cbox(0, 0.016, -0.02, 0.16, 0.016, 0.022).transformed(M)
+    for s in (1, -1):
+        trunk["dark"] += cbox(s * 0.07, 0.010, -0.02, 0.02, 0.02, 0.03).transformed(M)
+        trunk["dark"] += cylinder_x(0.016, min(s * 0.36, s * 0.56), max(s * 0.36, s * 0.56), 10).transformed(
+            T(0, YT - 0.006, ROOF_Z0 - 0.025))
     return {"doors_hood": hood, "doors_trunk": trunk}
 
 

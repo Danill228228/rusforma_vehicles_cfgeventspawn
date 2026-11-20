@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "next_task": 54,
+  "next_task": 55,
   "next_project": 5,
   "projects": [
     {
@@ -2551,6 +2551,34 @@
       "created": "2026-11-20T12:41",
       "updated": "2026-11-20T12:46",
       "completed": "2026-11-20T12:46"
+    },
+    {
+      "id": "T-0054",
+      "title": "RF_Humvee: ревью текстур и материала — что улучшить для вида в игре",
+      "description": "Запрос заказчика 20.11 16:24 МСК: посмотреть текстуру машины и написать, что улучшить или доделать, чтобы в игре она выглядела лучше. Только анализ и рекомендации с приоритетами, мод не править.",
+      "project": "PRJ-0004",
+      "type": "art",
+      "assignee": "modeler-3d",
+      "priority": "P1",
+      "status": "NEW",
+      "due": null,
+      "deps": [],
+      "budget": 60000,
+      "result": "",
+      "files": [
+        "AI_Company_DayZMods/Projects/Active/PRJ-0004_rf_humvee_mod_hammera_m1025/TEXTURE_REVIEW.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T13:27",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T13:27",
+      "updated": "2026-11-20T13:27"
     }
   ]
 }

@@ -1,8 +1,8 @@
 # Доска задач
 
-_Автогенерация `./dzm board` · 2026-11-20T12:52 · не редактировать вручную_
+_Автогенерация `./dzm board` · 2026-11-20T13:27 · не редактировать вручную_
 
-Сводка: NEW 29 · REVIEW 1 · COMPLETED 23
+Сводка: NEW 30 · REVIEW 1 · COMPLETED 23
 
 ## PRJ-0001 — Запуск компании [ACTIVE] — 15/16
 
@@ -64,12 +64,13 @@ _Автогенерация `./dzm board` · 2026-11-20T12:52 · не редак
 |---|---|---|---|---|---|---|
 | T-0040 | COMPLETED | P1 | config-build-engineer | — | — | Аудит и исправление CE-конфига заказчика rusforma_vehicles_cfgeventspawn |
 
-## PRJ-0004 — RF_Humvee — мод Хаммера (M1025) [ACTIVE] — 6/8
+## PRJ-0004 — RF_Humvee — мод Хаммера (M1025) [ACTIVE] — 6/9
 
 | ID | Статус | P | Исполнитель | Срок | Зависит от | Задача |
 |---|---|---|---|---|---|---|
 | T-0052 | REVIEW | P0 | ceo | — | T-0049, T-0050, T-0051, T-0053 | RF_Humvee: пересборка PBO после исправлений |
 | T-0047 | NEW | P1 | client | — | — | RF_Humvee: ручной тест на ПК по сценарию QA и присылка логов |
+| T-0054 | NEW | P1 | modeler-3d | — | — | RF_Humvee: ревью текстур и материала — что улучшить для вида в игре |
 | T-0045 | COMPLETED | P0 | qa-lead | — | — | QA-аудит мода RF_Humvee по 10 стадиям |
 | T-0049 | COMPLETED | P0 | config-build-engineer | — | — | RF_Humvee: BUG-0003 (PROVENANCE.md) и BUG-0007 (названия), убрать категорию vehiclesparts |
 | T-0050 | COMPLETED | P0 | lead-engineer | — | — | RF_Humvee: BUG-0005 — версия формата сохранения люка |

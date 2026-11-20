@@ -5,6 +5,7 @@ updated: 2026-11-20
 owner: hr-director
 tags: [claude-code, agents, subagents, memory, skills, hr]
 sources:
+  - https://code.claude.com/docs/en/setup и https://code.claude.com/docs/en/desktop-quickstart (прочитано 2026-11-20): установка на Windows
   - https://code.claude.com/docs/en/sub-agents (прочитано 2026-11-20, Claude Code 2.1.329)
   - https://code.claude.com/docs/en/skills
   - experiment:2026-11-20 claude plugin validate .claude/agents → Validation passed; запуск агента через Agent вернул usage (токены, вызовы инструментов, длительность)
@@ -29,6 +30,13 @@ sources:
 - В сессии, где папки `.claude/` не было на старте, агенты, созданные по ходу работы, в инструменте Agent не появились («Agent type not found»), хотя документация обещает отслеживание без перезапуска. Видимо, наблюдатель не следит за папкой, которой не было при запуске (гипотеза).
 - Новый процесс Claude Code видит всех агентов сразу (проверено `claude -p`). В следующих сессиях агенты работают нативно. Подтверждено: после перезапуска рабочего процесса этой же облачной сессии все 10 агентов появились в инструменте Agent.
 - Рабочий обходной путь внутри такой сессии: `claude -p "Делегируй агенту <имя>: …" --model haiku --permission-mode auto --output-format json`. Это отдельный процесс; агент работает со своим промптом, моделью и памятью, а JSON даёт стоимость и токены по моделям. Пример: аудит qa-lead — 97 с, $0.235 (haiku-оркестратор $0.007, sonnet-агент $0.228).
+
+## Компания на ПК заказчика (Windows, проверено 2026-11-20)
+- Установка Claude Code: PowerShell без прав администратора — `irm https://claude.ai/install.ps1 | iex` (обновляется сам) или `winget install Anthropic.ClaudeCode` (обновлять: `winget upgrade Anthropic.ClaudeCode`). Требование: Windows 10 1809+. Без терминала — приложение Claude, вкладка Code, среда **Local** и папка проекта.
+- Git for Windows желателен: с ним у Claude есть Bash (Git Bash), без него — только PowerShell.
+- Агенты, навыки и память — проектные (`.claude/agents`, `.claude/skills`, `.claude/agent-memory`): появляются, когда `claude` запущен в клоне репозитория на ветке компании. Проверка: `/agents`. Обновление с облачной сессии: `git pull`.
+- `./dzm` на Windows: в Git Bash сам ищет `python3`, `python` или `py -3`; в PowerShell/CMD — `.\dzm.cmd`. Нужен Python 3.8+ (`winget install Python.Python.3.13`). Концы строк для `dzm` закреплены в `.gitattributes` (LF).
+- Наблюдение: в локальной сессии заказчика по умолчанию включён auto mode; для правок файлов игры и сервера лучше обычный режим с подтверждением (Shift+Tab).
 
 ## Как проверено
 Документация прочитана из контейнера, официальный валидатор прошёл. Тестовый запуск встроенного агента web-fetch вернул usage: 8 718 токенов. Новый процесс `claude -p` перечислил всех 10 агентов и выполнил делегирование нативному qa-lead.

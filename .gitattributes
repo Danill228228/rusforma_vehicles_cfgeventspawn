@@ -1,0 +1,5 @@
+# bash-скрипты должны оставаться с LF, иначе в Git Bash на Windows «bash\r: No such file»
+dzm text eol=lf
+*.sh text eol=lf
+# лаунчер для CMD/PowerShell — с CRLF
+*.cmd text eol=crlf

@@ -62,6 +62,7 @@
 - Есть: Python 3.13, git, ffmpeg/ffprobe, ImageMagick, Pillow, numpy, Node 22, WebSearch. Blender ставится по требованию: `bash AI_Company_DayZMods/Company/Tools/setup_blender.sh` (bpy 5.3, около 1 ГБ).
 - Сеть ограничена. Работают: bohemia.net и bistudio.com (правила BI), data.bistudio.com, Steam Community, DayZ Modding Wiki (stardz-team.github.io), документация аддона P3D, extensions.blender.org, `raw.githubusercontent.com`, `git clone --depth 1` публичных репозиториев GitHub (в `/home/user/<owner>/<repo>`, не в наш репозиторий), PyPI и npm. Вики BI, трекер, форумы и dayz.com закрыты защитой Cloudflare — не обходим, берём выдержки WebSearch.
 - В Linux-контейнере нет и не будет: DayZ Tools (Workbench, Object Builder, Addon Builder, Binarize, TexView, DSUtils) и запуска игры. Такие шаги выполняются на ПК заказчика: оформляй их как точную инструкцию.
+- Сессия на ПК заказчика (Windows, `claude` в клоне репозитория): DayZ и DayZServer стоят локально, шаги «на ПК» можно делать самому с подтверждением заказчика. `./dzm` — в Git Bash, в PowerShell — `.\dzm.cmd` (нужен Python 3).
 
 ## Протокол CEO (только для основной сессии)
 1. Старт сессии: `./dzm status`. Новый заказ — скилл `/new-project`.

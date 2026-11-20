@@ -1,3 +1,16 @@
 #!/usr/bin/env bash
 # Лаунчер операционной системы AI Company DayZMods: ./dzm -h
-exec python3 "$(cd "$(dirname "$0")" && pwd)/AI_Company_DayZMods/Company/Tools/company.py" "$@"
+# Linux, macOS и Git Bash на Windows. В PowerShell и CMD — dzm.cmd.
+# На Windows команды python3 часто нет (или это заглушка Microsoft Store), поэтому ищем рабочий Python 3.
+export PYTHONUTF8=1
+CLI="$(cd "$(dirname "$0")" && pwd)/AI_Company_DayZMods/Company/Tools/company.py"
+for py in python3 python; do
+  if command -v "$py" >/dev/null 2>&1 && "$py" -c 'import sys; sys.exit(sys.version_info < (3, 8))' >/dev/null 2>&1; then
+    exec "$py" "$CLI" "$@"
+  fi
+done
+if command -v py >/dev/null 2>&1; then
+  exec py -3 "$CLI" "$@"
+fi
+echo "dzm: не найден Python 3.8+ (python3, python или py). Windows: winget install Python.Python.3.13" >&2
+exit 127

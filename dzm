@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Лаунчер операционной системы AI Company DayZMods: ./dzm -h
+exec python3 "$(cd "$(dirname "$0")" && pwd)/AI_Company_DayZMods/Company/Tools/company.py" "$@"

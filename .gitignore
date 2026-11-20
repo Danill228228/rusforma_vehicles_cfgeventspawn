@@ -1,0 +1,25 @@
+# --- AI Company DayZMods ---
+__pycache__/
+*.pyc
+*.tmp
+.DS_Store
+
+# Blender: автосохранения и бэкапы
+*.blend1
+*.blend2
+
+# Сборки: в git — только инструкции и логи, не бинарники
+AI_Company_DayZMods/Development/Builds/**/*.pbo
+AI_Company_DayZMods/Development/Builds/**/*.bisign
+AI_Company_DayZMods/Development/Builds/**/*.bikey
+AI_Company_DayZMods/Development/Builds/**/*.biprivatekey
+*.biprivatekey
+
+# Тяжёлое видео: хранится вне git (или через Git LFS по решению заказчика)
+AI_Company_DayZMods/Media/Footage/**/*.mp4
+AI_Company_DayZMods/Media/Footage/**/*.mkv
+AI_Company_DayZMods/Media/Footage/**/*.mov
+AI_Company_DayZMods/Media/Footage/**/*.avi
+
+# Локальная память агентов (scope local) не коммитится; project-память коммитится
+.claude/agent-memory-local/

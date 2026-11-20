@@ -1,0 +1,1449 @@
+{
+  "version": 1,
+  "next_task": 41,
+  "next_project": 4,
+  "projects": [
+    {
+      "id": "PRJ-0001",
+      "name": "Запуск компании",
+      "description": "Первое задание: создать структуру компании, агентов, систему задач, базу знаний, хранение, доступ к источникам, план изучения движка и дорожные карты отделов",
+      "owner": "ceo",
+      "status": "ACTIVE",
+      "created": "2026-11-20",
+      "dir": "AI_Company_DayZMods/Projects/Active/PRJ-0001_zapusk_kompanii"
+    },
+    {
+      "id": "PRJ-0002",
+      "name": "Глубокое изучение DayZ Engine",
+      "description": "Систематическое изучение движка, моддинга и инструментов по плану Knowledge_Base/Research/DAYZ_ENGINE_STUDY_PLAN.md",
+      "owner": "research-lead",
+      "status": "ACTIVE",
+      "created": "2026-11-20",
+      "dir": "AI_Company_DayZMods/Projects/Active/PRJ-0002_glubokoe_izuchenie_dayz_engine"
+    },
+    {
+      "id": "PRJ-0003",
+      "name": "Сопровождение CE-конфигов Rusforma",
+      "description": "Актив заказчика: rusforma_vehicles_cfgeventspawn (спавн техники CrSk в Central Economy). Изменения — только с согласия заказчика",
+      "owner": "config-build-engineer",
+      "status": "ACTIVE",
+      "created": "2026-11-20",
+      "dir": "AI_Company_DayZMods/Projects/Active/PRJ-0003_soprovozhdenie_ce_konfigov_rusforma"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-0001",
+      "title": "Создать структуру компании",
+      "description": "Дерево папок по разделу 6 задания",
+      "project": "PRJ-0001",
+      "type": "ops",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Дерево AI_Company_DayZMods по разделу 6 (+ Knowledge_Base/Tools); ./dzm init создаёт его идемпотентно; README компании",
+      "files": [
+        "AI_Company_DayZMods/Company/Tools/company.py",
+        "AI_Company_DayZMods/README.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0002",
+      "title": "Создать CEO",
+      "description": "Главный управляющий: протокол, устав, журнал решений",
+      "project": "PRJ-0001",
+      "type": "ops",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "CEO = основная сессия (решение D-001): протокол в CLAUDE.md, устав, журнал решений; скиллы /new-project, /ceo-report, /wrap-up",
+      "files": [
+        ".claude/skills/ceo-report/SKILL.md",
+        ".claude/skills/new-project/SKILL.md",
+        "AI_Company_DayZMods/Company/CEO/CHARTER.md",
+        "AI_Company_DayZMods/Company/CEO/DECISIONS.md",
+        "CLAUDE.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0003",
+      "title": "Создать HR",
+      "description": "Директор по персоналу и механизм найма агентов",
+      "project": "PRJ-0001",
+      "type": "hr",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Агент hr-director; найм и вывод из штата через ./dzm hr hire|retire (файл агента + ростер + память); шаблон агента; штатное расписание с триггерами; скилл /hire",
+      "files": [
+        ".claude/agents/hr-director.md",
+        ".claude/skills/hire/SKILL.md",
+        "AI_Company_DayZMods/Company/HR/STAFFING_PLAN.md",
+        "AI_Company_DayZMods/Company/HR/roster.json",
+        "AI_Company_DayZMods/Company/HR/templates/AGENT_TEMPLATE.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0004",
+      "title": "Создать QA",
+      "description": "Тестировщик, стандарт ошибок, гейты качества, автотесты",
+      "project": "PRJ-0001",
+      "type": "qa",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Агент qa-lead; 10 стадий и стандарт ошибки (7 полей) в QUALITY_GATES.md; реестр ./dzm bug (без полей 1–6 не принимается, закрытие только PASS-ретестом QA); 13 автотестов; скилл /qa-gate",
+      "files": [
+        ".claude/agents/qa-lead.md",
+        ".claude/skills/qa-gate/SKILL.md",
+        "AI_Company_DayZMods/Company/Rules/QUALITY_GATES.md",
+        "AI_Company_DayZMods/QA/Tests/test_company.py"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0005",
+      "title": "Создать 3D-отдел",
+      "description": "3D-моделлер и рабочий конвейер Blender",
+      "project": "PRJ-0001",
+      "type": "art",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Агент modeler-3d; Blender 5.3 headless (setup_blender.sh); smoke-тест: 3 LOD 588/108/12 треугольников, UV, экспорт FBX/OBJ/GLB/.blend — OK; README отдела с конвейером",
+      "files": [
+        ".claude/agents/modeler-3d.md",
+        "AI_Company_DayZMods/Company/Departments/3D_Art/README.md",
+        "AI_Company_DayZMods/Company/Tools/blender_smoke_test.py",
+        "AI_Company_DayZMods/Company/Tools/setup_blender.sh"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0006",
+      "title": "Создать Media Director",
+      "description": "Режиссёр медиаотдела",
+      "project": "PRJ-0001",
+      "type": "media",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Агент media-director (может вызывать сценариста и монтажёра); стиль DayZ и конвейер производства в README медиаотдела",
+      "files": [
+        ".claude/agents/media-director.md",
+        "AI_Company_DayZMods/Company/Departments/Media/README.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0007",
+      "title": "Создать сценариста",
+      "description": "Сценарист и шаблоны сценария и раскадровки",
+      "project": "PRJ-0001",
+      "type": "media",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Агент screenwriter; шаблоны сценария (все обязательные поля задания) и раскадровки",
+      "files": [
+        ".claude/agents/screenwriter.md",
+        "AI_Company_DayZMods/Media/Scripts/TEMPLATE_SCRIPT.md",
+        "AI_Company_DayZMods/Media/Storyboards/TEMPLATE_STORYBOARD.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0008",
+      "title": "Создать монтажёра",
+      "description": "Монтажёр и проверка видеоконвейера",
+      "project": "PRJ-0001",
+      "type": "media",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Агент video-editor (haiku); проверка ffmpeg 6.1: libx264, AAC, drawtext, loudnorm, ass; тестовый ролик 1080x1920 собран и проверен ffprobe",
+      "files": [
+        ".claude/agents/video-editor.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0009",
+      "title": "Создать планировщика",
+      "description": "Планировщик, политика токенов и моделей",
+      "project": "PRJ-0001",
+      "type": "planning",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Агент project-planner; политика моделей, бюджеты S/M/L и правила экономии в RESOURCES.md; учёт запусков ./dzm run log и отчёты ./dzm report",
+      "files": [
+        ".claude/agents/project-planner.md",
+        "AI_Company_DayZMods/Company/Rules/RESOURCES.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0010",
+      "title": "Настроить взаимодействие между агентами",
+      "description": "Механизмы передачи работы и связи",
+      "project": "PRJ-0001",
+      "type": "ops",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "WORKFLOW.md: Agent (CEO→агент), вложенный Agent у руководителей (до 3 уровней), SendMessage, комментарии задач --to и ./dzm inbox, передача через REVIEW; формат короткого отчёта в CLAUDE.md; claude plugin validate .claude/agents — OK; запуск агента возвращает usage для учёта",
+      "files": [
+        "AI_Company_DayZMods/Company/Rules/WORKFLOW.md",
+        "CLAUDE.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0011",
+      "title": "Создать общую базу знаний",
+      "description": "Структура, формат, статусы достоверности, первые записи",
+      "project": "PRJ-0001",
+      "type": "research",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Knowledge_Base: README, формат и статусы (RESEARCH_PROTOCOL.md), ./dzm kb search|new|index и проверка источников в validate; 7 записей (4 VERIFIED, 2 PARTIAL, 1 HYPOTHESIS) + план изучения",
+      "files": [
+        "AI_Company_DayZMods/Company/Rules/RESEARCH_PROTOCOL.md",
+        "AI_Company_DayZMods/Knowledge_Base/INDEX.md",
+        "AI_Company_DayZMods/Knowledge_Base/README.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0012",
+      "title": "Настроить систему хранения файлов",
+      "description": "Долговременное хранение между сессиями",
+      "project": "PRJ-0001",
+      "type": "ops",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Хранение: git — единственное долговременное хранилище (контейнер одноразовый), правила в RULES.md, .gitignore для бинарников, соглашения Development/README.md, /wrap-up с commit и push",
+      "files": [
+        ".claude/skills/wrap-up/SKILL.md",
+        ".gitignore",
+        "AI_Company_DayZMods/Company/Rules/RULES.md",
+        "AI_Company_DayZMods/Development/README.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0013",
+      "title": "Настроить браузер и доступ к исследовательским источникам",
+      "description": "Проверить доступ к источникам из раздела 4 задания",
+      "project": "PRJ-0001",
+      "type": "research",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "BLOCKED",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Работает: WebSearch, git clone публичных репозиториев (клонированы официальные DayZ-Samples и DayZ-Central-Economy), raw.githubusercontent.com, PyPI. Заблокированы прокси: вики BI, трекер, форумы, dayz.com, Steam, Reddit, сторонние вики (curl 000/403, WebFetch: DNS-отказ). Реестр SOURCES.md",
+      "files": [
+        "AI_Company_DayZMods/Knowledge_Base/SOURCES.md",
+        "AI_Company_DayZMods/Knowledge_Base/Tools/container_toolchain.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → BLOCKED: нужно одобрение заказчика: добавить хосты источников в сетевые настройки окружения (список в SOURCES.md)"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54",
+      "blocked_reason": "нужно одобрение заказчика: добавить хосты источников в сетевые настройки окружения (список в SOURCES.md)"
+    },
+    {
+      "id": "T-0014",
+      "title": "Создать план глубокого изучения DayZ Engine",
+      "description": "План по разделу 3 задания, превращённый в задачи",
+      "project": "PRJ-0001",
+      "type": "research",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "DAYZ_ENGINE_STUDY_PLAN.md (фазы 0–4, ключевые вопросы, результаты) и проект PRJ-0002 из 24 задач с зависимостями и бюджетами",
+      "files": [
+        "AI_Company_DayZMods/Knowledge_Base/Research/DAYZ_ENGINE_STUDY_PLAN.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0015",
+      "title": "Создать дорожную карту обучения каждого отдела",
+      "description": "Дорожные карты в README отделов",
+      "project": "PRJ-0001",
+      "type": "planning",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": "2026-11-20",
+      "deps": [],
+      "budget": null,
+      "result": "Дорожные карты обучения в README отделов Planning, QA, Research, Engineering, 3D_Art, Media и HR, связаны с задачами PRJ-0002",
+      "files": [
+        "AI_Company_DayZMods/Company/Departments/3D_Art/README.md",
+        "AI_Company_DayZMods/Company/Departments/Engineering/README.md",
+        "AI_Company_DayZMods/Company/Departments/Media/README.md",
+        "AI_Company_DayZMods/Company/Departments/Planning/README.md",
+        "AI_Company_DayZMods/Company/Departments/QA/README.md",
+        "AI_Company_DayZMods/Company/Departments/Research/README.md",
+        "AI_Company_DayZMods/Company/HR/README.md"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:53",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T10:53",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0016",
+      "title": "Первоисточники после открытия доступа: вики BI, перепроверка записей БЗ",
+      "description": "Прочитать DayZ:Modding_Basics и страницы CE; верифицировать Tools/dayz_tools_overview.md (сейчас HYPOTHESIS); обновить SOURCES.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P1",
+      "status": "NEW",
+      "due": "2026-12-04",
+      "deps": [
+        "T-0013"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0017",
+      "title": "Упаковщик PBO для Linux (без подписи) и тест упаковка-распаковка",
+      "description": "Собственная реализация по описанию формата (не копировать чужой код с закрытой лицензией); префикс PBO; тест round-trip в QA/Tests",
+      "project": "PRJ-0002",
+      "type": "build",
+      "assignee": "config-build-engineer",
+      "priority": "P1",
+      "status": "NEW",
+      "due": "2026-12-04",
+      "deps": [],
+      "budget": 80000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0018",
+      "title": "Enforce Script: основы языка",
+      "description": "Типы, классы, наследование, modded, ref и время жизни, шаблоны, typename, массивы и map, ошибки → Enforce_Script/language_basics.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P1",
+      "status": "NEW",
+      "due": "2026-12-04",
+      "deps": [],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0019",
+      "title": "Слои скриптов 1_Core…5_Mission: видимость и порядок загрузки",
+      "description": "Поднять статус знаний о модулях до VERIFIED → Modding/script_modules.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P1",
+      "status": "NEW",
+      "due": "2026-12-04",
+      "deps": [],
+      "budget": 50000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0020",
+      "title": "Доступ к ванильным скриптам: P:\\scripts и оценка общественных зеркал",
+      "description": "Инструкция для заказчика по извлечению через DayZ Tools; лицензия и актуальность зеркал → Tools/vanilla_scripts_access.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P1",
+      "status": "NEW",
+      "due": "2026-12-04",
+      "deps": [],
+      "budget": 40000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0021",
+      "title": "Линтер config.cpp и XML Central Economy для QA",
+      "description": "Скобки и ;, requiredAddons, пути files[], парсинг XML и сверка структуры с эталоном BI; учесть особенности образцов BI",
+      "project": "PRJ-0002",
+      "type": "config",
+      "assignee": "config-build-engineer",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-11",
+      "deps": [],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0022",
+      "title": "Клиент-сервер и сетевая синхронизация: RPC, NetSync, JIP",
+      "description": "→ Networking/rpc_netsync.md, включая правила доверия к клиенту",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "lead-engineer",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-18",
+      "deps": [
+        "T-0018",
+        "T-0019"
+      ],
+      "budget": 80000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0023",
+      "title": "Жизненный цикл объектов, события, сохранение, таймеры",
+      "description": "→ DayZ_Engine/object_lifecycle.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-18",
+      "deps": [
+        "T-0018"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0024",
+      "title": "Система действий и взаимодействия",
+      "description": "→ DayZ_Engine/actions.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-18",
+      "deps": [
+        "T-0022"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0025",
+      "title": "Инвентарь и система повреждений",
+      "description": "→ DayZ_Engine/inventory_damage.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-18",
+      "deps": [
+        "T-0023"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0026",
+      "title": "Транспорт: CarScript, SimulationModule, экипаж, двери и люки",
+      "description": "Разбор образца Test_SmartCar и ванильных классов → Vehicles/vehicle_systems.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "lead-engineer",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2027-01-15",
+      "deps": [
+        "T-0022",
+        "T-0024"
+      ],
+      "budget": 120000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0027",
+      "title": "Оружие: CfgWeapons, магазины, ограничения стрельбы",
+      "description": "→ DayZ_Engine/weapons.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-15",
+      "deps": [
+        "T-0025"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0028",
+      "title": "Анимации: CfgMoves, команды персонажа, граф анимаций",
+      "description": "→ Animations/overview.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-15",
+      "deps": [
+        "T-0019",
+        "T-0020"
+      ],
+      "budget": 80000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0029",
+      "title": "Звук: CfgSoundShaders, CfgSoundSets, воспроизведение из скриптов",
+      "description": "→ DayZ_Engine/sound.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-15",
+      "deps": [
+        "T-0019"
+      ],
+      "budget": 40000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0030",
+      "title": "Интерфейс: layout, виджеты, меню и HUD",
+      "description": "→ DayZ_Engine/ui.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-15",
+      "deps": [
+        "T-0019"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0031",
+      "title": "ИИ и NPC: возможности и ограничения",
+      "description": "→ DayZ_Engine/ai_npc.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-15",
+      "deps": [
+        "T-0023"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0032",
+      "title": "Физика и коллизии: геометрии, dBody, ограничения",
+      "description": "→ DayZ_Engine/physics.md (совместно с modeler-3d)",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-15",
+      "deps": [
+        "T-0034"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T10:54",
+          "by": "project-planner",
+          "kind": "update",
+          "text": "изменено: deps"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0033",
+      "title": "Экспорт P3D через Arma 3 Object Builder в headless Blender",
+      "description": "git clone аддона (GPLv3), установка в bpy, экспорт тестового ящика в MLOD, проверка LOD и выделений; итог — обновить Tools/blender_p3d_pipeline.md",
+      "project": "PRJ-0002",
+      "type": "art",
+      "assignee": "modeler-3d",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-11",
+      "deps": [],
+      "budget": 80000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0034",
+      "title": "Требования DayZ к моделям: LOD, геометрии, memory, proxy, rvmat, текстуры",
+      "description": "→ Tools/model_requirements.md (для modeler-3d и QA)",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-11",
+      "deps": [],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0035",
+      "title": "Гайд визуального стиля DayZ и шаблон трейлера мода",
+      "description": "Расширить раздел стиля в Departments/Media/README.md, шаблон трейлера 60–90 с",
+      "project": "PRJ-0002",
+      "type": "media",
+      "assignee": "media-director",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-15",
+      "deps": [],
+      "budget": 30000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0036",
+      "title": "Регламент ручного тестирования на ПК заказчика",
+      "description": "Окружение, запуск с модами, сбор script.log и RPT, шаблон отчёта заказчика",
+      "project": "PRJ-0002",
+      "type": "qa",
+      "assignee": "qa-lead",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-11",
+      "deps": [],
+      "budget": 30000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0037",
+      "title": "Реестр ограничений движка",
+      "description": "Что нельзя сделать скриптами и почему, известные обходы → DayZ_Engine/engine_limits.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-29",
+      "deps": [
+        "T-0022",
+        "T-0026"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0038",
+      "title": "Структура и совместимость модов: mod.cpp, -mod/-servermod, ключи, modded-цепочки",
+      "description": "→ Modding/mod_compatibility.md",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P1",
+      "status": "NEW",
+      "due": "2026-12-04",
+      "deps": [
+        "T-0019"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0039",
+      "title": "Кейс: стрельба из открывающегося люка автомобиля — оценка реализуемости",
+      "description": "Пример уникальной механики из задания. Только исследование и вердикт с альтернативами, без разработки",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "lead-engineer",
+      "priority": "P3",
+      "status": "NEW",
+      "due": "2027-01-29",
+      "deps": [
+        "T-0026"
+      ],
+      "budget": 80000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    },
+    {
+      "id": "T-0040",
+      "title": "Аудит и исправление CE-конфига заказчика rusforma_vehicles_cfgeventspawn",
+      "description": "QA проверяет файл; исправление — только после согласия заказчика (решение D-010)",
+      "project": "PRJ-0003",
+      "type": "config",
+      "assignee": "config-build-engineer",
+      "priority": "P1",
+      "status": "NEW",
+      "due": null,
+      "deps": [],
+      "budget": 30000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T10:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T10:54",
+      "updated": "2026-11-20T10:54"
+    }
+  ]
+}

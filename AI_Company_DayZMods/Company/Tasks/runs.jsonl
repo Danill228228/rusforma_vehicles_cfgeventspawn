@@ -1,0 +1,1 @@
+{"at": "2026-11-20T10:53", "agent": "builtin:web-fetch", "task": "T-0013", "model": "builtin", "tokens": 8718, "tool_uses": 1, "duration_ms": 3955, "note": "проверка доступа к вики BI: DNS-блок прокси"}

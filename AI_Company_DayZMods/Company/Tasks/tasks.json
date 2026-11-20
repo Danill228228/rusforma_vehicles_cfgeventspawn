@@ -2560,7 +2560,7 @@
       "type": "art",
       "assignee": "modeler-3d",
       "priority": "P1",
-      "status": "NEW",
+      "status": "IN_PROGRESS",
       "due": null,
       "deps": [],
       "budget": 60000,
@@ -2575,10 +2575,16 @@
           "by": "ceo",
           "kind": "create",
           "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T13:38",
+          "by": "modeler-3d",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
         }
       ],
       "created": "2026-11-20T13:27",
-      "updated": "2026-11-20T13:27"
+      "updated": "2026-11-20T13:38"
     }
   ]
 }

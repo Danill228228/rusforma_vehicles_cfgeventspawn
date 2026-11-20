@@ -40,7 +40,7 @@
       "type": "ops",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -49,7 +49,14 @@
         "AI_Company_DayZMods/Company/Tools/company.py",
         "AI_Company_DayZMods/README.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадии 2,4: company.py компилируется, unittest 13/13 OK, validate OK; дерево папок и README существуют (ls). Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -74,10 +81,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадии 2,4: company.py компилируется, unittest 13/13 OK, validate OK; дерево папок и README существуют (ls). Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0002",
@@ -87,7 +107,7 @@
       "type": "ops",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -99,7 +119,14 @@
         "AI_Company_DayZMods/Company/CEO/DECISIONS.md",
         "CLAUDE.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: все файлы из списка существуют; скиллы new-project, ceo-report, wrap-up на месте; протокол CEO в CLAUDE.md. Не проверено: фактический запуск скиллов. Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -124,10 +151,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: все файлы из списка существуют; скиллы new-project, ceo-report, wrap-up на месте; протокол CEO в CLAUDE.md. Не проверено: фактический запуск скиллов. Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0003",
@@ -137,7 +177,7 @@
       "type": "hr",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -149,7 +189,14 @@
         "AI_Company_DayZMods/Company/HR/roster.json",
         "AI_Company_DayZMods/Company/HR/templates/AGENT_TEMPLATE.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадии 2,4: hr-director.md, hire/SKILL.md, STAFFING_PLAN, roster.json, шаблон есть; cmd_hr_hire в company.py; roster --check OK; plugin validate OK. Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -174,10 +221,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадии 2,4: hr-director.md, hire/SKILL.md, STAFFING_PLAN, roster.json, шаблон есть; cmd_hr_hire в company.py; roster --check OK; plugin validate OK. Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0004",
@@ -187,7 +247,7 @@
       "type": "qa",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -198,7 +258,14 @@
         "AI_Company_DayZMods/Company/Rules/QUALITY_GATES.md",
         "AI_Company_DayZMods/QA/Tests/test_company.py"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадии 2,3: QUALITY_GATES.md содержит 10 стадий и 7 пунктов отчёта; 13 тестов OK; bug add требует поля (проверено регистрацией BUG-0001/0002). Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -223,10 +290,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадии 2,3: QUALITY_GATES.md содержит 10 стадий и 7 пунктов отчёта; 13 тестов OK; bug add требует поля (проверено регистрацией BUG-0001/0002). Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0005",
@@ -236,7 +316,7 @@
       "type": "art",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -247,7 +327,14 @@
         "AI_Company_DayZMods/Company/Tools/blender_smoke_test.py",
         "AI_Company_DayZMods/Company/Tools/setup_blender.sh"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4/5: blender_smoke_test.py компилируется (py_compile), setup_blender.sh проходит bash -n, в скрипте LOD, smart_project UV, экспорт fbx/obj/glb. NOT RUN: сам Blender и цифры 588/108/12 не перезапускал. Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -272,10 +359,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4/5: blender_smoke_test.py компилируется (py_compile), setup_blender.sh проходит bash -n, в скрипте LOD, smart_project UV, экспорт fbx/obj/glb. NOT RUN: сам Blender и цифры 588/108/12 не перез…"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0006",
@@ -285,7 +385,7 @@
       "type": "media",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -294,7 +394,14 @@
         ".claude/agents/media-director.md",
         "AI_Company_DayZMods/Company/Departments/Media/README.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: media-director.md и README медиаотдела существуют, внутри конвейер и дорожная карта (T-0035). Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -319,10 +426,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: media-director.md и README медиаотдела существуют, внутри конвейер и дорожная карта (T-0035). Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0007",
@@ -332,7 +452,7 @@
       "type": "media",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -342,7 +462,14 @@
         "AI_Company_DayZMods/Media/Scripts/TEMPLATE_SCRIPT.md",
         "AI_Company_DayZMods/Media/Storyboards/TEMPLATE_STORYBOARD.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: screenwriter.md, TEMPLATE_SCRIPT.md (платформа, таймкоды, звук, музыка, субтитры, экспорт), TEMPLATE_STORYBOARD.md существуют. Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -367,10 +494,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: screenwriter.md, TEMPLATE_SCRIPT.md (платформа, таймкоды, звук, музыка, субтитры, экспорт), TEMPLATE_STORYBOARD.md существуют. Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0008",
@@ -380,7 +520,7 @@
       "type": "media",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -388,7 +528,14 @@
       "files": [
         ".claude/agents/video-editor.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: video-editor.md есть (ffprobe-проверка, build.sh). NOT RUN: ffmpeg и тестовый ролик 1080x1920 не перепроверял; артефакт ролика в репозитории отсутствует (Media/Finished пуст). Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -413,10 +560,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: video-editor.md есть (ffprobe-проверка, build.sh). NOT RUN: ffmpeg и тестовый ролик 1080x1920 не перепроверял; артефакт ролика в репозитории отсутствует (Media/Finished пуст). Отчёт QA-PRJ-…"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0009",
@@ -426,7 +586,7 @@
       "type": "planning",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -435,7 +595,14 @@
         ".claude/agents/project-planner.md",
         "AI_Company_DayZMods/Company/Rules/RESOURCES.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: project-planner.md и RESOURCES.md существуют; ./dzm run log и report работают (validate OK). Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -460,10 +627,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: project-planner.md и RESOURCES.md существуют; ./dzm run log и report работают (validate OK). Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0010",
@@ -473,7 +653,7 @@
       "type": "ops",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -482,7 +662,14 @@
         "AI_Company_DayZMods/Company/Rules/WORKFLOW.md",
         "CLAUDE.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: WORKFLOW.md упоминает SendMessage/inbox; claude plugin validate .claude/agents: Validation passed; формат короткого отчёта в CLAUDE.md. Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -507,10 +694,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: WORKFLOW.md упоминает SendMessage/inbox; claude plugin validate .claude/agents: Validation passed; формат короткого отчёта в CLAUDE.md. Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0011",
@@ -520,7 +720,7 @@
       "type": "research",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -530,7 +730,14 @@
         "AI_Company_DayZMods/Knowledge_Base/INDEX.md",
         "AI_Company_DayZMods/Knowledge_Base/README.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: KB README, INDEX, RESEARCH_PROTOCOL есть; validate проверяет KB (записей 8; в результате задачи заявлено 7 - неточность S4). Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -555,10 +762,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: KB README, INDEX, RESEARCH_PROTOCOL есть; validate проверяет KB (записей 8; в результате задачи заявлено 7 - неточность S4). Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0012",
@@ -568,7 +788,7 @@
       "type": "ops",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -579,7 +799,14 @@
         "AI_Company_DayZMods/Company/Rules/RULES.md",
         "AI_Company_DayZMods/Development/README.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: wrap-up/SKILL.md (commit, push), .gitignore, RULES.md, Development/README.md существуют. Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -604,10 +831,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: wrap-up/SKILL.md (commit, push), .gitignore, RULES.md, Development/README.md существуют. Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0013",
@@ -665,7 +905,7 @@
       "type": "research",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -673,7 +913,14 @@
       "files": [
         "AI_Company_DayZMods/Knowledge_Base/Research/DAYZ_ENGINE_STUDY_PLAN.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: DAYZ_ENGINE_STUDY_PLAN.md существует; проект PRJ-0002 в Projects/Active, validate OK. Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -698,10 +945,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: DAYZ_ENGINE_STUDY_PLAN.md существует; проект PRJ-0002 в Projects/Active, validate OK. Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0015",
@@ -711,7 +971,7 @@
       "type": "planning",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
@@ -725,7 +985,14 @@
         "AI_Company_DayZMods/Company/Departments/Research/README.md",
         "AI_Company_DayZMods/Company/HR/README.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4: все 7 README содержат раздел дорожной карты. Замечание S4: в Planning и HR нет ссылок на T-ID PRJ-0002, хотя результат это заявляет. Отчёт QA-PRJ-0001-2026-11-20.md"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -750,10 +1017,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4: все 7 README содержат раздел дорожной карты. Замечание S4: в Planning и HR нет ссылок на T-ID PRJ-0002, хотя результат это заявляет. Отчёт QA-PRJ-0001-2026-11-20.md"
+        },
+        {
+          "at": "2026-11-20T10:57",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T10:57",
+      "completed": "2026-11-20T10:57"
     },
     {
       "id": "T-0016",

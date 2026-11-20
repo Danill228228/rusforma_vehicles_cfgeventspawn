@@ -50,8 +50,10 @@ SH_X_IN, SH_X_OUT = 0.74, 1.08
 SH_Z0, SH_Z1, SH_Z_END = -1.05, -2.42, -2.47
 TAIL_Y = 1.414                         # верх наплывов у торца
 SH_SLOPE = (YT - TAIL_Y) / (ROOF_Z0 - SH_Z1)
-SH_R_OUT, SH_R_IN, ROLL_R = 0.11, 0.04, 0.09   # скругления наплывов (снаружи, у крышки) и катаной кромки кормы
-TG_Y0, TG_Y1, TG_D = 0.72, 1.18, 0.035  # задний борт: низ, верх, глубина ниши в задней стенке
+SH_R_OUT, SH_R_IN, ROLL_R = 0.16, 0.05, 0.12   # скругления наплывов (снаружи, у крышки) и катаной кромки кормы
+SH_LEAN = 0.22                         # завал наружной стенки наплыва внутрь (м на м высоты): корма сужается кверху
+TG_X, TG_Y0, TG_Y1, TG_R = 0.52, 0.74, 1.16, 0.06   # задний борт: полуширина, низ, верх, скругление углов
+BUMPER_R = (0.52, 0.64, 0.07)          # задний бампер: низ, верх, вынос назад от стенки
 
 # люк стрелка
 HATCH_Z = -0.30
@@ -214,6 +216,33 @@ def d_ring(c, R=0.045, a=0.011, axis_z=False):
     return g
 
 
+def round_arch(pts, radii=(0.07, 0.14, 0.14, 0.07), seg=5):
+    """Колёсная арка (z, y) спереди назад: углы скруглены, концы у низа кузова на месте."""
+    return fillet2d(pts, [0, *radii, 0], seg=seg)
+
+
+def edges_on(poly, pts):
+    """Индексы рёбер многоугольника, оба конца которых — точки pts (рёбра арки, для второго материала)."""
+    key = {(round(a, 6), round(b, 6)) for a, b in pts}
+    n = len(poly)
+    on = [(round(poly[i][0], 6), round(poly[i][1], 6)) in key for i in range(n)]
+    return {i for i in range(n) if on[i] and on[(i + 1) % n]}
+
+
+def flare(path, s, x0, x1, w=0.05):
+    """Накладка-расширитель вдоль кромки арки борта s: полоса шириной w от кромки наружу (от колеса), выступает
+    от x0 до x1 (модули). path — точки арки (z, y) спереди назад через верх."""
+    P = [np.asarray(q, float) for q in path]
+    rows = []
+    for k, q in enumerate(P):
+        t = P[min(k + 1, len(P) - 1)] - P[max(k - 1, 0)]
+        n = np.array([t[1], -t[0]]) / np.linalg.norm(t)                  # (z, y) от колеса наружу
+        e = q + n * w
+        rows.append([(s * x0, q[1], q[0]), (s * x1, q[1], q[0]), (s * x1, e[1], e[0]), (s * x0, e[1], e[0])])
+    cents = np.array([np.mean(r, axis=0) for r in rows])                  # середина сечения полосы
+    return loft(rows, lambda c: cents[np.argmin(np.linalg.norm(cents - c, axis=1))], closed=True, smooth_deg=50)
+
+
 def coil_spring(x, z, y0, y1, R=0.07, wire=0.011, turns=6):
     k = int(turns * 12)
     path = [(x + R * math.cos(2 * math.pi * turns * i / k), y0 + (y1 - y0) * i / k, z + R * math.sin(2 * math.pi * turns * i / k))
@@ -225,29 +254,37 @@ def coil_spring(x, z, y0, y1, R=0.07, wire=0.011, turns=6):
 def build_body():
     p = _new()
 
-    # задние борта до линии окон, с аркой; в зоне дверей — только порог до пола
+    # задние борта до линии окон, с аркой (углы скруглены, по кромке — тёмная накладка-расширитель, ниша закрыта
+    # изнутри щитком, как у ванили); в зоне дверей — только порог до пола
     prof = [(HOOD_Z0, BOT_Y), (HOOD_Z0, FLOOR_Y), (DOOR_Z[False][0], FLOOR_Y), (DOOR_Z[False][0], BELT_Y),
             (Z_REAR, BELT_Y), (Z_REAR, 0.62), (Z_REAR + 0.05, BOT_Y)]
-    a0 = len(prof)
-    prof += arch(AXLE_R)[::-1]
-    g, d = extrude_x2(prof, INNER_X, HALF_W, alt=set(range(a0, a0 + 5)))
+    ar = round_arch(arch(AXLE_R))
+    prof += ar[::-1]
+    g, d = extrude_x2(prof, INNER_X, HALF_W, alt=edges_on(prof, ar))
     p["paint"] += both(g)
     p["dark"] += both(d)
+    for s in (1, -1):
+        p["dark"] += flare(ar, s, HALF_W - 0.005, HALF_W + 0.03)
+        p["dark"] += face([(s * (INNER_X + 0.004), y, z) for z, y in ar], (s, 0, 0))
 
-    # центральная «ванна»: пол салона и грузового отсека, задний борт — утоплен в стенку, как у M1025
+    # центральная «ванна»: пол салона и грузового отсека, задняя стенка
     tub = [(HOOD_Z0, BOT_Y), (HOOD_Z0, 1.10), (HOOD_Z0 - 0.04, FLOOR_Y), (Z_REAR + 0.07, FLOOR_Y + 0.25),
-           (Z_REAR + 0.07, BELT_Y), (Z_REAR, BELT_Y), (Z_REAR, TG_Y1 + 0.02), (Z_REAR + TG_D, TG_Y1),
-           (Z_REAR + TG_D, TG_Y0), (Z_REAR, TG_Y0 - 0.02), (Z_REAR, 0.62), (Z_REAR + 0.05, BOT_Y)]
+           (Z_REAR + 0.07, BELT_Y), (Z_REAR, BELT_Y), (Z_REAR, 0.62), (Z_REAR + 0.05, BOT_Y)]
     g, d = extrude_x2(tub, -INNER_X, INNER_X)
     p["paint"] += g
     p["dark"] += d
-    # задний борт: петли снизу, замки по углам сверху, поперечное ребро
+    # задний борт, как у ванили: накладная панель со скруглёнными углами посередине стенки, петли снизу,
+    # замки по углам сверху, поперечное ребро
+    ring = fillet2d([(-TG_X, TG_Y0), (TG_X, TG_Y0), (TG_X, TG_Y1), (-TG_X, TG_Y1)], [TG_R] * 4, seg=4, closed=True)
+    zt = Z_REAR - 0.022
+    p["paint"] += face([(x, y, zt) for x, y in ring], (0, 0, -1))
+    p["paint"] += loft([[(x, y, Z_REAR + 0.002) for x, y in ring], [(x, y, zt) for x, y in ring]],
+                       lambda c: (0, (TG_Y0 + TG_Y1) / 2, c[2]), closed=True, smooth_deg=50)
+    p["paint"] += cbox(0, (TG_Y0 + TG_Y1) / 2, zt - 0.006, 2 * TG_X - 0.10, 0.035, 0.012)
     for s in (1, -1):
-        p["dark"] += tube((s * 0.30, TG_Y0 + 0.03, Z_REAR + TG_D - 0.012), (s * 0.48, TG_Y0 + 0.03, Z_REAR + TG_D - 0.012),
-                          0.014, 8)
-        p["dark"] += cbox(s * 0.56, TG_Y1 - 0.05, Z_REAR + TG_D - 0.01, 0.07, 0.05, 0.02)
-        p["dark"] += cbox(s * 0.56, TG_Y1 - 0.05, Z_REAR + TG_D - 0.025, 0.025, 0.07, 0.02)
-    p["paint"] += cbox(0, (TG_Y0 + TG_Y1) / 2, Z_REAR + TG_D - 0.008, 2 * INNER_X - 0.06, 0.04, 0.016)
+        p["dark"] += tube((s * 0.18, TG_Y0 + 0.02, zt - 0.012), (s * 0.40, TG_Y0 + 0.02, zt - 0.012), 0.014, 8)
+        p["dark"] += cbox(s * (TG_X - 0.07), TG_Y1 - 0.05, zt - 0.008, 0.07, 0.05, 0.016)
+        p["dark"] += cbox(s * (TG_X - 0.07), TG_Y1 - 0.05, zt - 0.022, 0.025, 0.07, 0.016)
 
     # борт за передней аркой до передней двери (выше — крыло откидывающегося капота)
     for s in (1, -1):
@@ -339,7 +376,7 @@ def build_body():
         p["dark"] += cbox(s * (HALF_W + 0.003), 1.06, Z_REAR + 0.16, 0.006, 0.055, 0.09)
         p["red"] += cbox(s * (HALF_W + 0.007), 1.06, Z_REAR + 0.16, 0.004, 0.04, 0.07)
         za = Z_REAR + 0.34
-        xa, ya = s * (SH_X_IN + SH_X_OUT) / 2, sh_top(za) - 0.003
+        xa, ya = s * (SH_X_IN + 0.09), sh_top(za) - 0.003                                 # на плоском верху наплыва
         base = lathe([(0.0, 0.0), (0.055, 0.0), (0.055, 0.03), (0.035, 0.04), (0.035, 0.11), (0.02, 0.12), (0.0, 0.12)],
                      seg=16, smooth_deg=30)
         p["dark"] += base.transformed(chain(T(xa, ya - 0.01, za), AX_TO_Y))
@@ -348,8 +385,9 @@ def build_body():
     cap = lathe([(0.0, 0.0), (0.062, 0.0), (0.062, 0.012), (0.048, 0.02), (0.0, 0.022)], seg=20, smooth_deg=30)
     p["dark"] += cap.transformed(chain(T(-HALF_W, 1.03, -1.30), Ry(math.pi)))
 
-    # корма: фонари в корпусах по углам (круглые красные в ободках, отражатель), бампер-швеллер с упорами,
-    # серьги и фаркоп
+    # корма: фонари в корпусах по углам (круглые красные в ободках, отражатель), тонкий бампер-поперечина
+    # с упорами по краям, серьги и фаркоп
+    by0, by1, bz = BUMPER_R
     for s in (1, -1):
         xh = s * 0.86
         p["dark"] += cbox(xh, 1.03, Z_REAR - 0.03, 0.17, 0.40, 0.06)
@@ -359,17 +397,17 @@ def build_body():
             p["metal"] += lathe([(0.056, -0.01), (0.056, 0.012), (0.046, 0.016)], seg=24).transformed(M)
             p["red"] += lathe([(0.046, 0.010), (0.030, 0.018), (0.0, 0.020)], seg=24).transformed(M)
         p["red"] += cbox(xh, 0.88, Z_REAR - 0.068, 0.10, 0.05, 0.008)                    # отражатель
-        p["dark"] += box(min(s * 0.95, s * 1.06), max(s * 0.95, s * 1.06), 0.46, 0.66, Z_REAR - 0.155, Z_REAR - 0.12)
-        p["dark"] += cbox(s * 0.60, 0.455, Z_REAR - 0.13, 0.03, 0.05, 0.07)                  # ушко серьги
-        p["chassis"] += d_ring((s * 0.60, 0.44, Z_REAR - 0.13), R=0.045)
-    p["paint"] += box(-HALF_W + 0.02, HALF_W - 0.02, 0.48, 0.64, Z_REAR - 0.12, Z_REAR)
-    for y0, y1 in ((0.475, 0.495), (0.625, 0.645)):                                       # полки швеллера
-        p["paint"] += box(-0.92, 0.92, y0, y1, Z_REAR - 0.145, Z_REAR - 0.12)
-    p["dark"] += box(-0.10, 0.10, 0.42, 0.58, Z_REAR - 0.20, Z_REAR - 0.12)                # плита фаркопа
-    hook = [(0.0, 0.50 + 0.04 * math.sin(t), Z_REAR - 0.29 - 0.04 * math.cos(t))
-            for t in np.linspace(math.pi, 2 * math.pi + 0.6, 12)]                       # крюк фаркопа, зев вверх
-    p["chassis"] += sweep_tube(hook, 0.016, ring=8)
-    p["chassis"] += tube((0, 0.50, Z_REAR - 0.20), (0, 0.50, Z_REAR - 0.25), 0.02, 8)
+        p["dark"] += box(min(s * 0.94, s * 1.04), max(s * 0.94, s * 1.04), by0 - 0.04, by1 + 0.02, Z_REAR - bz - 0.02,
+                         Z_REAR)                                                           # упоры по краям
+        p["dark"] += cbox(s * 0.42, by0 - 0.025, Z_REAR - bz / 2, 0.03, 0.05, 0.06)          # ушко серьги
+        p["chassis"] += d_ring((s * 0.42, by0 - 0.035, Z_REAR - bz / 2), R=0.045)
+    p["paint"] += box(-0.94, 0.94, by0, by1, Z_REAR - bz, Z_REAR)                          # поперечина под стенкой
+    zs0 = Z_REAR - bz - 0.06
+    p["dark"] += box(-0.10, 0.10, by0 - 0.08, by1 - 0.02, zs0, Z_REAR - bz)                # плита фаркопа
+    hy, zc = by0 - 0.02, zs0 - 0.09
+    hook = [(0.0, hy + 0.04 * math.sin(t), zc - 0.04 * math.cos(t)) for t in np.linspace(math.pi, 2 * math.pi + 0.6, 12)]
+    p["chassis"] += sweep_tube(hook, 0.016, ring=8)                                      # крюк фаркопа, зев вверх
+    p["chassis"] += tube((0, hy, zs0), (0, hy, zs0 - 0.05), 0.02, 8)
 
     # передний бампер и кенгурятник
     p["paint"] += box(-1.10, 1.10, 0.48, 0.66, FRONT_Z, FRONT_Z + 0.14)
@@ -418,7 +456,7 @@ def _shoulder(s):
     загибается дугой вниз (как катаные наплывы ванильного M1025); нормали гладкие."""
     def section(top):
         h = top - BELT_Y
-        pts = [(SH_X_IN, BELT_Y), (SH_X_OUT, BELT_Y), (SH_X_OUT, top), (SH_X_IN, top)]
+        pts = [(SH_X_IN, BELT_Y), (SH_X_OUT, BELT_Y), (SH_X_OUT - SH_LEAN * h, top), (SH_X_IN, top)]
         r_out, r_in = min(SH_R_OUT, 0.8 * h), min(SH_R_IN, 0.3 * h)
         return [(s * x, y) for x, y in fillet2d(pts, [0, 0, r_out, r_in], seg=6, closed=True)]
     y0 = YT - 0.003                                         # чуть ниже крыши: там, где наплыв заходит под неё
@@ -444,21 +482,27 @@ def build_lids():
     g, _ = extrude_x2(_ccw(prof), -INNER_X, INNER_X)
     hood["paint"] += g
     slope = math.atan2(HOOD_Y0 - HOOD_Y1, HOOD_Z1 - HOOD_Z0)
-    base = chain(T(0, hood_y(1.90) + 0.004, 1.90), Rx(slope))
-    hood["dark"] += cbox(0, 0, 0, 0.62, 0.006, 0.30).transformed(base)
-    for k in range(6):
-        hood["paint"] += cbox(0, 0.012, -0.125 + k * 0.05, 0.58, 0.016, 0.018).transformed(base)
-    # крылья с арками: откидываются вместе с капотом, как у M1025
+    # большая решётка воздухозаборника посередине капота, как у ванили: рамка, тёмная сетка, ламели
+    zv = 1.52
+    base = chain(T(0, hood_y(zv) + 0.004, zv), Rx(slope))
+    hood["paint"] += cbox(0, 0.004, 0, 0.76, 0.012, 0.42).transformed(base)
+    hood["dark"] += cbox(0, 0.011, 0, 0.68, 0.004, 0.34).transformed(base)
+    for k in range(7):
+        hood["paint"] += cbox(0, 0.020, -0.135 + k * 0.045, 0.64, 0.016, 0.016).transformed(base)
+    # крылья с арками (углы скруглены, тёмная накладка по кромке): откидываются вместе с капотом, как у M1025
     zc = AXLE_F
+    af = round_arch([(FRONT_Z - 0.02, 0.76), (zc + 0.50, 0.90), (zc + 0.30, 1.04), (zc - 0.40, 1.04), (zc - 0.56, 0.96)],
+                    radii=(0.08, 0.12, 0.10))
     fend = [(FRONT_Z, 0.74), (FRONT_Z, 1.06), (HOOD_Z1, HOOD_Y1 - 0.02), (HOOD_Z0, HOOD_Y0 - 0.03), (HOOD_Z0, 0.96)]
-    fend += [(zc - 0.56, 0.96), (zc - 0.40, 1.04), (zc + 0.30, 1.04), (zc + 0.50, 0.90), (FRONT_Z - 0.02, 0.76)]
-    g, d = extrude_x2(_ccw(fend), INNER_X, FENDER_W, alt={5, 6, 7, 8})
+    fend = _ccw(fend + af[::-1])
+    g, d = extrude_x2(fend, INNER_X, FENDER_W, alt=edges_on(fend, af))
     hood["paint"] += both(g)
     hood["dark"] += both(d)
     for s in (1, -1):
+        hood["dark"] += flare(af, s, FENDER_W - 0.005, FENDER_W + 0.03)
         hood["amber"] += cbox(s * 0.88, 0.86, FRONT_Z + 0.012, 0.10, 0.06, 0.024)          # поворотники
         hood["dark"] += cbox(s * 0.88, 0.95, FRONT_Z + 0.012, 0.08, 0.05, 0.024)           # маскировочные фары
-        hood["dark"] += cbox(s * (FENDER_W + 0.008), 0.99, 2.02, 0.016, 0.14, 0.035)       # резиновые замки
+        hood["dark"] += cbox(s * (FENDER_W + 0.008), 1.03, 2.02, 0.016, 0.08, 0.035)       # резиновые замки
         hood["amber"] += cbox(s * (FENDER_W + 0.004), 0.95, 2.16, 0.008, 0.04, 0.07)       # боковые габариты
         hood["dark"] += tube((s * INNER_X, hood_y(HOOD_Z0) - 0.02, HOOD_Z0 + 0.02),
                              (s * INNER_X, hood_y(2.16) - 0.02, 2.16), 0.008, 6)            # стыки капота и крыльев
@@ -466,8 +510,9 @@ def build_lids():
     trunk = _new()
     t, xw, crown = 0.03, TRUNK_X - 0.006, 0.022
     # линия крышки по центру: скат и катаная кромка до задней стенки; поперёк — выпуклость crown
-    line = [np.array(q) for q in tail_line(YT - 0.015, ROOF_Z0 - 0.01, Z_REAR + 0.012)]
-    line.append(np.array([Z_REAR + 0.012, BELT_Y + 0.012]))
+    # кромка загиба на 1 см за задней стенкой и чуть ниже её верха — накрывает стенку, как у ванили
+    line = [np.array(q) for q in tail_line(YT - 0.015, ROOF_Z0 - 0.01, Z_REAR - 0.012)]
+    line.append(np.array([Z_REAR - 0.012, BELT_Y - 0.03]))
     nrm = []
     for k in range(len(line)):
         d = line[min(k + 1, len(line) - 1)] - line[max(k - 1, 0)]
@@ -486,7 +531,7 @@ def build_lids():
         q = [top[0][k], top[-1][k], bot[-1][k], bot[0][k]]
         trunk["paint"] += face(q, (0, 0, 1) if k == 0 else (0, -1, 0))
     # замок с ручкой на скате у кормы, петли у крыши
-    zh = Z_REAR + 0.42
+    zh = Z_REAR + 0.22
     yh = YT - 0.015 - SH_SLOPE * (ROOF_Z0 - 0.01 - zh) + crown
     tilt = math.atan(SH_SLOPE)
     M = chain(T(0, yh, zh), Rx(-tilt))                                        # локальный верх — по нормали ската

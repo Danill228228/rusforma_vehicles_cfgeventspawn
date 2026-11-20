@@ -44,8 +44,8 @@ ATLAS = None          # texture_atlas.Atlas, строится в build_car_p3d
 MARKINGS = [
     ("2-7 B", (0.84, 0.57, G.FRONT_Z + 0.14), (0, 0, 1), 0.20),
     ("HQ 14", (-0.84, 0.57, G.FRONT_Z + 0.14), (0, 0, 1), 0.20),
-    ("2-7 B", (0.84, 0.56, G.Z_REAR - 0.12), (0, 0, -1), 0.20),
-    ("HQ 14", (-0.84, 0.56, G.Z_REAR - 0.12), (0, 0, -1), 0.20),
+    ("2-7 B", (0.70, 0.58, G.Z_REAR - G.BUMPER_R[2]), (0, 0, -1), 0.18),
+    ("HQ 14", (-0.70, 0.58, G.Z_REAR - G.BUMPER_R[2]), (0, 0, -1), 0.18),
     ("TIRE PRESS 20 PSI", (G.FENDER_W, 1.115, G.AXLE_F), (1, 0, 0), 0.30),
     ("TIRE PRESS 20 PSI", (-G.FENDER_W, 1.115, G.AXLE_F), (-1, 0, 0), 0.30),
     ("DIESEL\nFUEL ONLY", (-G.HALF_W, 1.17, -1.45), (-1, 0, 0), 0.14),

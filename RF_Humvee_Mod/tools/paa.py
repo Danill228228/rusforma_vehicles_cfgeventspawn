@@ -22,6 +22,8 @@ def dxt1_encode(img):
     h, w, _ = img.shape
     blk = img.reshape(h // 4, 4, w // 4, 4, 3).transpose(0, 2, 1, 3, 4).reshape(-1, 16, 3).astype(float)
     hi, lo = blk.max(1), blk.min(1)
+    inset = (hi - lo) / 16.0                      # поджатие концов палитры: меньше ошибка на блоках с выбросами
+    hi, lo = hi - inset, lo + inset
     c0, c1 = _to565(hi), _to565(lo)
     swap = c0 < c1
     c0, c1 = np.where(swap, c1, c0), np.where(swap, c0, c1)
@@ -46,6 +48,46 @@ def dxt1_decode(data, w, h):
     idx = np.stack([(a["bits"] >> (2 * i)) & 3 for i in range(16)], 1)
     px = np.take_along_axis(pal, idx[..., None].astype(int).repeat(3, -1), 1)
     return px.reshape(h // 4, w // 4, 4, 4, 3).transpose(0, 2, 1, 3, 4).reshape(h, w, 3)
+
+
+def downscale(img, k):
+    """Усреднение блоков k x k (k - степень двойки): сверхсэмплинг из генератора вместо пережатия."""
+    while k > 1:
+        m = img.astype(np.float32)
+        img = np.clip(np.rint((m[0::2, 0::2] + m[1::2, 0::2] + m[0::2, 1::2] + m[1::2, 1::2]) / 4), 0, 255).astype(np.uint8)
+        k //= 2
+    return img
+
+
+def downscale_normals(img, k):
+    """То же для карты нормалей: после усреднения вектор нормализуется заново."""
+    while k > 1:
+        v = img.astype(np.float32) / 255 * 2 - 1
+        v = (v[0::2, 0::2] + v[1::2, 0::2] + v[0::2, 1::2] + v[1::2, 1::2]) / 4
+        v /= np.maximum(np.linalg.norm(v, axis=-1, keepdims=True), 1e-6)
+        img = np.clip(np.rint((v * 0.5 + 0.5) * 255), 0, 255).astype(np.uint8)
+        k //= 2
+    return img
+
+
+def info_paa(path):
+    """Разбор заголовка PAA: тип, размер, число мипов, LZO-флаг."""
+    b = open(path, "rb").read()
+    typ = struct.unpack_from("<H", b, 0)[0]
+    o = 2
+    while b[o:o + 4] == b"GGAT":
+        o += 12 + struct.unpack_from("<I", b, o + 8)[0]
+    o += 2 + struct.unpack_from("<H", b, o)[0] * 3
+    mips = []
+    while True:
+        w, h = struct.unpack_from("<HH", b, o)
+        if w == 0 or h == 0:
+            break
+        size = int.from_bytes(b[o + 4:o + 7], "little")
+        mips.append((w & 0x7FFF, h, size, bool(w & 0x8000)))
+        o += 7 + size
+    return {"type": hex(typ), "size": (mips[0][0], mips[0][1]), "mips": len(mips),
+            "lzo": any(m[3] for m in mips), "bytes": len(b)}
 
 
 def _mips(img):

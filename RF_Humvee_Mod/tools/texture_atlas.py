@@ -92,8 +92,11 @@ def _trilinear(B, q):
 def _text_mask(text, px=96):
     """Надпись трафаретом: 0…1, обрезана по краям букв; строки разделяются переводом строки."""
     from PIL import Image, ImageDraw, ImageFont
-    font = ImageFont.truetype("bahnschrift.ttf", px)
-    font.set_variation_by_name("Bold Condensed")
+    try:
+        font = ImageFont.truetype("bahnschrift.ttf", px)
+        font.set_variation_by_name("Bold Condensed")
+    except OSError:                                   # нет Windows-шрифта (Linux): запасной жирный шрифт
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", px)
     img = Image.new("L", (px * (len(text) + 2), px * (text.count("\n") + 3)), 0)
     ImageDraw.Draw(img).multiline_text((px, px), text, fill=255, font=font, spacing=px // 5, align="center")
     a = np.asarray(img, np.float32) / 255

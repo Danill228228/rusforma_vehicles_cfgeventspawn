@@ -30,6 +30,7 @@ import texture_atlas  # noqa: E402
 
 SRC = os.path.join(MOD, "src")
 DATA = os.path.join(SRC, "RF_Humvee", "data")
+TEX_SIZE = 2048      # размер PAA; 4096 давал ~11 МБ на текстуру (BUG-0006)
 OUT_ADDONS = os.path.join(MOD, "@RF_Humvee", "Addons")
 
 # Окраска — своя текстура-атлас (texture_atlas.py): все окрашенные грани (кузов, тёмные детали, салон, сиденья)
@@ -652,18 +653,24 @@ def main():
     # своя текстура: лесная и пустынная окраска, общие рельеф (по высоте сколов, царапин, грязи) и блики
     wheels = [(x, G.WHEEL_Y, z, G.WHEEL_R) for x, z, _ in WHEELS.values()]
     ATLAS.rasterize()
+    # атлас рисуется в ATLAS.size (4096), в PAA уходит TEX_SIZE: сверхсэмплинг 2x2, UV не меняются
+    k = ATLAS.size // TEX_SIZE
     co, height, spec, gloss = ATLAS.paint("woodland", wheels, MARKINGS)
-    paa.write_paa(os.path.join(DATA, "rf_humvee_woodland_co.paa"), co)
-    paa.write_paa(os.path.join(DATA, "rf_humvee_body_nohq.paa"), _normal_map(height, 0.35))
-    paa.write_paa(os.path.join(DATA, "rf_humvee_body_smdi.paa"), _smdi(spec, gloss))
+    paa.write_paa(os.path.join(DATA, "rf_humvee_woodland_co.paa"), paa.downscale(co, k))
+    paa.write_paa(os.path.join(DATA, "rf_humvee_body_nohq.paa"), paa.downscale_normals(_normal_map(height, 0.35), k))
+    paa.write_paa(os.path.join(DATA, "rf_humvee_body_smdi.paa"), paa.downscale(_smdi(spec, gloss), k))
     co, _, _, _ = ATLAS.paint("desert", wheels, MARKINGS)
-    paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"), co)
-    write_rvmat(os.path.join(SRC, BODY_MAT), r"rf_humvee\data\rf_humvee_body_nohq.paa",
+    paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"), paa.downscale(co, k))
+    write_rvmat(os.path.join(DATA, "rf_humvee_body.rvmat"),  # BUG-0009: путь ФС, не путь P3D
+                r"rf_humvee\data\rf_humvee_body_nohq.paa",
                 r"rf_humvee\data\rf_humvee_body_smdi.paa", 0.75, 250)    # как у ванильного M1025: блик узкий и слабый
     with open(os.path.join(DATA, "model.cfg"), "w", encoding="utf-8") as f:
         f.write(model_cfg())
 
     built = []
+    if "--no-pbo" in sys.argv:                 # только текстуры/модель, без упаковки PBO
+        print("PBO пропущен (--no-pbo)")
+        return
     for addon in ("RF_Humvee", "RF_Humvee_Hatch"):
         files = pbo.pack(os.path.join(OUT_ADDONS, addon + ".pbo"), os.path.join(SRC, addon), addon)
         built.append((addon, len(files)))

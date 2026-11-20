@@ -774,10 +774,17 @@
           "by": "qa-lead",
           "kind": "status",
           "text": "REVIEW → COMPLETED"
+        },
+        {
+          "at": "2026-11-20T11:00",
+          "by": "ceo",
+          "kind": "comment",
+          "text": "Замечание S4 учтено: 8 файлов = 7 записей + 1 документ (план изучения, kind: document); формулировка результата верна",
+          "to": "qa-lead"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:57",
+      "updated": "2026-11-20T11:00",
       "completed": "2026-11-20T10:57"
     },
     {
@@ -1029,10 +1036,17 @@
           "by": "qa-lead",
           "kind": "status",
           "text": "REVIEW → COMPLETED"
+        },
+        {
+          "at": "2026-11-20T11:00",
+          "by": "ceo",
+          "kind": "comment",
+          "text": "Замечание S4 исправлено: в дорожные карты Planning и HR добавлены ссылки на задачи PRJ-0002",
+          "to": "qa-lead"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:57",
+      "updated": "2026-11-20T11:00",
       "completed": "2026-11-20T10:57"
     },
     {
@@ -1707,7 +1721,7 @@
       "type": "config",
       "assignee": "config-build-engineer",
       "priority": "P1",
-      "status": "NEW",
+      "status": "BLOCKED",
       "due": null,
       "deps": [],
       "budget": 30000,
@@ -1720,10 +1734,24 @@
           "by": "ceo",
           "kind": "create",
           "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T11:00",
+          "by": "ceo",
+          "kind": "status",
+          "text": "NEW → BLOCKED: ждёт решения заказчика: исправить файл (BUG-0001 S1, вставить </event> после строки 45)? нужен ли общий пул точек (BUG-0002)? прислать events.xml сервера"
+        },
+        {
+          "at": "2026-11-20T11:00",
+          "by": "qa-lead",
+          "kind": "comment",
+          "text": "После решения заказчика: исправить BUG-0001, прогнать парсер и сравнение с эталоном BI, перевести в REVIEW; ретест делаю я",
+          "to": "config-build-engineer"
         }
       ],
       "created": "2026-11-20T10:54",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T11:00",
+      "blocked_reason": "ждёт решения заказчика: исправить файл (BUG-0001 S1, вставить </event> после строки 45)? нужен ли общий пул точек (BUG-0002)? прислать events.xml сервера"
     }
   ]
 }

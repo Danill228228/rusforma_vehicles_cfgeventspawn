@@ -963,18 +963,25 @@ def cmd_run_log(a):
         find(tasks_db()["tasks"], a.task, "Задача")
     run = {"at": now(), "agent": a.agent, "task": a.task.upper() if a.task else None,
            "model": a.model or (agent or {}).get("model", "?"), "tokens": a.tokens,
-           "tool_uses": a.tool_uses, "duration_ms": a.duration_ms, "note": a.note or ""}
+           "cost_usd": a.cost_usd, "tool_uses": a.tool_uses, "duration_ms": a.duration_ms, "note": a.note or ""}
     RUNS_LOG.parent.mkdir(parents=True, exist_ok=True)
     with open(RUNS_LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(run, ensure_ascii=False) + "\n")
     print(f"Запуск учтён: {a.agent} {a.tokens} токенов" + (f" по {run['task']}" if run["task"] else ""))
 
 
+def total_cost(runs: list[dict]) -> float:
+    return round(sum(float(x.get("cost_usd") or 0) for x in runs), 4)
+
+
 def cmd_run_list(a):
     runs = load_runs()
     for run in runs[-a.limit:]:
-        print(f"{run['at']}  {run['agent']:<26} {run.get('model', '?'):<7} {int(run.get('tokens') or 0):>8}  {run.get('task') or '-':<7} {short(run.get('note', ''), 60)}")
-    print(f"— всего запусков: {len(runs)}, токенов: {sum(int(x.get('tokens') or 0) for x in runs)}")
+        cost = f"${float(run['cost_usd']):.4f}" if run.get("cost_usd") is not None else "-"
+        print(f"{run['at']}  {run['agent']:<26} {run.get('model', '?'):<7} {int(run.get('tokens') or 0):>8} {cost:>9}  "
+              f"{run.get('task') or '-':<7} {short(run.get('note', ''), 60)}")
+    print(f"— всего запусков: {len(runs)}, токенов: {sum(int(x.get('tokens') or 0) for x in runs)}, "
+          f"стоимость (где известна): ${total_cost(runs)}")
 
 
 # ----------------------------------------------------------------------------- витрины (Markdown)
@@ -1121,11 +1128,13 @@ def build_ceo_report(days: int) -> str:
     L += ["## 9. Расход вычислительных ресурсов", ""]
     period_runs = [x for x in runs if x["at"] >= since]
     total = sum(int(x.get("tokens") or 0) for x in period_runs)
-    L.append(f"Учтённых запусков агентов за период: {len(period_runs)}, токенов: {total} "
-             f"(всего за историю: {sum(int(x.get('tokens') or 0) for x in runs)}). "
+    L.append(f"Учтённых запусков агентов за период: {len(period_runs)}, токенов: {total}, "
+             f"стоимость там, где она известна: ${total_cost(period_runs)} "
+             f"(за всю историю: {sum(int(x.get('tokens') or 0) for x in runs)} токенов, ${total_cost(runs)}). "
              "Расход основной сессии (CEO) агенту не виден — смотрите /usage в Claude Code.")
     for agent, n in sorted(tokens_by(period_runs, "agent").items(), key=lambda x: -x[1]):
-        L.append(f"- {agent}: {n}")
+        cost = total_cost([x for x in period_runs if x.get("agent") == agent])
+        L.append(f"- {agent}: {n}" + (f" (${cost})" if cost else ""))
     for model, n in sorted(tokens_by(period_runs, "model").items(), key=lambda x: -x[1]):
         L.append(f"- модель {model}: {n}")
     by_task = tokens_by(runs, "task")
@@ -1435,7 +1444,9 @@ def build_parser() -> argparse.ArgumentParser:
     run = sp.add_parser("run", help="учёт запусков агентов и токенов").add_subparsers(dest="sub", required=True)
     x = run.add_parser("log")
     x.add_argument("--agent", required=True, help="имя из ростера или builtin:<тип>")
-    x.add_argument("--tokens", type=int, required=True)
+    x.add_argument("--tokens", type=int, required=True,
+                   help="новые токены: input + cache_creation + output (повторное чтение кэша не считаем)")
+    x.add_argument("--cost-usd", type=float, help="стоимость запуска, если известна (claude -p --output-format json)")
     x.add_argument("--task")
     x.add_argument("--model")
     x.add_argument("--tool-uses", type=int)

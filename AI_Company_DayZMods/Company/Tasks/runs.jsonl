@@ -1,1 +1,3 @@
 {"at": "2026-11-20T10:53", "agent": "builtin:web-fetch", "task": "T-0013", "model": "builtin", "tokens": 8718, "tool_uses": 1, "duration_ms": 3955, "note": "проверка доступа к вики BI: DNS-блок прокси"}
+{"at": "2026-11-20T11:00", "agent": "qa-lead", "task": null, "model": "sonnet", "tokens": 47065, "cost_usd": 0.2279, "tool_uses": null, "duration_ms": 97474, "note": "аудит PRJ-0001 (14 PASS) и смоук-тест актива (BUG-0001, BUG-0002); нативный агент через claude -p"}
+{"at": "2026-11-20T11:00", "agent": "ceo", "task": null, "model": "haiku", "tokens": 27007, "cost_usd": 0.0071, "tool_uses": null, "duration_ms": null, "note": "оркестратор аудита в отдельном процессе claude -p (только делегирование)"}

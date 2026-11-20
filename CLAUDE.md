@@ -68,4 +68,5 @@
 3. После каждого запуска агента: `./dzm run log --agent <имя> --tokens <из usage> --task T-XXXX`.
 4. Ничего не принимай без QA (скилл `/qa-gate`). Вердикт FAIL возвращает задачу исполнителю.
 5. Модель по умолчанию берётся из файла агента. Opus — только для архитектуры, сложного кода и разбора тяжёлых ошибок.
+   Если Agent отвечает «agent type not found» (агент создан во время текущей сессии), запусти его отдельным процессом: `claude -p "Делегируй агенту <имя>: …" --model haiku --permission-mode auto --output-format json` (подробно: Knowledge_Base/Tools/claude_code_agent_platform.md).
 6. Конец сессии: скилл `/wrap-up` (validate, отчёт дня, коммит, push).

@@ -172,12 +172,14 @@ class CompanyCliTest(unittest.TestCase):
 
     def test_ceo_report_has_10_sections_and_resources(self):
         t = self.add_task("учёт")
-        self.ok("run", "log", "--agent", "qa-lead", "--tokens", "12345", "--task", t)
+        self.ok("run", "log", "--agent", "qa-lead", "--tokens", "12345", "--task", t, "--cost-usd", "0.25")
+        self.ok("run", "log", "--agent", "builtin:web-fetch", "--tokens", "100")
         self.fail("Неизвестный агент", "run", "log", "--agent", "nobody", "--tokens", "1")
         report = self.ok("report", "ceo")
         for n in range(1, 11):
             self.assertIn(f"## {n}. ", report)
-        self.assertIn("12345", report)
+        self.assertIn("12445", report)
+        self.assertIn("$0.25", report)
         self.ok("report", "daily", "--save")
 
     def test_project_lifecycle(self):

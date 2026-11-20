@@ -1,6 +1,6 @@
 # Индекс базы знаний
 
-_Автогенерация: `./dzm kb index` · 2026-11-20T10:54_
+_Автогенерация: `./dzm kb index` · 2026-11-20T11:00_
 
 Статусы: **VERIFIED** — ≥2 независимых источника или источник + эксперимент; **PARTIAL** — 1 источник; **HYPOTHESIS** — не подтверждено, нужен эксперимент; **OUTDATED** — устарело.
 
@@ -23,7 +23,7 @@ _Автогенерация: `./dzm kb index` · 2026-11-20T10:54_
 | Запись | Статус | Обновлено | Владелец | Источников |
 |---|---|---|---|---|
 | [Blender → P3D — аддон Arma 3 Object Builder](Tools/blender_p3d_pipeline.md) | PARTIAL | 2026-11-20 | modeler-3d | 3 |
-| [Платформа агентов Claude Code — что реально умеют сотрудники компании](Tools/claude_code_agent_platform.md) | VERIFIED | 2026-11-20 | hr-director | 3 |
+| [Платформа агентов Claude Code — что реально умеют сотрудники компании](Tools/claude_code_agent_platform.md) | VERIFIED | 2026-11-20 | hr-director | 4 |
 | [Что работает в облачном контейнере компании](Tools/container_toolchain.md) | VERIFIED | 2026-11-20 | research-lead | 3 |
 | [DayZ Tools — состав и назначение (требует проверки)](Tools/dayz_tools_overview.md) | HYPOTHESIS | 2026-11-20 | research-lead | 0 |
 

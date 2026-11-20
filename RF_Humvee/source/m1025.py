@@ -50,10 +50,14 @@ SH_X_IN, SH_X_OUT = 0.74, 1.08
 SH_Z0, SH_Z1, SH_Z_END = -1.05, -2.42, -2.47
 TAIL_Y = 1.414                         # верх наплывов у торца
 SH_SLOPE = (YT - TAIL_Y) / (ROOF_Z0 - SH_Z1)
-SH_R_OUT, SH_R_IN, ROLL_R = 0.16, 0.05, 0.12   # скругления наплывов (снаружи, у крышки) и катаной кромки кормы
-SH_LEAN = 0.22                         # завал наружной стенки наплыва внутрь (м на м высоты): корма сужается кверху
-TG_X, TG_Y0, TG_Y1, TG_R = 0.52, 0.74, 1.16, 0.06   # задний борт: полуширина, низ, верх, скругление углов
-BUMPER_R = (0.52, 0.64, 0.07)          # задний бампер: низ, верх, вынос назад от стенки
+# корма по замерам ванильного M1025 (лучи по его геометрии попаданий): задняя стенка от REAR_LOW до ~1.25, выше —
+# катаный нос наплывов и крышки радиусом ~0.17; ниже стенки — утопленный бампер, серьги, фаркоп и рама
+SH_R_OUT, SH_R_IN, ROLL_R = 0.15, 0.05, 0.17   # скругления наплывов (снаружи, у крышки) и катаной кромки кормы
+SH_LEAN = 0.03                         # наплывы почти вертикальные: у ванили от 1.3 до 1.75 они по x до 1.05
+REAR_LOW = 0.80                        # низ задней стенки и задних крыльев за аркой
+LID_DROP, LID_GAP = 0.06, 0.06         # крышка багажника ниже крыши у петель и уже проёма: желоба по бокам
+TG_X, TG_Y0, TG_Y1, TG_R = 0.52, 0.86, 1.20, 0.06   # задний борт: полуширина, низ, верх, скругление углов
+BUMPER_R = (0.60, 0.75, -0.05)         # задний бампер: низ, верх, задняя грань от стенки (минус — утоплен)
 
 # люк стрелка
 HATCH_Z = -0.30
@@ -89,8 +93,17 @@ def hood_y(z):
     return HOOD_Y0 + (HOOD_Y1 - HOOD_Y0) * (z - HOOD_Z0) / (HOOD_Z1 - HOOD_Z0)
 
 
+SH_BULGE = 0.06                        # скат кормы дугой: у ванили верх наплывов посередине на ~6 см выше прямой
+
+
+def _bulge(z):
+    """Выпуклость ската: 0 у крыши и за 0.3 м до торца (там начинается нос), наибольшая посередине."""
+    u = (ROOF_Z0 - z) / (ROOF_Z0 - (Z_REAR + 0.30))
+    return SH_BULGE * math.sin(math.pi * u) if 0.0 < u < 1.0 else 0.0
+
+
 def sh_top(z):
-    return YT - SH_SLOPE * max(0.0, ROOF_Z0 - z)
+    return YT - SH_SLOPE * max(0.0, ROOF_Z0 - z) + _bulge(z)
 
 
 def arch(zc, y_top=1.04, half=0.56):
@@ -257,8 +270,10 @@ def build_body():
     # задние борта до линии окон, с аркой (углы скруглены, по кромке — тёмная накладка-расширитель, ниша закрыта
     # изнутри щитком, как у ванили); в зоне дверей — только порог до пола
     prof = [(HOOD_Z0, BOT_Y), (HOOD_Z0, FLOOR_Y), (DOOR_Z[False][0], FLOOR_Y), (DOOR_Z[False][0], BELT_Y),
-            (Z_REAR, BELT_Y), (Z_REAR, 0.62), (Z_REAR + 0.05, BOT_Y)]
-    ar = round_arch(arch(AXLE_R))
+            (Z_REAR, BELT_Y), (Z_REAR, REAR_LOW)]
+    zc, half = AXLE_R, 0.56
+    ar = round_arch([(zc + half, BOT_Y), (zc + half - 0.04, 0.88), (zc + half - 0.20, 1.04), (zc - half + 0.24, 1.04),
+                     (zc - half + 0.08, 0.88), (zc - half + 0.04, REAR_LOW)], radii=(0.07, 0.14, 0.14, 0.05))
     prof += ar[::-1]
     g, d = extrude_x2(prof, INNER_X, HALF_W, alt=edges_on(prof, ar))
     p["paint"] += both(g)
@@ -268,8 +283,8 @@ def build_body():
         p["dark"] += face([(s * (INNER_X + 0.004), y, z) for z, y in ar], (s, 0, 0))
 
     # центральная «ванна»: пол салона и грузового отсека, задняя стенка
-    tub = [(HOOD_Z0, BOT_Y), (HOOD_Z0, 1.10), (HOOD_Z0 - 0.04, FLOOR_Y), (Z_REAR + 0.07, FLOOR_Y + 0.25),
-           (Z_REAR + 0.07, BELT_Y), (Z_REAR, BELT_Y), (Z_REAR, 0.62), (Z_REAR + 0.05, BOT_Y)]
+    tub = [(HOOD_Z0, BOT_Y), (HOOD_Z0, 1.10), (HOOD_Z0 - 0.04, FLOOR_Y), (Z_REAR + 0.07, REAR_LOW + 0.03),
+           (Z_REAR + 0.07, BELT_Y), (Z_REAR, BELT_Y), (Z_REAR, REAR_LOW), (AXLE_R - 0.35, BOT_Y)]
     g, d = extrude_x2(tub, -INNER_X, INNER_X)
     p["paint"] += g
     p["dark"] += d
@@ -360,6 +375,10 @@ def build_body():
     # задние наплывы по бокам крышки багажника (сечение выпуклое: грани наружу от его центра)
     for s in (1, -1):
         p["paint"] += _shoulder(s)
+        # желоб между крышкой багажника и наплывом (у ванили крышка уже проёма): тёмное дно на 5 см ниже крышки
+        gx0, gx1 = s * (TRUNK_X - LID_GAP), s * (SH_X_IN + 0.002)
+        p["dark"] += loft([[(gx0, y - 0.05, z), (gx1, y - 0.05, z)] for z, y in lid_line()[:-1]],
+                          lambda c: (c[0], c[1] - 1.0, c[2]))
 
     # зеркала на кронштейнах у стоек A
     for s in (1, -1):
@@ -385,26 +404,28 @@ def build_body():
     cap = lathe([(0.0, 0.0), (0.062, 0.0), (0.062, 0.012), (0.048, 0.02), (0.0, 0.022)], seg=20, smooth_deg=30)
     p["dark"] += cap.transformed(chain(T(-HALF_W, 1.03, -1.30), Ry(math.pi)))
 
-    # корма: фонари в корпусах по углам (круглые красные в ободках, отражатель), тонкий бампер-поперечина
-    # с упорами по краям, серьги и фаркоп
+    # корма: фонари в корпусах в нижних углах стенки (круглые красные в ободках), под стенкой — утопленный бампер,
+    # серьги на кронштейнах, фаркоп и концы рамы, как у ванили
     by0, by1, bz = BUMPER_R
+    zb = Z_REAR - bz                                                                      # задняя грань бампера
     for s in (1, -1):
         xh = s * 0.86
-        p["dark"] += cbox(xh, 1.03, Z_REAR - 0.03, 0.17, 0.40, 0.06)
-        p["dark"] += cbox(xh, 1.03, Z_REAR - 0.062, 0.19, 0.42, 0.006)                    # рамка корпуса
-        for yl in (1.13, 1.00):
+        p["dark"] += cbox(xh, 1.00, Z_REAR - 0.03, 0.17, 0.28, 0.06)
+        p["dark"] += cbox(xh, 1.00, Z_REAR - 0.062, 0.19, 0.30, 0.006)                    # рамка корпуса
+        for yl in (1.06, 0.94):
             M = chain(T(xh, yl, Z_REAR - 0.065), Ry(math.pi), AX_TO_Z)                    # ось лампы — назад
             p["metal"] += lathe([(0.056, -0.01), (0.056, 0.012), (0.046, 0.016)], seg=24).transformed(M)
             p["red"] += lathe([(0.046, 0.010), (0.030, 0.018), (0.0, 0.020)], seg=24).transformed(M)
-        p["red"] += cbox(xh, 0.88, Z_REAR - 0.068, 0.10, 0.05, 0.008)                    # отражатель
-        p["dark"] += box(min(s * 0.94, s * 1.04), max(s * 0.94, s * 1.04), by0 - 0.04, by1 + 0.02, Z_REAR - bz - 0.02,
-                         Z_REAR)                                                           # упоры по краям
-        p["dark"] += cbox(s * 0.42, by0 - 0.025, Z_REAR - bz / 2, 0.03, 0.05, 0.06)          # ушко серьги
-        p["chassis"] += d_ring((s * 0.42, by0 - 0.035, Z_REAR - bz / 2), R=0.045)
-    p["paint"] += box(-0.94, 0.94, by0, by1, Z_REAR - bz, Z_REAR)                          # поперечина под стенкой
-    zs0 = Z_REAR - bz - 0.06
-    p["dark"] += box(-0.10, 0.10, by0 - 0.08, by1 - 0.02, zs0, Z_REAR - bz)                # плита фаркопа
-    hy, zc = by0 - 0.02, zs0 - 0.09
+        p["dark"] += box(min(s * 0.40, s * 0.50), max(s * 0.40, s * 0.50), by0 - 0.05, by1 - 0.03, Z_REAR - 0.02,
+                         zb)                                                               # кронштейн серьги
+        p["chassis"] += d_ring((s * 0.45, by0 - 0.06, Z_REAR - 0.01), R=0.045)
+        p["dark"] += box(min(s * 0.36, s * 0.44), max(s * 0.36, s * 0.44), by0 + 0.01, by1 - 0.02, zb,
+                         AXLE_R - 0.30)                                                    # конец рамы
+        p["dark"] += tube((s * 0.40, 0.42, AXLE_R - 0.10), (s * 0.40, by0 + 0.05, AXLE_R - 0.36), 0.04, 8)
+    p["paint"] += box(-0.94, 0.94, by0, by1, zb, zb + 0.15)                                 # бампер под стенкой
+    zs0 = Z_REAR + 0.005
+    p["dark"] += box(-0.10, 0.10, by0 - 0.04, by1 - 0.01, zs0, zb)                          # плита фаркопа
+    hy, zc = by0 + 0.03, zs0 - 0.09
     hook = [(0.0, hy + 0.04 * math.sin(t), zc - 0.04 * math.cos(t)) for t in np.linspace(math.pi, 2 * math.pi + 0.6, 12)]
     p["chassis"] += sweep_tube(hook, 0.016, ring=8)                                      # крюк фаркопа, зев вверх
     p["chassis"] += tube((0, hy, zs0), (0, hy, zs0 - 0.05), 0.02, 8)
@@ -448,15 +469,29 @@ def tail_line(y_front, z_front, z_end, r=ROLL_R, seg=8):
     """Профиль (z, y) верха кормы: скат вдоль наплывов и катаная кромка дугой вниз; последняя точка — конец дуги,
     где она становится вертикальной (на плоскости z_end)."""
     yc = y_front - SH_SLOPE * (z_front - z_end)
-    return fillet2d([(z_front, y_front), (z_end, yc), (z_end, yc - 1.0)], [0, r, 0], seg=seg)[:-1]
+    # скат дугой (выпуклость _bulge) до 0.3 м от торца, дальше прямой участок, на углу — нос радиусом r
+    slope = [(z, y_front - SH_SLOPE * (z_front - z) + _bulge(z)) for z in np.linspace(z_front, z_end + 0.30, 9)]
+    pts = slope + [(z_end, yc), (z_end, yc - 1.0)]
+    return fillet2d(pts, [0] * len(slope) + [r, 0], seg=seg)[:-1]
+
+
+def lid_line():
+    """Профиль (z, y) крышки багажника по центру: от петель у крыши скат вдоль наплывов, катаный нос до низа и
+    вертикальный кусок на 1 см за задней стенкой (крышка накрывает стенку, как у ванили)."""
+    line = [np.array(q) for q in tail_line(YT - LID_DROP, ROOF_Z0 - 0.01, Z_REAR - 0.012)]
+    line.append(np.array([Z_REAR - 0.012, line[-1][1] - 0.05]))
+    return line
 
 
 def _shoulder(s):
     """Задний наплыв с борта s: сечение со скруглёнными верхними кромками, верх скатывается назад и у кормы
     загибается дугой вниз (как катаные наплывы ванильного M1025); нормали гладкие."""
+    xo = SH_X_OUT - 0.004                                   # на 4 мм внутри борта: без мерцания там, где они совпадают
+
     def section(top):
-        h = top - BELT_Y
-        pts = [(SH_X_IN, BELT_Y), (SH_X_OUT, BELT_Y), (SH_X_OUT - SH_LEAN * h, top), (SH_X_IN, top)]
+        base = min(BELT_Y, top - 0.05)                      # у носа кормы — ниже линии окон, внутри борта
+        h = top - base
+        pts = [(SH_X_IN, base), (xo, base), (xo - SH_LEAN * h, top), (SH_X_IN, top)]
         r_out, r_in = min(SH_R_OUT, 0.8 * h), min(SH_R_IN, 0.3 * h)
         return [(s * x, y) for x, y in fillet2d(pts, [0, 0, r_out, r_in], seg=6, closed=True)]
     y0 = YT - 0.003                                         # чуть ниже крыши: там, где наплыв заходит под неё
@@ -466,7 +501,8 @@ def _shoulder(s):
 
     def inside(c):                                          # середина сечения на этом z
         top = np.interp(c[2], zs[::-1], tops[::-1])
-        return (s * (SH_X_IN + SH_X_OUT) / 2, BELT_Y + 0.45 * (top - BELT_Y), c[2])
+        base = min(BELT_Y, top - 0.05)
+        return (s * (SH_X_IN + SH_X_OUT) / 2, base + 0.45 * (top - base), c[2])
     g = loft(secs, inside, closed=True)
     g += face(secs[0], (0, 0, 1))
     g += face(secs[-1], (0, 0, -1))
@@ -491,7 +527,8 @@ def build_lids():
         hood["paint"] += cbox(0, 0.020, -0.135 + k * 0.045, 0.64, 0.016, 0.016).transformed(base)
     # крылья с арками (углы скруглены, тёмная накладка по кромке): откидываются вместе с капотом, как у M1025
     zc = AXLE_F
-    af = round_arch([(FRONT_Z - 0.02, 0.76), (zc + 0.50, 0.90), (zc + 0.30, 1.04), (zc - 0.40, 1.04), (zc - 0.56, 0.96)],
+    # проём арки выше, как у ванили (крыло над колесом — узкая полоса до ~1.10)
+    af = round_arch([(FRONT_Z - 0.06, 0.74), (zc + 0.48, 0.94), (zc + 0.30, 1.10), (zc - 0.38, 1.10), (zc - 0.56, 0.96)],
                     radii=(0.08, 0.12, 0.10))
     fend = [(FRONT_Z, 0.74), (FRONT_Z, 1.06), (HOOD_Z1, HOOD_Y1 - 0.02), (HOOD_Z0, HOOD_Y0 - 0.03), (HOOD_Z0, 0.96)]
     fend = _ccw(fend + af[::-1])
@@ -502,17 +539,15 @@ def build_lids():
         hood["dark"] += flare(af, s, FENDER_W - 0.005, FENDER_W + 0.03)
         hood["amber"] += cbox(s * 0.88, 0.86, FRONT_Z + 0.012, 0.10, 0.06, 0.024)          # поворотники
         hood["dark"] += cbox(s * 0.88, 0.95, FRONT_Z + 0.012, 0.08, 0.05, 0.024)           # маскировочные фары
-        hood["dark"] += cbox(s * (FENDER_W + 0.008), 1.03, 2.02, 0.016, 0.08, 0.035)       # резиновые замки
+        hood["dark"] += cbox(s * (FENDER_W + 0.008), 1.02, 2.15, 0.016, 0.08, 0.035)       # резиновые замки
         hood["amber"] += cbox(s * (FENDER_W + 0.004), 0.95, 2.16, 0.008, 0.04, 0.07)       # боковые габариты
         hood["dark"] += tube((s * INNER_X, hood_y(HOOD_Z0) - 0.02, HOOD_Z0 + 0.02),
                              (s * INNER_X, hood_y(2.16) - 0.02, 2.16), 0.008, 6)            # стыки капота и крыльев
 
     trunk = _new()
-    t, xw, crown = 0.03, TRUNK_X - 0.006, 0.022
+    t, xw, crown = 0.03, TRUNK_X - LID_GAP, 0.022
     # линия крышки по центру: скат и катаная кромка до задней стенки; поперёк — выпуклость crown
-    # кромка загиба на 1 см за задней стенкой и чуть ниже её верха — накрывает стенку, как у ванили
-    line = [np.array(q) for q in tail_line(YT - 0.015, ROOF_Z0 - 0.01, Z_REAR - 0.012)]
-    line.append(np.array([Z_REAR - 0.012, BELT_Y - 0.03]))
+    line = lid_line()
     nrm = []
     for k in range(len(line)):
         d = line[min(k + 1, len(line) - 1)] - line[max(k - 1, 0)]
@@ -532,7 +567,7 @@ def build_lids():
         trunk["paint"] += face(q, (0, 0, 1) if k == 0 else (0, -1, 0))
     # замок с ручкой на скате у кормы, петли у крыши
     zh = Z_REAR + 0.22
-    yh = YT - 0.015 - SH_SLOPE * (ROOF_Z0 - 0.01 - zh) + crown
+    yh = YT - LID_DROP - SH_SLOPE * (ROOF_Z0 - 0.01 - zh) + _bulge(zh) + crown
     tilt = math.atan(SH_SLOPE)
     M = chain(T(0, yh, zh), Rx(-tilt))                                        # локальный верх — по нормали ската
     trunk["dark"] += cbox(0, 0.004, 0, 0.26, 0.008, 0.10).transformed(M)
@@ -540,7 +575,7 @@ def build_lids():
     for s in (1, -1):
         trunk["dark"] += cbox(s * 0.07, 0.010, -0.02, 0.02, 0.02, 0.03).transformed(M)
         trunk["dark"] += cylinder_x(0.016, min(s * 0.36, s * 0.56), max(s * 0.36, s * 0.56), 10).transformed(
-            T(0, YT - 0.006, ROOF_Z0 - 0.025))
+            T(0, YT - LID_DROP + 0.01, ROOF_Z0 - 0.025))
     return {"doors_hood": hood, "doors_trunk": trunk}
 
 
@@ -552,7 +587,7 @@ def build_doors():
     for sel, (s, front) in DOORS.items():
         parts = _new()
         za, zb = DOOR_Z[front]
-        y0, y1, fw = BELT_Y + 0.06, CEIL_Y - 0.08, 0.08
+        y0, y1, fw = BELT_Y + 0.02, CEIL_Y - 0.03, 0.06        # окна большие, рамка узкая — как у ванили (1.30…1.74)
         g = Geo()   # панель до окна и рама вокруг окна: через окно видно и снаружи, и из салона
         g += box(xa, xb, FLOOR_Y, y0, za, zb)
         g += box(xa, xb, y1, CEIL_Y, za, zb)
@@ -575,7 +610,7 @@ def build_doors():
             parts["paint"] += tube((s * (xb + 0.004), pa[1], pa[0]), (s * (xb + 0.004), pb[1], pb[0]), 0.012, 6)
         for yh in (FLOOR_Y + 0.25, CEIL_Y - 0.15):                                               # петли
             parts["dark"] += cbox(s * (xb + 0.012), yh, zb - 0.04, 0.03, 0.10, 0.06)
-        parts["dark"] += cbox(s * (xb + 0.015), BELT_Y + 0.02, za + 0.08, 0.03, 0.035, 0.12)     # ручка
+        parts["dark"] += cbox(s * (xb + 0.015), BELT_Y - 0.01, za + 0.10, 0.03, 0.035, 0.12)     # ручка под окном
         out[sel] = parts
     return out
 
@@ -600,7 +635,7 @@ def build_interior():
     p["seat"] += cylinder_x(0.02, -0.19, 0.19, 8).transformed(M)
     p["dark"] += cylinder_x(0.03, 0.0, 0.30, 10).transformed(chain(M, Ry(math.pi)))
     for s in (1, -1):
-        p["dark"] += cbox(s * 0.42, BELT_Y + 0.13, -1.85, 0.30, 0.24, 0.45)                   # ящики в грузовом отсеке
+        p["dark"] += cbox(s * 0.42, 1.10, -1.75, 0.30, 0.24, 0.40)                            # ящики в грузовом отсеке
     return p
 
 

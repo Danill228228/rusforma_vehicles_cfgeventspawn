@@ -1518,6 +1518,11 @@ def main(argv=None) -> int:
     except DzmError as e:
         print(f"Ошибка: {e}", file=sys.stderr)
         return 2
+    except BrokenPipeError:  # вывод обрезан, например `./dzm status | head`: это не ошибка
+        try:
+            sys.stdout = open(os.devnull, "w")
+        except OSError:
+            pass
     return 0
 
 

@@ -7,6 +7,7 @@ tags: [environment, tools, network, blender, ffmpeg, limits]
 sources:
   - experiment:2026-11-20 проверка команд (python3, ffmpeg -encoders/-filters, convert, import bpy)
   - experiment:2026-11-20 curl и WebFetch к хостам источников, git clone официальных репозиториев BI
+  - experiment:2026-11-20 повторная проверка хостов после изменения сетевых настроек (curl, заголовки ответа)
   - experiment:2026-11-20 blender_smoke_test.py (3 LOD, UV, экспорт FBX/OBJ/GLB/.blend — OK) и тестовый ролик ffmpeg 1080x1920
 ---
 # Что работает в облачном контейнере компании
@@ -33,7 +34,9 @@ Linux, 4 ядра, 15 ГБ ОЗУ, Python 3.13. Работают: скрипты
 | raw.githubusercontent.com, code.claude.com | работают |
 | pypi.org, registry.npmjs.org | работают |
 | github.com (веб-страницы) | 400/403 — только git |
-| community.bistudio.com, feedback.bistudio.com, forums.bohemia.net, forums.dayz.com, dayz.com, www.bohemia.net, steamcommunity.com, store.steampowered.com, steamdb.info, www.reddit.com, discord.com, www.youtube.com, dayz.fandom.com, stardz-team.github.io, mrcmodding.gitbook.io, extensions.blender.org, download.blender.org | заблокированы прокси; WebFetch тоже не проходит |
+| www.bohemia.net, www.bistudio.com, data.bistudio.com, steamcommunity.com, stardz-team.github.io, mrcmodding.gitbook.io, extensions.blender.org | открыты заказчиком 2026-11-20 — работают |
+| community.bistudio.com, feedback.bistudio.com, forums.bohemia.net, forums.dayz.com, dayz.com | открыты в прокси, но сайт отвечает 403 «cf-mitigated: challenge» (Cloudflare); не обходим |
+| store.steampowered.com, steamdb.info, www.reddit.com, discord.com, www.youtube.com, dayz.fandom.com, download.blender.org | заблокированы прокси; WebFetch тоже не проходит |
 
 ## Как проверено
 Команды выполнены 2026-11-20 в сессии запуска компании. Результаты зафиксированы в задачах T-0010 и T-0013 и в QA-отчёте.

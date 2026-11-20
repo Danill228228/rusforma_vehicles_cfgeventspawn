@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "next_task": 44,
+  "next_task": 45,
   "next_project": 4,
   "projects": [
     {
@@ -864,16 +864,24 @@
       "type": "research",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "BLOCKED",
+      "status": "COMPLETED",
       "due": "2026-11-20",
       "deps": [],
       "budget": null,
-      "result": "Работает: WebSearch, git clone публичных репозиториев (клонированы официальные DayZ-Samples и DayZ-Central-Economy), raw.githubusercontent.com, PyPI. Заблокированы прокси: вики BI, трекер, форумы, dayz.com, Steam, Reddit, сторонние вики (curl 000/403, WebFetch: DNS-отказ). Реестр SOURCES.md",
+      "result": "Хосты одобрены заказчиком и применены. Работают: www.bohemia.net/www.bistudio.com (Game Content Usage Rules прочитаны), data.bistudio.com (PDF 200), steamcommunity.com, stardz-team.github.io, mrcmodding.gitbook.io, extensions.blender.org; ранее — WebSearch, git clone, raw.githubusercontent.com, PyPI. Вики BI, трекер, форумы, dayz.com: прокси пропускает, но Cloudflare-проверка браузера (403 cf-mitigated: challenge) — не обходим (D-015), замена описана в SOURCES.md",
       "files": [
+        "AI_Company_DayZMods/Knowledge_Base/Research/commercial_use_rules.md",
         "AI_Company_DayZMods/Knowledge_Base/SOURCES.md",
         "AI_Company_DayZMods/Knowledge_Base/Tools/container_toolchain.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T11:31",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадии 4/10 (доступ к источникам). Перепроверка curl 2026-11-20: 200 для bohemia.net (usage rules), data.bistudio.com PDF, steamcommunity workshop, stardz-team.github.io, mrcmodding.gitbook.io; 403 cf-mitigated: challenge для community.bistudio.com и forums.dayz.com (не обходили); reddit.com 000 / прокси 403 'no rule allows this host'. Совпадает с SOURCES.md (Статус доступа, колонка Доступ) и container_toolchain.md (Сеть). Не проверялись: extensions.blender.org, feedback/forums.bohemia/dayz.com (вне списка запроса). Отдельного файла отчёта нет."
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:53",
@@ -905,11 +913,41 @@
           "kind": "comment",
           "text": "К списку хостов добавлены www.bistudio.com и data.bistudio.com: там официальные правила BI о монетизации и использовании контента (нужны для T-0041)",
           "to": "client"
+        },
+        {
+          "at": "2026-11-20T11:30",
+          "by": "ceo",
+          "kind": "status",
+          "text": "BLOCKED → IN_PROGRESS: заказчик одобрил 12 хостов в сетевых настройках окружения"
+        },
+        {
+          "at": "2026-11-20T11:30",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T11:30",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T11:31",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадии 4/10 (доступ к источникам). Перепроверка curl 2026-11-20: 200 для bohemia.net (usage rules), data.bistudio.com PDF, steamcommunity workshop, stardz-team.github.io, mrcmodding.gitbook.io; 403 c…"
+        },
+        {
+          "at": "2026-11-20T11:31",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T11:17",
-      "blocked_reason": "нужно одобрение заказчика: добавить хосты источников в сетевые настройки окружения (список в SOURCES.md)"
+      "updated": "2026-11-20T11:31",
+      "completed": "2026-11-20T11:31"
     },
     {
       "id": "T-0014",
@@ -1768,25 +1806,65 @@
       "type": "research",
       "assignee": "research-lead",
       "priority": "P1",
-      "status": "NEW",
+      "status": "COMPLETED",
       "due": "2026-12-04",
       "deps": [
         "T-0013"
       ],
       "budget": 60000,
-      "result": "",
-      "files": [],
-      "reviews": [],
+      "result": "Монетизация DayZ-серверов: только по одобрению BI (до 31.01.2027), только не влияющие на геймплей вещи; продажа/лицензирование модов и платная передача контента требуют письменного разрешения BI (EULA DayZ и Tools EULA запрещают коммерческое использование без него). Программы вроде Creator DLC для DayZ не найдено. Запись обновлена до VERIFIED (три официальных документа); неясны заказная разработка и отдельный DayZ Tools EULA.",
+      "files": [
+        "AI_Company_DayZMods/Knowledge_Base/Research/commercial_use_rules.md"
+      ],
+      "reviews": [
+        {
+          "at": "2026-11-20T11:34",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 4 (источники/лицензии, дословная сверка): curl 2026-11-20 подтверждены все цитаты из Game Content Usage Rules (в т.ч. non-commercial only, free of any charge, дата Updated 21/08/2026), EULA DayZ (non-commercial, commercially without Our permission), Tools EULA (commercially exploit, prior written permission), monetization/dayz (до January 31st 2027, private shard) и FAQ (vehicles, vehicle spawns); PDF V11 (pdftotext) тоже. Цитаты отделены от выводов, оговорка не юридическая консультация есть (строки 26, 83). Замечания S4: в HTML у EULA первая буква Y в You must not redistribute выделена отдельно, фраза по смыслу дословна. Юридическое толкование не проверялось."
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T11:17",
           "by": "ceo",
           "kind": "create",
           "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T11:31",
+          "by": "research-lead",
+          "kind": "status",
+          "text": "NEW → RESEARCH"
+        },
+        {
+          "at": "2026-11-20T11:32",
+          "by": "research-lead",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T11:32",
+          "by": "research-lead",
+          "kind": "status",
+          "text": "RESEARCH → REVIEW"
+        },
+        {
+          "at": "2026-11-20T11:34",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 4 (источники/лицензии, дословная сверка): curl 2026-11-20 подтверждены все цитаты из Game Content Usage Rules (в т.ч. non-commercial only, free of any charge, дата Updated 21/08/2026), EULA Da…"
+        },
+        {
+          "at": "2026-11-20T11:34",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T11:17",
-      "updated": "2026-11-20T11:17"
+      "updated": "2026-11-20T11:34",
+      "completed": "2026-11-20T11:34"
     },
     {
       "id": "T-0042",
@@ -1842,6 +1920,34 @@
       ],
       "created": "2026-11-20T11:17",
       "updated": "2026-11-20T11:17"
+    },
+    {
+      "id": "T-0044",
+      "title": "Подготовить запрос в Bohemia Interactive о коммерческом использовании модов (на английском)",
+      "description": "Черновик письма для формы CONTACT US (https://www.bohemia.net/en/monetization?contact=1): модель заказчика (закрытые моды без ассетов BI, личный сервер, продажа или заказная разработка), прямые вопросы: считается ли это commercial use, на каких условиях возможно разрешение. Отправляет только заказчик",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P1",
+      "status": "NEW",
+      "due": null,
+      "deps": [
+        "T-0041"
+      ],
+      "budget": 20000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T11:34",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T11:34",
+      "updated": "2026-11-20T11:34"
     }
   ]
 }

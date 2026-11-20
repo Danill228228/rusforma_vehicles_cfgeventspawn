@@ -1,10 +1,10 @@
 # Индекс базы знаний
 
-_Автогенерация: `./dzm kb index` · 2026-11-20T11:17_
+_Автогенерация: `./dzm kb index` · 2026-11-20T11:34_
 
 Статусы: **VERIFIED** — ≥2 независимых источника или источник + эксперимент; **PARTIAL** — 1 источник; **HYPOTHESIS** — не подтверждено, нужен эксперимент; **OUTDATED** — устарело.
 
-Сводка: HYPOTHESIS: 2 · PARTIAL: 2 · VERIFIED: 4 · document: 1
+Сводка: HYPOTHESIS: 1 · PARTIAL: 2 · VERIFIED: 5 · document: 1
 
 ## Modding
 
@@ -17,7 +17,7 @@ _Автогенерация: `./dzm kb index` · 2026-11-20T11:17_
 | Запись | Статус | Обновлено | Владелец | Источников |
 |---|---|---|---|---|
 | [План глубокого изучения DayZ Engine](Research/DAYZ_ENGINE_STUDY_PLAN.md) | document | 2026-11-20 | research-lead | 0 |
-| [Коммерческое использование модов DayZ — правила BI (не проверено по первоисточнику)](Research/commercial_use_rules.md) | HYPOTHESIS | 2026-11-20 | research-lead | 3 |
+| [Коммерческое использование модов DayZ — правила BI](Research/commercial_use_rules.md) | VERIFIED | 2026-11-20 | research-lead | 8 |
 
 ## Tools
 
@@ -25,7 +25,7 @@ _Автогенерация: `./dzm kb index` · 2026-11-20T11:17_
 |---|---|---|---|---|
 | [Blender → P3D — аддон Arma 3 Object Builder](Tools/blender_p3d_pipeline.md) | PARTIAL | 2026-11-20 | modeler-3d | 3 |
 | [Платформа агентов Claude Code — что реально умеют сотрудники компании](Tools/claude_code_agent_platform.md) | VERIFIED | 2026-11-20 | hr-director | 4 |
-| [Что работает в облачном контейнере компании](Tools/container_toolchain.md) | VERIFIED | 2026-11-20 | research-lead | 3 |
+| [Что работает в облачном контейнере компании](Tools/container_toolchain.md) | VERIFIED | 2026-11-20 | research-lead | 4 |
 | [DayZ Tools — состав и назначение (требует проверки)](Tools/dayz_tools_overview.md) | HYPOTHESIS | 2026-11-20 | research-lead | 0 |
 
 ## Vehicles

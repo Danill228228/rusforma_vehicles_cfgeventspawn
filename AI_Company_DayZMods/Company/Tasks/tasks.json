@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "next_task": 45,
-  "next_project": 4,
+  "next_task": 49,
+  "next_project": 5,
   "projects": [
     {
       "id": "PRJ-0001",
@@ -29,6 +29,15 @@
       "status": "ACTIVE",
       "created": "2026-11-20",
       "dir": "AI_Company_DayZMods/Projects/Active/PRJ-0003_soprovozhdenie_ce_konfigov_rusforma"
+    },
+    {
+      "id": "PRJ-0004",
+      "name": "RF_Humvee — мод Хаммера (M1025)",
+      "description": "Мод из ветки ccr-1682cad6-sct7q3 (сделан другой сессией): HMMWV с открывающимся люком стрелка. Задача компании — независимая проверка QA по 10 стадиям",
+      "owner": "ceo",
+      "status": "ACTIVE",
+      "created": "2026-11-20",
+      "dir": "AI_Company_DayZMods/Projects/Active/PRJ-0004_rf_humvee_mod_hammera_m1025"
     }
   ],
   "tasks": [
@@ -1143,10 +1152,17 @@
           "by": "ceo",
           "kind": "create",
           "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "comment",
+          "text": "Не начинать с нуля: в ветке ccr-1682cad6-sct7q3 есть RF_Humvee_Mod/tools/pbo.py — QA оценил как основу (нужны детерминированные метки времени, нормализация путей, тесты). См. QA-T-0045, раздел 5",
+          "to": "config-build-engineer"
         }
       ],
       "created": "2026-11-20T10:54",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T11:54"
     },
     {
       "id": "T-0018",
@@ -1590,10 +1606,17 @@
           "by": "ceo",
           "kind": "create",
           "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "comment",
+          "text": "В ветке ccr-1682cad6-sct7q3 есть собственный писатель MLOD RF_Humvee_Mod/tools/p3d_mlod.py (10 LOD, селекции, Memory) — проверить его как альтернативу аддону. См. QA-T-0045, раздел 5",
+          "to": "modeler-3d"
         }
       ],
       "created": "2026-11-20T10:54",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T11:54"
     },
     {
       "id": "T-0034",
@@ -1948,6 +1971,150 @@
       ],
       "created": "2026-11-20T11:34",
       "updated": "2026-11-20T11:34"
+    },
+    {
+      "id": "T-0045",
+      "title": "QA-аудит мода RF_Humvee по 10 стадиям",
+      "description": "Рабочая копия ветки: /home/user/review/rf_humvee (только чтение). Мод коммерческий (правило 8): код мода в наш репозиторий не копировать, в отчётах — ссылки файл:строка",
+      "project": "PRJ-0004",
+      "type": "qa",
+      "assignee": "qa-lead",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "due": null,
+      "deps": [],
+      "budget": 150000,
+      "result": "QA: стадии 1-3 PASS по статике; стадия 4 FAIL (BUG-0003 S2 нет PROVENANCE, BUG-0004 S2 мод в публичном репо); BUG-0005/0006 S3, BUG-0007 S4; 6,7,9 NOT RUN; компиляция NOT RUN",
+      "files": [
+        "AI_Company_DayZMods/QA/Reports/QA-T-0045-RF_Humvee-2026-11-20.md"
+      ],
+      "reviews": [
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "verdict": "PASS",
+          "report": "Аудит выполнен по всем применимым стадиям, доказательства в QA/Reports/QA-T-0045-RF_Humvee-2026-11-20.md. CEO выборочно перепроверил: нет стрельбы и места стрелка в скриптах, 4 PAA DXT1 4096² без LZO, состав PBO люка = src; публичность (BUG-0004) подтверждена. Вердикт по МОДУ — FAIL до закрытия S2"
+        }
+      ],
+      "log": [
+        {
+          "at": "2026-11-20T11:49",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T11:49",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T11:52",
+          "by": "qa-lead",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T11:52",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "review",
+          "text": "PASS: Аудит выполнен по всем применимым стадиям, доказательства в QA/Reports/QA-T-0045-RF_Humvee-2026-11-20.md. CEO выборочно перепроверил: нет стрельбы и места стрелка в скриптах, 4 PAA DXT1 4096² без LZO…"
+        },
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
+        }
+      ],
+      "created": "2026-11-20T11:49",
+      "updated": "2026-11-20T11:54",
+      "completed": "2026-11-20T11:54"
+    },
+    {
+      "id": "T-0046",
+      "title": "RF_Humvee: ответить на архитектурные вопросы QA и составить план исправлений",
+      "description": "Вопросы из QA-T-0045 (раздел 1): работает ли действие люка изнутри машины через Car.SetActions без цели; формат сохранения люка (BUG-0005). План исправлений BUG-0003, BUG-0005–0007 и вариант стрельбы из люка (место стрелка) — с учётом T-0039",
+      "project": "PRJ-0004",
+      "type": "research",
+      "assignee": "lead-engineer",
+      "priority": "P1",
+      "status": "NEW",
+      "due": null,
+      "deps": [],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T11:54",
+      "updated": "2026-11-20T11:54"
+    },
+    {
+      "id": "T-0047",
+      "title": "RF_Humvee: ручной тест на ПК по сценарию QA и присылка логов",
+      "description": "Сценарий: QA/Reports/QA-T-0045-RF_Humvee-2026-11-20.md, раздел «Сценарий ручного теста». Главное: появляется ли «Открыть люк» в меню изнутри машины; 2 клиента; рестарт сервера с открытым люком. Прислать script_*.log, *.RPT, скриншоты",
+      "project": "PRJ-0004",
+      "type": "qa",
+      "assignee": "client",
+      "priority": "P1",
+      "status": "NEW",
+      "due": null,
+      "deps": [],
+      "budget": null,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T11:54",
+      "updated": "2026-11-20T11:54"
+    },
+    {
+      "id": "T-0048",
+      "title": "Свести в базу знаний наработки соседних веток (люк M1025, CrewFire, инструменты pbo/p3d/paa)",
+      "description": "Ветки ccr-644b6c8a-4wqyqq (исследование люка Offroad_02 и прототип P0), claude/dayz-vehicle-shooting-animation-s15all (мод CrewFire: стрельба из окна), ccr-1682cad6-sct7q3 (tools: pbo.py, p3d_mlod.py, paa.py). Цель — не исследовать повторно; входные данные для T-0017, T-0033, T-0039",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P1",
+      "status": "NEW",
+      "due": null,
+      "deps": [],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T11:54",
+      "updated": "2026-11-20T11:54"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "next": 3,
+  "next": 8,
   "bugs": [
     {
       "id": "BUG-0001",
@@ -47,6 +47,144 @@
           "by": "qa-lead",
           "kind": "create",
           "text": "ошибка зарегистрирована"
+        }
+      ]
+    },
+    {
+      "id": "BUG-0003",
+      "title": "RF_Humvee: нет PROVENANCE.md, чужая CC-BY-модель осталась в истории и старых PBO",
+      "severity": "S2",
+      "status": "OPEN",
+      "repro": "git ls-files в ветке ccr-1682cad6-sct7q3: PROVENANCE.md отсутствует; git show --stat ecbcb60: low_poly_humvee/license.txt, scene.gltf (MadTrollStudio, CC-BY-4.0), CREDITS.txt; в 26c4dbd удалены, но остаются в истории вместе с PBO тех коммитов",
+      "cause": "Правило 8 CLAUDE.md и стадия 4 требуют PROVENANCE.md; атрибуция CC-BY (автор, лицензия, ссылка, изменения) нигде не зафиксирована в текущей версии",
+      "location": "RF_Humvee_Mod/ (корень), коммиты ecbcb60..26c4dbd",
+      "fix": "Создать PROVENANCE.md по шаблону: своя модель (m1025.py, замеры ванильного M1025), текстуры (texture_atlas.py), ссылки DZ\\ и наследование Offroad_02, прежняя CC-BY модель и её судьба; подтвердить, что в текущих PBO и p3d чужой геометрии нет (в m1025.py нет импорта lowpoly_humvee); при публикации истории сохранить атрибуцию CC-BY",
+      "retests": [],
+      "task": "T-0045",
+      "found_by": "qa-lead",
+      "assignee": "config-build-engineer",
+      "created": "2026-11-20T11:52",
+      "updated": "2026-11-20T11:52",
+      "log": [
+        {
+          "at": "2026-11-20T11:52",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        }
+      ]
+    },
+    {
+      "id": "BUG-0004",
+      "title": "Коммерческий мод RF_Humvee вместе с PBO лежит в git-ветке origin/ccr-1682cad6-sct7q3 (репозиторий публичный по CLAUDE.md/T-0042)",
+      "severity": "S2",
+      "status": "OPEN",
+      "repro": "Публичность подтверждена CEO 2026-11-20: list_repos → visibility public; анонимный curl raw.githubusercontent.com/.../ccr-1682cad6-sct7q3/RF_Humvee_Mod/README.md и src/RF_Humvee/config.cpp → 200, @RF_Humvee/Addons/RF_Humvee.pbo → 206 (скачивается)",
+      "cause": "Нарушение правила 8: исходники, модели, текстуры и сборки модов не коммитятся, пока репозиторий публичный",
+      "location": "RF_Humvee_Mod/**, RF_Humvee/** в ветке ccr-1682cad6-sct7q3",
+      "fix": "Заказчику: проверить видимость репозитория; если публичный — сделать приватным или удалить ветку и переписать историю (в т.ч. forks/кэш); перенести мод в приватное хранилище; не мерджить ветку в main",
+      "retests": [],
+      "task": "T-0045",
+      "found_by": "qa-lead",
+      "assignee": "client",
+      "created": "2026-11-20T11:52",
+      "updated": "2026-11-20T11:54",
+      "log": [
+        {
+          "at": "2026-11-20T11:52",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "repro (доказательство публичности)"
+        }
+      ]
+    },
+    {
+      "id": "BUG-0005",
+      "title": "RF_Humvee_Hatch: OnStoreSave/OnStoreLoad пишут и читают bool без защиты версией хранилища",
+      "severity": "S3",
+      "status": "OPEN",
+      "repro": "Сервер с сохранённым RF_Humvee, мод люка добавлен/убран или обновлён с версии без поля; перезапуск сервера",
+      "cause": "НЕИЗВЕСТНО: гипотеза. OnStoreSave добавляет bool после super, а OnStoreLoad читает его всегда; у ранее сохранённых машин байта нет, чтение захватит чужие данные потока; при удалении аддона наоборот лишний байт сломает разбор persistence. Нужна проверка архитектором и тест на сервере",
+      "location": "RF_Humvee_Mod/src/RF_Humvee_Hatch/scripts/4_World/RF_Humvee_Hatch/RF_HumveeHatch.c:38-62",
+      "fix": "Писать версионный маркер (int) перед bool и читать по нему; либо хранить состояние люка без изменения формата (например, фазу анимации восстанавливать из переменной, сохраняемой штатным механизмом); добавить в README предупреждение об удалении аддона при живом persistence",
+      "retests": [],
+      "task": "T-0045",
+      "found_by": "qa-lead",
+      "assignee": "lead-engineer",
+      "created": "2026-11-20T11:52",
+      "updated": "2026-11-20T11:54",
+      "log": [
+        {
+          "at": "2026-11-20T11:52",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "location (строки исправлены по поправке QA в отчёте)"
+        }
+      ]
+    },
+    {
+      "id": "BUG-0006",
+      "title": "RF_Humvee: четыре текстуры PAA 4096x4096 DXT1 без LZO (около 11 МБ каждая), нормаль и smdi в DXT1",
+      "severity": "S3",
+      "status": "OPEN",
+      "repro": "Разбор заголовков PAA: тег 0xFF01 (DXT1), mip0 4096x4096, 11 мипов, размер 11185003 байт у всех четырёх; общий PBO 53 МБ",
+      "cause": "Генератор paa.py умеет только DXT1 без сжатия LZO и без DXT5; для ванильной техники такие размеры не типичны (гипотеза, эталонных PAA в контейнере нет). Нагрузка на видеопамять: около 33 МБ на машину (co+nohq+smdi), 44 МБ с обеими окрасками; _nohq в DXT1 может дать артефакты рельефа",
+      "location": "RF_Humvee_Mod/src/RF_Humvee/data/*.paa; RF_Humvee_Mod/tools/paa.py",
+      "fix": "Снизить до 2048x2048 (nohq/smdi), пересохранить через TexView/ImageToPAA в DXT5 (nohq) с LZO; сравнить вид и размер PBO",
+      "retests": [],
+      "task": "T-0045",
+      "found_by": "qa-lead",
+      "assignee": "modeler-3d",
+      "created": "2026-11-20T11:52",
+      "updated": "2026-11-20T11:52",
+      "log": [
+        {
+          "at": "2026-11-20T11:52",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        }
+      ]
+    },
+    {
+      "id": "BUG-0007",
+      "title": "RF_Humvee: displayName Humvee M1114 при модели M1025; люк стрелка без места стрелка",
+      "severity": "S4",
+      "status": "OPEN",
+      "repro": "config.cpp: displayName Humvee M1114, descriptionShort и README про люк стрелка; в model.cfg/p3d места только crewDriver, crewCoDriver, crewCargo1, crewCargo2, турели и стрельбы из люка нет",
+      "cause": "Несоответствие названия модели и описания функциям; название Humvee/HMMWV может быть товарным знаком (вопрос для research-lead)",
+      "location": "RF_Humvee_Mod/src/RF_Humvee/config.cpp:43-44 и :199",
+      "fix": "Привести название к M1025 или к нейтральному; описать люк как открываемый, без заявлений о стрельбе; отдать research-lead вопрос о товарном знаке",
+      "retests": [],
+      "task": "T-0045",
+      "found_by": "qa-lead",
+      "assignee": "config-build-engineer",
+      "created": "2026-11-20T11:52",
+      "updated": "2026-11-20T11:54",
+      "log": [
+        {
+          "at": "2026-11-20T11:52",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T11:54",
+          "by": "ceo",
+          "kind": "update",
+          "text": "location (строки исправлены по поправке QA в отчёте)"
         }
       ]
     }

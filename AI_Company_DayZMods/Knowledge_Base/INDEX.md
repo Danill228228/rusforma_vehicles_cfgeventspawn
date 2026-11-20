@@ -1,10 +1,10 @@
 # Индекс базы знаний
 
-_Автогенерация: `./dzm kb index` · 2026-11-20T11:34_
+_Автогенерация: `./dzm kb index` · 2026-11-20T12:40_
 
 Статусы: **VERIFIED** — ≥2 независимых источника или источник + эксперимент; **PARTIAL** — 1 источник; **HYPOTHESIS** — не подтверждено, нужен эксперимент; **OUTDATED** — устарело.
 
-Сводка: HYPOTHESIS: 1 · PARTIAL: 2 · VERIFIED: 5 · document: 1
+Сводка: HYPOTHESIS: 1 · PARTIAL: 3 · VERIFIED: 5 · document: 1
 
 ## Modding
 
@@ -27,6 +27,7 @@ _Автогенерация: `./dzm kb index` · 2026-11-20T11:34_
 | [Платформа агентов Claude Code — что реально умеют сотрудники компании](Tools/claude_code_agent_platform.md) | VERIFIED | 2026-11-20 | hr-director | 4 |
 | [Что работает в облачном контейнере компании](Tools/container_toolchain.md) | VERIFIED | 2026-11-20 | research-lead | 4 |
 | [DayZ Tools — состав и назначение (требует проверки)](Tools/dayz_tools_overview.md) | HYPOTHESIS | 2026-11-20 | research-lead | 0 |
+| [Форматы PAA и суффиксы текстур (_co, _nohq, _smdi)](Tools/texture_formats.md) | PARTIAL | 2026-11-20 | modeler-3d | 4 |
 
 ## Vehicles
 

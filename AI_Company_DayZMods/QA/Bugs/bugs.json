@@ -1,28 +1,47 @@
 {
   "version": 1,
-  "next": 8,
+  "next": 12,
   "bugs": [
     {
       "id": "BUG-0001",
       "title": "cfgeventspawns: событие VehicleSpawnPoints не закрыто тегом </event>, XML не парсится",
       "severity": "S1",
-      "status": "OPEN",
+      "status": "CLOSED",
       "repro": "python3 -c \"import xml.etree.ElementTree as E; E.parse('rusforma_vehicles_cfgeventspawn')\" -> ParseError: mismatched tag: line 332, column 2",
       "cause": "Открытый на строке 3 <event name=\"VehicleSpawnPoints\"> не закрыт: после последней pos (строка 45) сразу идёт комментарий и следующий <event> (строка 47); 41 событие VehicleCrSk_* оказываются вложенными",
       "location": "rusforma_vehicles_cfgeventspawn:45-47",
       "fix": "Вставить </event> после строки 45 (перед комментарием LUAZ_969); повторить парсер и сравнение с эталоном BI. Сервер при битом XML может проигнорировать файл целиком (не проверено, нужен сервер)",
-      "retests": [],
+      "retests": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "result": "PASS",
+          "notes": "ET.parse OK; 42 event и 144 pos как в HEAD (grep), git diff = одна добавленная строка </event> после строки 45. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
+        }
+      ],
       "task": "T-0040",
       "found_by": "qa-lead",
       "assignee": "config-build-engineer",
       "created": "2026-11-20T10:57",
-      "updated": "2026-11-20T10:57",
+      "updated": "2026-11-20T12:46",
       "log": [
         {
           "at": "2026-11-20T10:57",
           "by": "qa-lead",
           "kind": "create",
           "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T12:33",
+          "by": "config-build-engineer",
+          "kind": "update",
+          "text": "status OPEN → RETEST"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "retest",
+          "text": "PASS: ET.parse OK; 42 event и 144 pos как в HEAD (grep), git diff = одна добавленная строка </event> после строки 45. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
         }
       ]
     },
@@ -30,7 +49,7 @@
       "id": "BUG-0002",
       "title": "cfgeventspawns: все 123 точки событий VehicleCrSk_* совпадают с 21 точкой VehicleSpawnPoints (каждая используется 7 раз)",
       "severity": "S3",
-      "status": "OPEN",
+      "status": "WONTFIX",
       "repro": "Скрипт Python: 144 pos, 21 уникальная пара (x,z); 41 событие по 3 точки, все из пула VehicleSpawnPoints. У эталона BI Черноруссии 54 общих из 552 точек (около 10%), здесь около 85%",
       "cause": "НЕИЗВЕСТНО: гипотеза — точки скопированы из общего списка по ошибке, либо намеренно; при совпадении точек разные классы техники претендуют на одно место, CE может пропускать спавн или ставить машины друг на друга",
       "location": "rusforma_vehicles_cfgeventspawn:4-45 и 47-331",
@@ -40,13 +59,19 @@
       "found_by": "qa-lead",
       "assignee": "config-build-engineer",
       "created": "2026-11-20T10:57",
-      "updated": "2026-11-20T10:57",
+      "updated": "2026-11-20T12:32",
       "log": [
         {
           "at": "2026-11-20T10:57",
           "by": "qa-lead",
           "kind": "create",
           "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T12:32",
+          "by": "ceo",
+          "kind": "update",
+          "text": "status OPEN → WONTFIX (решение заказчика 20.11.2026 15:28 МСК: общий пул точек задуман)"
         }
       ]
     },
@@ -54,23 +79,42 @@
       "id": "BUG-0003",
       "title": "RF_Humvee: нет PROVENANCE.md, чужая CC-BY-модель осталась в истории и старых PBO",
       "severity": "S2",
-      "status": "OPEN",
+      "status": "CLOSED",
       "repro": "git ls-files в ветке ccr-1682cad6-sct7q3: PROVENANCE.md отсутствует; git show --stat ecbcb60: low_poly_humvee/license.txt, scene.gltf (MadTrollStudio, CC-BY-4.0), CREDITS.txt; в 26c4dbd удалены, но остаются в истории вместе с PBO тех коммитов",
       "cause": "Правило 8 CLAUDE.md и стадия 4 требуют PROVENANCE.md; атрибуция CC-BY (автор, лицензия, ссылка, изменения) нигде не зафиксирована в текущей версии",
       "location": "RF_Humvee_Mod/ (корень), коммиты ecbcb60..26c4dbd",
       "fix": "Создать PROVENANCE.md по шаблону: своя модель (m1025.py, замеры ванильного M1025), текстуры (texture_atlas.py), ссылки DZ\\ и наследование Offroad_02, прежняя CC-BY модель и её судьба; подтвердить, что в текущих PBO и p3d чужой геометрии нет (в m1025.py нет импорта lowpoly_humvee); при публикации истории сохранить атрибуцию CC-BY",
-      "retests": [],
+      "retests": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "result": "PASS",
+          "notes": "PROVENANCE.md есть, таблица по всем материалам, ссылки BI, раздел истории. Проверено git ls-tree по 19 коммитам: чужая модель (low_poly_humvee, lowpoly_humvee, CREDITS) только в bb1eccc и ecbcb60 — утверждение верно. Мелочи: ссылка на строки config 39-40 неточна (класс на :41). Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
+        }
+      ],
       "task": "T-0045",
       "found_by": "qa-lead",
       "assignee": "config-build-engineer",
       "created": "2026-11-20T11:52",
-      "updated": "2026-11-20T11:52",
+      "updated": "2026-11-20T12:46",
       "log": [
         {
           "at": "2026-11-20T11:52",
           "by": "qa-lead",
           "kind": "create",
           "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T12:33",
+          "by": "config-build-engineer",
+          "kind": "update",
+          "text": "status OPEN → RETEST"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "retest",
+          "text": "PASS: PROVENANCE.md есть, таблица по всем материалам, ссылки BI, раздел истории. Проверено git ls-tree по 19 коммитам: чужая модель (low_poly_humvee, lowpoly_humvee, CREDITS) только в bb1eccc и ecbcb60 — утверждение верно. Мелочи: ссылка на строки config 39-40 неточна (класс на :41). Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
         }
       ]
     },
@@ -108,17 +152,24 @@
       "id": "BUG-0005",
       "title": "RF_Humvee_Hatch: OnStoreSave/OnStoreLoad пишут и читают bool без защиты версией хранилища",
       "severity": "S3",
-      "status": "OPEN",
+      "status": "CLOSED",
       "repro": "Сервер с сохранённым RF_Humvee, мод люка добавлен/убран или обновлён с версии без поля; перезапуск сервера",
       "cause": "НЕИЗВЕСТНО: гипотеза. OnStoreSave добавляет bool после super, а OnStoreLoad читает его всегда; у ранее сохранённых машин байта нет, чтение захватит чужие данные потока; при удалении аддона наоборот лишний байт сломает разбор persistence. Нужна проверка архитектором и тест на сервере",
       "location": "RF_Humvee_Mod/src/RF_Humvee_Hatch/scripts/4_World/RF_Humvee_Hatch/RF_HumveeHatch.c:38-62",
       "fix": "Писать версионный маркер (int) перед bool и читать по нему; либо хранить состояние люка без изменения формата (например, фазу анимации восстанавливать из переменной, сохраняемой штатным механизмом); добавить в README предупреждение об удалении аддона при живом persistence",
-      "retests": [],
+      "retests": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "result": "PASS",
+          "notes": "RF_HumveeHatch.c:49-99: запись bool+int RFHT(1380337748 проверено)+версия; чтение bool первым (совместимо со старым bool), при отсутствии метки v0, при чужих данных закрыт+Print, OnStoreLoad всегда true, машина не удаляется. Не доказано (гипотеза H1 архитектора): движок отдаёт каждой сущности ограниченный блок и пропускает хвост; нужен тест на сервере. Компиляция NOT RUN. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
+        }
+      ],
       "task": "T-0045",
       "found_by": "qa-lead",
       "assignee": "lead-engineer",
       "created": "2026-11-20T11:52",
-      "updated": "2026-11-20T11:54",
+      "updated": "2026-11-20T12:46",
       "log": [
         {
           "at": "2026-11-20T11:52",
@@ -131,6 +182,18 @@
           "by": "ceo",
           "kind": "update",
           "text": "location (строки исправлены по поправке QA в отчёте)"
+        },
+        {
+          "at": "2026-11-20T12:39",
+          "by": "lead-engineer",
+          "kind": "update",
+          "text": "status OPEN → RETEST"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "retest",
+          "text": "PASS: RF_HumveeHatch.c:49-99: запись bool+int RFHT(1380337748 проверено)+версия; чтение bool первым (совместимо со старым bool), при отсутствии метки v0, при чужих данных закрыт+Print, OnStoreLoad всегда true, машина не удаляется. Не доказано (гипотеза H1 архитектора): движок отдаёт каждой сущности ограниченный блок и пропускает хвост; нужен тест на сервере. Компиляция NOT RUN. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
         }
       ]
     },
@@ -138,23 +201,42 @@
       "id": "BUG-0006",
       "title": "RF_Humvee: четыре текстуры PAA 4096x4096 DXT1 без LZO (около 11 МБ каждая), нормаль и smdi в DXT1",
       "severity": "S3",
-      "status": "OPEN",
+      "status": "CLOSED",
       "repro": "Разбор заголовков PAA: тег 0xFF01 (DXT1), mip0 4096x4096, 11 мипов, размер 11185003 байт у всех четырёх; общий PBO 53 МБ",
       "cause": "Генератор paa.py умеет только DXT1 без сжатия LZO и без DXT5; для ванильной техники такие размеры не типичны (гипотеза, эталонных PAA в контейнере нет). Нагрузка на видеопамять: около 33 МБ на машину (co+nohq+smdi), 44 МБ с обеими окрасками; _nohq в DXT1 может дать артефакты рельефа",
       "location": "RF_Humvee_Mod/src/RF_Humvee/data/*.paa; RF_Humvee_Mod/tools/paa.py",
       "fix": "Снизить до 2048x2048 (nohq/smdi), пересохранить через TexView/ImageToPAA в DXT5 (nohq) с LZO; сравнить вид и размер PBO",
-      "retests": [],
+      "retests": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "result": "PASS",
+          "notes": "Размер: 4 PAA 0xFF01 2048x2048, 10 мипов, по 2796388 байт (всего 11,2 МБ вместо 44,7). UV не сдвинулись: декод новых vs усреднённые старые 4096, MAE 1.0 (co), 3.1 (nohq), 0.6 (smdi), средние яркости совпадают. Формат nohq/smdi вынесен в BUG-0010; LZO нет. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
+        }
+      ],
       "task": "T-0045",
       "found_by": "qa-lead",
       "assignee": "modeler-3d",
       "created": "2026-11-20T11:52",
-      "updated": "2026-11-20T11:52",
+      "updated": "2026-11-20T12:46",
       "log": [
         {
           "at": "2026-11-20T11:52",
           "by": "qa-lead",
           "kind": "create",
           "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T12:40",
+          "by": "modeler-3d",
+          "kind": "update",
+          "text": "status OPEN → RETEST"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "retest",
+          "text": "PASS: Размер: 4 PAA 0xFF01 2048x2048, 10 мипов, по 2796388 байт (всего 11,2 МБ вместо 44,7). UV не сдвинулись: декод новых vs усреднённые старые 4096, MAE 1.0 (co), 3.1 (nohq), 0.6 (smdi), средние яркости совпадают. Формат nohq/smdi вынесен в BUG-0010; LZO нет. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
         }
       ]
     },
@@ -162,17 +244,24 @@
       "id": "BUG-0007",
       "title": "RF_Humvee: displayName Humvee M1114 при модели M1025; люк стрелка без места стрелка",
       "severity": "S4",
-      "status": "OPEN",
+      "status": "CLOSED",
       "repro": "config.cpp: displayName Humvee M1114, descriptionShort и README про люк стрелка; в model.cfg/p3d места только crewDriver, crewCoDriver, crewCargo1, crewCargo2, турели и стрельбы из люка нет",
       "cause": "Несоответствие названия модели и описания функциям; название Humvee/HMMWV может быть товарным знаком (вопрос для research-lead)",
       "location": "RF_Humvee_Mod/src/RF_Humvee/config.cpp:43-44 и :199",
       "fix": "Привести название к M1025 или к нейтральному; описать люк как открываемый, без заявлений о стрельбе; отдать research-lead вопрос о товарном знаке",
-      "retests": [],
+      "retests": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "result": "PASS",
+          "notes": "displayName M1025 (config.cpp:43,199), «люк на крыше» в config.cpp, mod.cpp, README; vehiclesparts убран (grep=0), types_snippet в обёртке парсится. Остался повтор «на крыше на крыше» — BUG-0011 S4. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
+        }
+      ],
       "task": "T-0045",
       "found_by": "qa-lead",
       "assignee": "config-build-engineer",
       "created": "2026-11-20T11:52",
-      "updated": "2026-11-20T11:54",
+      "updated": "2026-11-20T12:46",
       "log": [
         {
           "at": "2026-11-20T11:52",
@@ -185,6 +274,145 @@
           "by": "ceo",
           "kind": "update",
           "text": "location (строки исправлены по поправке QA в отчёте)"
+        },
+        {
+          "at": "2026-11-20T12:33",
+          "by": "config-build-engineer",
+          "kind": "update",
+          "text": "status OPEN → RETEST"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "retest",
+          "text": "PASS: displayName M1025 (config.cpp:43,199), «люк на крыше» в config.cpp, mod.cpp, README; vehiclesparts убран (grep=0), types_snippet в обёртке парсится. Остался повтор «на крыше на крыше» — BUG-0011 S4. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
+        }
+      ]
+    },
+    {
+      "id": "BUG-0008",
+      "title": "RF_Humvee_Hatch: действие люка изнутри машины доступно не всегда",
+      "severity": "S2",
+      "status": "CLOSED",
+      "repro": "Сесть в RF_Humvee, посмотреть в окно или в открытый люк: «Открыть/Закрыть люк» нет в меню (по разбору ванильного механизма выбора действий; в игре не проверено)",
+      "cause": "ActionRFOpen/CloseHatchInVehicle добавлены в Car.SetActions; действия машины выбираются по рейкасту камеры в машину, в ванили действия из салона регистрируются на PlayerBase",
+      "location": "RF_Humvee_Mod/src/RF_Humvee_Hatch/scripts/4_World/RF_Humvee_Hatch/RF_HumveeHatch.c:15-23",
+      "fix": "Перенести два действия «из салона» в modded class PlayerBase (без двойной регистрации на машине), условия — игрок в RF_Humvee",
+      "retests": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "result": "PASS",
+          "notes": "RF_HumveeHatch.c:125-134 override void SetActions(out TInputActionMap) + AddAction(typename, out TInputActionMap) совпадают с ванилью playerbase.c:1695,1817; на машине остались только Outside-действия, двойной регистрации нет; ActionRFHatch.c: CCTNone, HasTarget=false, CanBeUsedInVehicle=true как у ActionCarDoors (actioncardoors.c:20,115-123); InteractActionInput имеет DetectFromPlayer=true (actioninput.c:545-559, 385-388). Остаётся риск R4: одна анимация CMD_ACTIONMOD_HEADLIGHT вместо выбора по месту. Компиляция NOT RUN. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
+        }
+      ],
+      "task": "T-0050",
+      "found_by": "lead-engineer",
+      "assignee": "lead-engineer",
+      "created": "2026-11-20T12:41",
+      "updated": "2026-11-20T12:46",
+      "log": [
+        {
+          "at": "2026-11-20T12:41",
+          "by": "lead-engineer",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T12:44",
+          "by": "lead-engineer",
+          "kind": "update",
+          "text": "status OPEN → RETEST"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "retest",
+          "text": "PASS: RF_HumveeHatch.c:125-134 override void SetActions(out TInputActionMap) + AddAction(typename, out TInputActionMap) совпадают с ванилью playerbase.c:1695,1817; на машине остались только Outside-действия, двойной регистрации нет; ActionRFHatch.c: CCTNone, HasTarget=false, CanBeUsedInVehicle=true как у ActionCarDoors (actioncardoors.c:20,115-123); InteractActionInput имеет DetectFromPlayer=true (actioninput.c:545-559, 385-388). Остаётся риск R4: одна анимация CMD_ACTIONMOD_HEADLIGHT вместо выбора по месту. Компиляция NOT RUN. Круг 1, по исходникам; проверка сборки будет во втором круге (T-0052), игровая проверка NOT RUN."
+        }
+      ]
+    },
+    {
+      "id": "BUG-0009",
+      "title": "build_mod.py на Linux пишет rvmat в файл с обратными слэшами в имени",
+      "severity": "S4",
+      "status": "RETEST",
+      "repro": "Запустить tools/build_mod.py на Linux: os.path.join(SRC, BODY_MAT) при BODY_MAT='rf_humvee\\data\\rf_humvee_body.rvmat' даёт один файл 'src/rf_humvee\\data\\rf_humvee_body.rvmat', а src/RF_Humvee/data/rf_humvee_body.rvmat не перезаписывается (проверено python: os.path.join). Стороннего файла в копии пока нет",
+      "cause": "Путь с обратными слэшами из константы для P3D используется как путь файловой системы",
+      "location": "RF_Humvee_Mod/tools/build_mod.py:41,664",
+      "fix": "Писать rvmat в os.path.join(DATA, 'rf_humvee_body.rvmat'); BODY_MAT оставить для P3D/rvmat; после сборки проверять, что в src нет файлов с '\\' в имени",
+      "retests": [],
+      "task": "T-0051",
+      "found_by": "qa-lead",
+      "assignee": "config-build-engineer",
+      "created": "2026-11-20T12:46",
+      "updated": "2026-11-20T12:51",
+      "log": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T12:51",
+          "by": "ceo",
+          "kind": "update",
+          "text": "status OPEN → RETEST (исправлено CEO (лимит sonnet у исполнителя))"
+        }
+      ]
+    },
+    {
+      "id": "BUG-0010",
+      "title": "RF_Humvee: _nohq и _smdi остаются в DXT1, раскладка нормали BI не подтверждена; LZO нет",
+      "severity": "S3",
+      "status": "OPEN",
+      "repro": "Заголовки PAA (QA круг 1): тег 0xFF01 (DXT1) у rf_humvee_body_nohq.paa и rf_humvee_body_smdi.paa, 2048x2048, 10 мипов, без LZO",
+      "cause": "НЕИЗВЕСТНО: гипотеза. Игра ждёт для _nohq/_smdi раскладку BI (DXT5 с каналами в альфе/swizzle), в контейнере подтвердить нельзя; DXT1-нормаль может дать неверный рельеф или блики",
+      "location": "RF_Humvee_Mod/src/RF_Humvee/data/rf_humvee_body_nohq.paa, rf_humvee_body_smdi.paa; tools/paa.py",
+      "fix": "На ПК открыть PAA в TexView, при необходимости пересохранить через ImageToPAA из PNG в нужном формате; сравнить вид в игре с ванильным M1025; затем решить, нужен ли DXT5 в paa.py",
+      "retests": [],
+      "task": "T-0051",
+      "found_by": "qa-lead",
+      "assignee": "modeler-3d",
+      "created": "2026-11-20T12:46",
+      "updated": "2026-11-20T12:46",
+      "log": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        }
+      ]
+    },
+    {
+      "id": "BUG-0011",
+      "title": "Опечатка «на крыше на крыше» после правки BUG-0007",
+      "severity": "S4",
+      "status": "RETEST",
+      "repro": "grep -rn 'на крыше на крыше' RF_Humvee_Mod",
+      "cause": "Замена «люка стрелка на крыше» на «люка на крыше» оставила хвост «на крыше»",
+      "location": "RF_Humvee_Mod/src/RF_Humvee/config.cpp:44; RF_Humvee_Mod/README.md:3",
+      "fix": "Убрать повтор",
+      "retests": [],
+      "task": "T-0049",
+      "found_by": "qa-lead",
+      "assignee": "config-build-engineer",
+      "created": "2026-11-20T12:46",
+      "updated": "2026-11-20T12:51",
+      "log": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
+        },
+        {
+          "at": "2026-11-20T12:51",
+          "by": "ceo",
+          "kind": "update",
+          "text": "status OPEN → RETEST (исправлено CEO (лимит sonnet у исполнителя))"
         }
       ]
     }

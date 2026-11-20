@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "next_task": 49,
+  "next_task": 54,
   "next_project": 5,
   "projects": [
     {
@@ -1237,10 +1237,17 @@
           "by": "ceo",
           "kind": "create",
           "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T12:42",
+          "by": "ceo",
+          "kind": "comment",
+          "text": "Официальный источник найден: BohemiaInteractive/DayZ-Script-Diff (ванильные скрипты 1.30). Задача T-0020 упрощается: инструкция по P:\\scripts остаётся, но базовый источник — этот репозиторий (только изучение)",
+          "to": "research-lead"
         }
       ],
       "created": "2026-11-20T10:54",
-      "updated": "2026-11-20T10:54"
+      "updated": "2026-11-20T12:42"
     },
     {
       "id": "T-0021",
@@ -1789,13 +1796,22 @@
       "type": "config",
       "assignee": "config-build-engineer",
       "priority": "P1",
-      "status": "BLOCKED",
+      "status": "COMPLETED",
       "due": null,
       "deps": [],
       "budget": 30000,
-      "result": "",
-      "files": [],
-      "reviews": [],
+      "result": "BUG-0001 исправлен: добавлена строка </event> после строки 45 (после последней pos VehicleSpawnPoints). Парсер ET: корень eventposdef, 42 события, 144 точки, у VehicleSpawnPoints 21. BUG-0002 оставлен по решению заказчика.",
+      "files": [
+        "rusforma_vehicles_cfgeventspawn"
+      ],
+      "reviews": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Парсер OK, 42 события и 144 точки, правка = одна строка </event> (BUG-0001 PASS). Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во 2 круге, игра NOT RUN."
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T10:54",
@@ -1815,11 +1831,48 @@
           "kind": "comment",
           "text": "После решения заказчика: исправить BUG-0001, прогнать парсер и сравнение с эталоном BI, перевести в REVIEW; ретест делаю я",
           "to": "config-build-engineer"
+        },
+        {
+          "at": "2026-11-20T12:32",
+          "by": "ceo",
+          "kind": "comment",
+          "text": "Решение заказчика 20.11.2026: BUG-0001 исправить; BUG-0002 оставить (WONTFIX). Можно снимать блокировку",
+          "to": "config-build-engineer"
+        },
+        {
+          "at": "2026-11-20T12:32",
+          "by": "config-build-engineer",
+          "kind": "status",
+          "text": "BLOCKED → IN_PROGRESS: заказчик решил: BUG-0001 исправить, BUG-0002 оставить"
+        },
+        {
+          "at": "2026-11-20T12:33",
+          "by": "config-build-engineer",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T12:33",
+          "by": "config-build-engineer",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Парсер OK, 42 события и 144 точки, правка = одна строка </event> (BUG-0001 PASS). Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во 2 круге, игра NOT RUN."
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T10:54",
-      "updated": "2026-11-20T11:00",
-      "blocked_reason": "ждёт решения заказчика: исправить файл (BUG-0001 S1, вставить </event> после строки 45)? нужен ли общий пул точек (BUG-0002)? прислать events.xml сервера"
+      "updated": "2026-11-20T12:46",
+      "completed": "2026-11-20T12:46"
     },
     {
       "id": "T-0041",
@@ -2035,7 +2088,7 @@
         }
       ],
       "created": "2026-11-20T11:49",
-      "updated": "2026-11-20T11:54",
+      "updated": "2026-11-20T12:30",
       "completed": "2026-11-20T11:54"
     },
     {
@@ -2046,23 +2099,63 @@
       "type": "research",
       "assignee": "lead-engineer",
       "priority": "P1",
-      "status": "NEW",
+      "status": "COMPLETED",
       "due": null,
       "deps": [],
       "budget": 60000,
-      "result": "",
-      "files": [],
-      "reviews": [],
+      "result": "(а) по ванили 1.30 (DayZ-Script-Diff, DPL NC, только изучение): InteractActionInput берёт действия из цели-рейкаста/родителя/игрока; без цели действие машины доступно, только если луч камеры попадает в саму машину (R1). Ваниль: двери из салона на PlayerBase.SetActions, фары — свой ToggleVehicleLightsActionInput. Рекомендация: перенести 2 InVehicle-действия в modded PlayerBase.SetActions (отдельная задача). (б) оценка формата v1 + гипотезы H1-H3 + сценарий теста; идея места стрелка (3 варианта) для T-0039",
+      "files": [
+        "AI_Company_DayZMods/Projects/Active/PRJ-0004_rf_humvee_mod_hammera_m1025/ARCHITECTURE_NOTES.md"
+      ],
+      "reviews": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Ответы архитектора подкреплены ссылками на файл:строка; выборочно сверено с DayZ-Script-Diff (playerbase.c:1695,1780,1817; actioninput.c:371-390,545-571). Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во 2 круге, игра NOT RUN."
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T11:54",
           "by": "ceo",
           "kind": "create",
           "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T12:32",
+          "by": "lead-engineer",
+          "kind": "status",
+          "text": "NEW → RESEARCH"
+        },
+        {
+          "at": "2026-11-20T12:39",
+          "by": "lead-engineer",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T12:39",
+          "by": "lead-engineer",
+          "kind": "status",
+          "text": "RESEARCH → REVIEW"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Ответы архитектора подкреплены ссылками на файл:строка; выборочно сверено с DayZ-Script-Diff (playerbase.c:1695,1780,1817; actioninput.c:371-390,545-571). Отчёт QA-T-0045, раздел «Повторная проверка,…"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T11:54",
-      "updated": "2026-11-20T11:54"
+      "updated": "2026-11-20T12:46",
+      "completed": "2026-11-20T12:46"
     },
     {
       "id": "T-0047",
@@ -2115,6 +2208,349 @@
       ],
       "created": "2026-11-20T11:54",
       "updated": "2026-11-20T11:54"
+    },
+    {
+      "id": "T-0049",
+      "title": "RF_Humvee: BUG-0003 (PROVENANCE.md) и BUG-0007 (названия), убрать категорию vehiclesparts",
+      "description": "",
+      "project": "PRJ-0004",
+      "type": "config",
+      "assignee": "config-build-engineer",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "due": null,
+      "deps": [],
+      "budget": 60000,
+      "result": "BUG-0003: создан RF_Humvee_Mod/PROVENANCE.md. BUG-0007: M1114->M1025, люк стрелка->люк на крыше (config.cpp, mod.cpp, README). Из types_snippet.xml убрана category vehiclesparts. Скобки config сходятся, XML парсятся, grep чист.",
+      "files": [
+        "RF_Humvee_Mod/@RF_Humvee/mod.cpp",
+        "RF_Humvee_Mod/PROVENANCE.md",
+        "RF_Humvee_Mod/README.md",
+        "RF_Humvee_Mod/server/types_snippet.xml",
+        "RF_Humvee_Mod/src/RF_Humvee/config.cpp"
+      ],
+      "reviews": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "PROVENANCE.md полон и достоверен (чужая модель только в bb1eccc и ecbcb60); BUG-0003 и BUG-0007 PASS; опечатка BUG-0011 (S4) не блокирует. Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во 2 круге, игра NOT RUN."
+        }
+      ],
+      "log": [
+        {
+          "at": "2026-11-20T12:32",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T12:32",
+          "by": "config-build-engineer",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T12:33",
+          "by": "config-build-engineer",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T12:33",
+          "by": "config-build-engineer",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: PROVENANCE.md полон и достоверен (чужая модель только в bb1eccc и ecbcb60); BUG-0003 и BUG-0007 PASS; опечатка BUG-0011 (S4) не блокирует. Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка…"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
+        }
+      ],
+      "created": "2026-11-20T12:32",
+      "updated": "2026-11-20T12:46",
+      "completed": "2026-11-20T12:46"
+    },
+    {
+      "id": "T-0050",
+      "title": "RF_Humvee: BUG-0005 — версия формата сохранения люка",
+      "description": "",
+      "project": "PRJ-0004",
+      "type": "dev",
+      "assignee": "lead-engineer",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "due": null,
+      "deps": [],
+      "budget": 60000,
+      "result": "BUG-0005: блок люка v1 = bool + int RF_HATCH_STORE_MAGIC (0x52464854) + int RF_HATCH_STORE_VERSION=1 (RF_HumveeHatch.c:4-6, 42-104). v0 (один bool) — префикс v1, читается тем же Read(bool); нет данных/чужая метка/битая версия -> люк закрыт, предупреждение [RF_Humvee_Hatch], OnStoreLoad из-за наших данных не возвращает false. Гипотезы H1-H3 и сценарий проверки — ARCHITECTURE_NOTES.md (б). Компиляция NOT RUN, PBO не пересобран (T-0052)",
+      "files": [
+        "/home/user/review/rf_humvee/RF_Humvee_Mod/src/RF_Humvee_Hatch/scripts/4_World/RF_Humvee_Hatch/RF_HumveeHatch.c",
+        "AI_Company_DayZMods/Projects/Active/PRJ-0004_rf_humvee_mod_hammera_m1025/ARCHITECTURE_NOTES.md"
+      ],
+      "reviews": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Формат сохранения v1 с меткой RFHT, совместим со старым bool, машина не удаляется (BUG-0005 PASS по исходникам); гипотеза H1 и компиляция NOT RUN. Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во 2 круге, игра NOT RUN."
+        }
+      ],
+      "log": [
+        {
+          "at": "2026-11-20T12:32",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T12:32",
+          "by": "lead-engineer",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T12:39",
+          "by": "lead-engineer",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T12:39",
+          "by": "lead-engineer",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Формат сохранения v1 с меткой RFHT, совместим со старым bool, машина не удаляется (BUG-0005 PASS по исходникам); гипотеза H1 и компиляция NOT RUN. Отчёт QA-T-0045, раздел «Повторная проверка, круг 1»…"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
+        }
+      ],
+      "created": "2026-11-20T12:32",
+      "updated": "2026-11-20T12:46",
+      "completed": "2026-11-20T12:46"
+    },
+    {
+      "id": "T-0051",
+      "title": "RF_Humvee: BUG-0006 — текстуры 2048, корректные форматы, картинки до/после",
+      "description": "",
+      "project": "PRJ-0004",
+      "type": "art",
+      "assignee": "modeler-3d",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "due": null,
+      "deps": [],
+      "budget": 100000,
+      "result": "4 текстуры 2048x2048 DXT1 (было 4096, 44.7 МБ -> 11.2 МБ), из генератора (сверхсэмплинг). _nohq/_smdi оставлены DXT1 (swizzle-DXT5 не подтверждён, гипотеза), LZO не сделан (след. шаг). KB Tools/texture_formats.md",
+      "files": [
+        "RF_Humvee_Mod/src/RF_Humvee/data/*.paa",
+        "RF_Humvee_Mod/tools/build_mod.py",
+        "RF_Humvee_Mod/tools/paa.py",
+        "RF_Humvee_Mod/tools/texture_atlas.py"
+      ],
+      "reviews": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "PAA 2048x2048 DXT1, 10,7 МиБ вместо 42,7, UV не сдвинулись (MAE 0.6-3.1). Формат nohq/smdi -> BUG-0010 S3, build_mod -> BUG-0009 S4. Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во 2 круге, игра NOT RUN."
+        }
+      ],
+      "log": [
+        {
+          "at": "2026-11-20T12:32",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T12:32",
+          "by": "modeler-3d",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T12:40",
+          "by": "modeler-3d",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T12:40",
+          "by": "modeler-3d",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: PAA 2048x2048 DXT1, 10,7 МиБ вместо 42,7, UV не сдвинулись (MAE 0.6-3.1). Формат nohq/smdi -> BUG-0010 S3, build_mod -> BUG-0009 S4. Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во …"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
+        }
+      ],
+      "created": "2026-11-20T12:32",
+      "updated": "2026-11-20T12:46",
+      "completed": "2026-11-20T12:46"
+    },
+    {
+      "id": "T-0052",
+      "title": "RF_Humvee: пересборка PBO после исправлений",
+      "description": "",
+      "project": "PRJ-0004",
+      "type": "build",
+      "assignee": "ceo",
+      "priority": "P0",
+      "status": "REVIEW",
+      "due": null,
+      "deps": [
+        "T-0049",
+        "T-0050",
+        "T-0051",
+        "T-0053"
+      ],
+      "budget": 30000,
+      "result": "Только упаковка tools/pbo.py из src, генераторы не запускались. RF_Humvee.pbo 53 138 442 → 19 583 738 байт (−63%), RF_Humvee_Hatch.pbo 6 800 → 10 777; префиксы, 9 и 3 файла, SHA1 OK, побайтово = src. Попутно: BUG-0011 (опечатка), BUG-0009 (путь rvmat в build_mod.py:664), ссылка в PROVENANCE на config.cpp:41",
+      "files": [
+        "RF_Humvee_Mod/@RF_Humvee/Addons/RF_Humvee.pbo",
+        "RF_Humvee_Mod/@RF_Humvee/Addons/RF_Humvee_Hatch.pbo",
+        "RF_Humvee_Mod/PROVENANCE.md",
+        "RF_Humvee_Mod/README.md",
+        "RF_Humvee_Mod/src/RF_Humvee/config.cpp",
+        "RF_Humvee_Mod/tools/build_mod.py"
+      ],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T12:32",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T12:41",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: deps"
+        },
+        {
+          "at": "2026-11-20T12:48",
+          "by": "config-build-engineer",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T12:51",
+          "by": "ceo",
+          "kind": "update",
+          "text": "изменено: assignee, result, files"
+        },
+        {
+          "at": "2026-11-20T12:51",
+          "by": "ceo",
+          "kind": "comment",
+          "text": "Выполнил CEO: config-build-engineer остановился на лимите использования sonnet (сброс 16:50 МСК). Прошу проверить сборку во втором круге",
+          "to": "qa-lead"
+        },
+        {
+          "at": "2026-11-20T12:51",
+          "by": "ceo",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        }
+      ],
+      "created": "2026-11-20T12:32",
+      "updated": "2026-11-20T12:51"
+    },
+    {
+      "id": "T-0053",
+      "title": "RF_Humvee: BUG-0008 — действия люка из салона перенести на игрока",
+      "description": "",
+      "project": "PRJ-0004",
+      "type": "dev",
+      "assignee": "lead-engineer",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "due": null,
+      "deps": [],
+      "budget": 40000,
+      "result": "BUG-0008: InVehicle-действия люка перенесены с машины на игрока: RF_Humvee.SetActions = только Outside (RF_HumveeHatch.c:15-23); modded PlayerBase.SetActions(out TInputActionMap) + super + AddAction x2 (:119-134), двойной регистрации нет. Перегрузка с картой подтверждена по ванили (playerbase.c:1780). Условия: машина из GetCommand_Vehicle().GetTransport(), RF_Humvee.Cast -> только RF_Humvee, пешком/в чужой машине false (ActionRFHatch.c без изменения логики, обновлён комментарий :2). Риск R4 (анимация фар с пассажирских мест) и пункт 6 теста — ARCHITECTURE_NOTES.md. Компиляция NOT RUN",
+      "files": [
+        "/home/user/review/rf_humvee/RF_Humvee_Mod/src/RF_Humvee_Hatch/scripts/4_World/RF_Humvee_Hatch/ActionRFHatch.c",
+        "/home/user/review/rf_humvee/RF_Humvee_Mod/src/RF_Humvee_Hatch/scripts/4_World/RF_Humvee_Hatch/RF_HumveeHatch.c",
+        "AI_Company_DayZMods/Projects/Active/PRJ-0004_rf_humvee_mod_hammera_m1025/ARCHITECTURE_NOTES.md"
+      ],
+      "reviews": [
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Сигнатуры PlayerBase.SetActions/AddAction совпадают с ванилью 1.30; BUG-0008 PASS по исходникам; риск R4 (анимация), игра NOT RUN. Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во 2 круге, игра NOT RUN."
+        }
+      ],
+      "log": [
+        {
+          "at": "2026-11-20T12:41",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        },
+        {
+          "at": "2026-11-20T12:42",
+          "by": "lead-engineer",
+          "kind": "status",
+          "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T12:44",
+          "by": "lead-engineer",
+          "kind": "update",
+          "text": "изменено: result, files"
+        },
+        {
+          "at": "2026-11-20T12:44",
+          "by": "lead-engineer",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Сигнатуры PlayerBase.SetActions/AddAction совпадают с ванилью 1.30; BUG-0008 PASS по исходникам; риск R4 (анимация), игра NOT RUN. Отчёт QA-T-0045, раздел «Повторная проверка, круг 1». Сборка — во 2 …"
+        },
+        {
+          "at": "2026-11-20T12:46",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
+        }
+      ],
+      "created": "2026-11-20T12:41",
+      "updated": "2026-11-20T12:46",
+      "completed": "2026-11-20T12:46"
     }
   ]
 }

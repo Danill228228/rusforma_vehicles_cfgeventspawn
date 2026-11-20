@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 *.tmp
+.dzm.lock
 .DS_Store
 
 # Blender: автосохранения и бэкапы

@@ -1511,8 +1511,22 @@ def build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def acquire_lock():
+    """Один ./dzm за раз: агенты работают параллельно, а команды делают read-modify-write JSON."""
+    try:
+        import fcntl
+    except ImportError:  # Windows: блокировки нет, параллельный запуск не поддерживается
+        return None
+    path = P("Company", "Tasks", ".dzm.lock")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = open(path, "w")
+    fcntl.flock(handle, fcntl.LOCK_EX)
+    return handle
+
+
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    _lock = acquire_lock()  # держим до выхода из процесса
     try:
         args.func(args)
     except DzmError as e:

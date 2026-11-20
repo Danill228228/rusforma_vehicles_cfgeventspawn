@@ -33,3 +33,9 @@ sources:
 - Точная раскладка каналов swizzled-DXT5 для _nohq и формат по умолчанию для _smdi в TexConvert.cfg не подтверждены. Поэтому _nohq/_smdi оставлены DXT1 (RGB), 3-компонентная нормаль разрешена. Эксперимент: прогнать через ImageToPAA/TexView эталонный _nohq и сравнить тип/каналы с нашим.
 - Флаг LZO (старший бит ширины мипа, LZO1X) не подтверждён; писать без проверки на ПК нельзя. Следующий шаг: LZO через DayZ Tools ImageToPAA на ПК или эксперимент с python-lzo.
 - Разумное разрешение техники: 2048 для одного атласа на машину (консервативно; ванильная техника использует 2048-4096, не проверено). 4096 дал ~11 МБ на карту.
+
+## Свет и материалы машин в скриптах (T-0054, 2026-11-20)
+- VERIFIED (DayZ-Script-Diff, carscript.c:174-260, entityai.c:2884): CarScript регистрирует `VehicleLightsComponent` с селекциями по индексам 0…8 (перед L/R, стоп L/R, задний ход L/R, габарит L/R, приборка) и именами материалов `frontReflectorMatOn/Off`, `brakeReflectorMatOn/Off`, `TailReflectorMatOn/Off`, `ReverseReflectorMatOn/Off`, `dashboardMatOn/Off`; переключение `SetSelectionMaterial("BrakesOn")`. `SetObjectMaterial(int index, string)` и `SetObjectTexture` работают по индексу hiddenSelections.
+- HYPOTHESIS: откуда берутся сами материалы Mat On/Off и связь индекса 0…8 с hiddenSelections; без выделений `light_*` на гранях LOD0 свечения не будет. Нужна проверка в игре.
+- PARTIAL: `healthLevels[] = {{порог,{rvmat}}}` в DamageZones задаёт материалы повреждений (скрипты не читают; формат из ванильных конфигов). Пустые `{}` = без визуального эффекта.
+- Практика (PARTIAL): атлас без padding даёт тёмные кромки в mip; нужен dilate цвета 8-16 px.

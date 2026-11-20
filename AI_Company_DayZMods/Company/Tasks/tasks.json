@@ -2560,11 +2560,11 @@
       "type": "art",
       "assignee": "modeler-3d",
       "priority": "P1",
-      "status": "IN_PROGRESS",
+      "status": "REVIEW",
       "due": null,
       "deps": [],
       "budget": 60000,
-      "result": "",
+      "result": "TEXTURE_REVIEW.md: 14 улучшений в 3 группах, проверка света/повреждений по carscript.c, список проверок на ПК, первый пакет ~135k токенов",
       "files": [
         "AI_Company_DayZMods/Projects/Active/PRJ-0004_rf_humvee_mod_hammera_m1025/TEXTURE_REVIEW.md"
       ],
@@ -2581,10 +2581,22 @@
           "by": "modeler-3d",
           "kind": "status",
           "text": "NEW → IN_PROGRESS"
+        },
+        {
+          "at": "2026-11-20T13:39",
+          "by": "modeler-3d",
+          "kind": "update",
+          "text": "изменено: result"
+        },
+        {
+          "at": "2026-11-20T13:39",
+          "by": "modeler-3d",
+          "kind": "status",
+          "text": "IN_PROGRESS → REVIEW"
         }
       ],
       "created": "2026-11-20T13:27",
-      "updated": "2026-11-20T13:38"
+      "updated": "2026-11-20T13:39"
     }
   ]
 }

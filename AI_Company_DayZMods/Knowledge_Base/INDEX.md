@@ -1,10 +1,10 @@
 # Индекс базы знаний
 
-_Автогенерация: `./dzm kb index` · 2026-11-20T11:00_
+_Автогенерация: `./dzm kb index` · 2026-11-20T11:17_
 
 Статусы: **VERIFIED** — ≥2 независимых источника или источник + эксперимент; **PARTIAL** — 1 источник; **HYPOTHESIS** — не подтверждено, нужен эксперимент; **OUTDATED** — устарело.
 
-Сводка: HYPOTHESIS: 1 · PARTIAL: 2 · VERIFIED: 4 · document: 1
+Сводка: HYPOTHESIS: 2 · PARTIAL: 2 · VERIFIED: 4 · document: 1
 
 ## Modding
 
@@ -17,6 +17,7 @@ _Автогенерация: `./dzm kb index` · 2026-11-20T11:00_
 | Запись | Статус | Обновлено | Владелец | Источников |
 |---|---|---|---|---|
 | [План глубокого изучения DayZ Engine](Research/DAYZ_ENGINE_STUDY_PLAN.md) | document | 2026-11-20 | research-lead | 0 |
+| [Коммерческое использование модов DayZ — правила BI (не проверено по первоисточнику)](Research/commercial_use_rules.md) | HYPOTHESIS | 2026-11-20 | research-lead | 3 |
 
 ## Tools
 

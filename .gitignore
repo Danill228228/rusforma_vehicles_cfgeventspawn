@@ -23,3 +23,11 @@ AI_Company_DayZMods/Media/Footage/**/*.avi
 
 # Локальная память агентов (scope local) не коммитится; project-память коммитится
 .claude/agent-memory-local/
+
+# КОММЕРЧЕСКАЯ ЗАЩИТА (решение D-012): репозиторий публичный → исходники, модели, текстуры
+# и конфиги модов в git не попадают. Удалить этот блок только после перевода репозитория в private (T-0042).
+AI_Company_DayZMods/Development/Source/**
+AI_Company_DayZMods/Development/Models/**
+AI_Company_DayZMods/Development/Textures/**
+AI_Company_DayZMods/Development/Configs/**
+!AI_Company_DayZMods/Development/*/.gitkeep

@@ -182,6 +182,13 @@ class CompanyCliTest(unittest.TestCase):
         self.assertIn("$0.25", report)
         self.ok("report", "daily", "--save")
 
+    def test_mod_requires_provenance(self):
+        mod = self.root / "Development" / "Source" / "DZM_TestMod"
+        mod.mkdir(parents=True)
+        self.fail("нет PROVENANCE.md", "validate")
+        (mod / "PROVENANCE.md").write_text("# Происхождение\n", encoding="utf-8")
+        self.ok("validate")
+
     def test_project_lifecycle(self):
         self.ok("project", "add", "--name", "Тестовый мод", "--owner", "ceo", "--desc", "проверка")
         folder = next((self.root / "Projects" / "Active").glob("PRJ-0001_*"))

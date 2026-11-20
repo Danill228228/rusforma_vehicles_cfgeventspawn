@@ -1285,6 +1285,12 @@ def cmd_validate(a):
         if x["status"] == "CLOSED" and not any(rt["result"] == "PASS" for rt in x.get("retests", [])):
             errors.append(f"{x['id']}: закрыта без успешного повторного теста")
     errors += kb_problems()
+    source = P("Development", "Source")
+    if source.exists():
+        for mod in sorted(x for x in source.iterdir() if x.is_dir()):
+            if not (mod / "PROVENANCE.md").exists():
+                errors.append(f"{rel(mod)}: нет PROVENANCE.md — происхождение и лицензии материалов мода "
+                              "(правило коммерческой модели, шаблон Development/PROVENANCE_TEMPLATE.md)")
     try:
         load_runs()
     except DzmError as e:

@@ -4,8 +4,8 @@ _Сформирован `./dzm report ceo` по данным репозитор�
 
 ## 1. Активные проекты
 
-- **PRJ-0001 — Запуск компании** (владелец ceo): 14/15 задач завершено · `AI_Company_DayZMods/Projects/Active/PRJ-0001_zapusk_kompanii`
-- **PRJ-0002 — Глубокое изучение DayZ Engine** (владелец research-lead): 0/24 задач завершено · `AI_Company_DayZMods/Projects/Active/PRJ-0002_glubokoe_izuchenie_dayz_engine`
+- **PRJ-0001 — Запуск компании** (владелец ceo): 14/16 задач завершено · `AI_Company_DayZMods/Projects/Active/PRJ-0001_zapusk_kompanii`
+- **PRJ-0002 — Глубокое изучение DayZ Engine** (владелец research-lead): 0/26 задач завершено · `AI_Company_DayZMods/Projects/Active/PRJ-0002_glubokoe_izuchenie_dayz_engine`
 - **PRJ-0003 — Сопровождение CE-конфигов Rusforma** (владелец config-build-engineer): 0/1 задач завершено · `AI_Company_DayZMods/Projects/Active/PRJ-0003_soprovozhdenie_ce_konfigov_rusforma`
 
 ## 2. Выполненные задачи
@@ -44,8 +44,9 @@ _Сформирован `./dzm report ceo` по данным репозитор�
 
 ## 6. Результаты исследований DayZ Engine
 
-Записей в базе знаний: 7 (HYPOTHESIS: 1, PARTIAL: 2, VERIFIED: 4). Индекс: `Knowledge_Base/INDEX.md`.
+Записей в базе знаний: 8 (HYPOTHESIS: 2, PARTIAL: 2, VERIFIED: 4). Индекс: `Knowledge_Base/INDEX.md`.
 - [VERIFIED] config.cpp мода — CfgPatches и CfgMods по официальным образцам BI — `AI_Company_DayZMods/Knowledge_Base/Modding/config_cpp_mod_structure.md`
+- [HYPOTHESIS] Коммерческое использование модов DayZ — правила BI (не проверено по первоисточнику) — `AI_Company_DayZMods/Knowledge_Base/Research/commercial_use_rules.md`
 - [PARTIAL] Blender → P3D — аддон Arma 3 Object Builder — `AI_Company_DayZMods/Knowledge_Base/Tools/blender_p3d_pipeline.md`
 - [VERIFIED] Платформа агентов Claude Code — что реально умеют сотрудники компании — `AI_Company_DayZMods/Knowledge_Base/Tools/claude_code_agent_platform.md`
 - [VERIFIED] Что работает в облачном контейнере компании — `AI_Company_DayZMods/Knowledge_Base/Tools/container_toolchain.md`
@@ -74,13 +75,13 @@ _Сформирован `./dzm report ceo` по данным репозитор�
 |---|---|---|---|---|
 | 3D_Art | 1 | 0 | 1 | 0 |
 | CEO | 1 | 0 | 0 | 1 |
-| Client | 1 | 0 | 0 | 0 |
-| Engineering | 2 | 0 | 5 | 1 |
+| Client | 1 | 0 | 1 | 0 |
+| Engineering | 2 | 0 | 6 | 1 |
 | HR | 1 | 0 | 0 | 0 |
 | Media | 3 | 0 | 1 | 0 |
 | Planning | 1 | 0 | 0 | 0 |
 | QA | 1 | 0 | 1 | 0 |
-| Research | 1 | 0 | 16 | 0 |
+| Research | 1 | 0 | 17 | 0 |
 
 ## 9. Расход вычислительных ресурсов
 
@@ -94,6 +95,7 @@ _Сформирован `./dzm report ceo` по данным репозитор�
 
 ## 10. Следующие запланированные задачи
 
+- T-0042 [P0] Сделать репозиторий GitHub приватным → client
 - T-0017 [P1] Упаковщик PBO для Linux (без подписи) и тест упаковка-распаковка → config-build-engineer
 - T-0018 [P1] Enforce Script: основы языка → research-lead
 - T-0019 [P1] Слои скриптов 1_Core…5_Mission: видимость и порядок загрузки → research-lead

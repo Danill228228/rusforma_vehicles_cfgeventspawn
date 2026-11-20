@@ -15,6 +15,7 @@ _Владелец: research-lead · доступ проверен из конт�
 | Форумы DayZ | https://forums.dayz.com/ | ⛔ | моддинг, серверы |
 | Сайт DayZ | https://dayz.com/ | ⛔ | заметки к обновлениям, статус-репорты |
 | Сайт Bohemia | https://www.bohemia.net/ | ⛔ | лицензии (ADPL-SA и др.), правила монетизации |
+| Правила BI для коммерческой модели | https://www.bistudio.com/community/game-content-usage-rules · https://www.bistudio.com/monetization · https://community.bistudio.com/wiki/Intellectual_Property · https://data.bistudio.com/dayz/Public_PC_DayZ_Server_Hosting_Rules_V11.pdf | ⛔ (проверено 2026-11-20) | продажа модов, монетизация серверов, использование игрового контента (T-0041) |
 
 ## Сообщество (надёжность: средняя или низкая — нужны подтверждения)
 | Источник | Адрес | Доступ | Что берём |
@@ -38,4 +39,4 @@ _Владелец: research-lead · доступ проверен из конт�
 | Браузер с графическим интерфейсом | нет в облаке | возможен через приложение Claude на ПК заказчика (подключение компьютера) |
 
 ## Чтобы открыть заблокированные источники
-Заказчик одобряет добавление хостов в сетевые настройки окружения (запрос оформлен в задаче T-0013): community.bistudio.com, feedback.bistudio.com, forums.bohemia.net, forums.dayz.com, dayz.com, www.bohemia.net, steamcommunity.com, stardz-team.github.io, mrcmodding.gitbook.io, extensions.blender.org. После одобрения research-lead перепроверяет таблицу (задача T-0016).
+Заказчик одобряет добавление хостов в сетевые настройки окружения (запрос оформлен в задаче T-0013): community.bistudio.com, feedback.bistudio.com, forums.bohemia.net, forums.dayz.com, dayz.com, www.bohemia.net, www.bistudio.com, data.bistudio.com, steamcommunity.com, stardz-team.github.io, mrcmodding.gitbook.io, extensions.blender.org. После одобрения research-lead перепроверяет таблицу (задача T-0016).

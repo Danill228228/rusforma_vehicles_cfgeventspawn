@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "next_task": 41,
+  "next_task": 44,
   "next_project": 4,
   "projects": [
     {
@@ -898,10 +898,17 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → BLOCKED: нужно одобрение заказчика: добавить хосты источников в сетевые настройки окружения (список в SOURCES.md)"
+        },
+        {
+          "at": "2026-11-20T11:17",
+          "by": "ceo",
+          "kind": "comment",
+          "text": "К списку хостов добавлены www.bistudio.com и data.bistudio.com: там официальные правила BI о монетизации и использовании контента (нужны для T-0041)",
+          "to": "client"
         }
       ],
       "created": "2026-11-20T10:53",
-      "updated": "2026-11-20T10:54",
+      "updated": "2026-11-20T11:17",
       "blocked_reason": "нужно одобрение заказчика: добавить хосты источников в сетевые настройки окружения (список в SOURCES.md)"
     },
     {
@@ -1752,6 +1759,89 @@
       "created": "2026-11-20T10:54",
       "updated": "2026-11-20T11:00",
       "blocked_reason": "ждёт решения заказчика: исправить файл (BUG-0001 S1, вставить </event> после строки 45)? нужен ли общий пул точек (BUG-0002)? прислать events.xml сервера"
+    },
+    {
+      "id": "T-0041",
+      "title": "Правила BI для коммерческих модов: продажа, закрытая раздача, монетизация серверов, игровой контент",
+      "description": "Прочитать официальные документы BI (Game Content Usage Rules, Intellectual Property, правила хостинга DayZ, страница монетизации) и ответить на 4 вопроса из Knowledge_Base/Research/commercial_use_rules.md. Итог для заказчика: какие схемы продажи и раздачи разрешены. До закрытия задачи законность схемы продаж не утверждаем",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "research-lead",
+      "priority": "P1",
+      "status": "NEW",
+      "due": "2026-12-04",
+      "deps": [
+        "T-0013"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T11:17",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T11:17",
+      "updated": "2026-11-20T11:17"
+    },
+    {
+      "id": "T-0042",
+      "title": "Сделать репозиторий GitHub приватным",
+      "description": "Моды коммерческие (правило 8), а репозиторий сейчас public. GitHub → репозиторий → Settings → General → Danger Zone → Change repository visibility → Make private. После этого CEO снимает защиту в .gitignore (D-012)",
+      "project": "PRJ-0001",
+      "type": "ops",
+      "assignee": "client",
+      "priority": "P0",
+      "status": "NEW",
+      "due": null,
+      "deps": [],
+      "budget": null,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T11:17",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T11:17",
+      "updated": "2026-11-20T11:17"
+    },
+    {
+      "id": "T-0043",
+      "title": "Защита коммерческих модов: серверная логика, ключи и подписи, закрытая доставка",
+      "description": "Как держать ценную логику на сервере и отдавать клиенту только нужное; ключи .bikey и подписи; варианты закрытой доставки. Без скрытых закладок и удалённого отключения (RULES.md, раздел «Коммерческая модель»)",
+      "project": "PRJ-0002",
+      "type": "research",
+      "assignee": "lead-engineer",
+      "priority": "P2",
+      "status": "NEW",
+      "due": "2026-12-18",
+      "deps": [
+        "T-0038",
+        "T-0041"
+      ],
+      "budget": 60000,
+      "result": "",
+      "files": [],
+      "reviews": [],
+      "log": [
+        {
+          "at": "2026-11-20T11:17",
+          "by": "ceo",
+          "kind": "create",
+          "text": "задача создана"
+        }
+      ],
+      "created": "2026-11-20T11:17",
+      "updated": "2026-11-20T11:17"
     }
   ]
 }

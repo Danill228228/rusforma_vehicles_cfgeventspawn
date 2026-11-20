@@ -492,8 +492,8 @@ def _smdi(spec, gloss):
 def write_rvmat(path, nohq, smdi, specular, power):
     """Материал Super как у ванильных машин: свои карты нормалей и бликов, остальное процедурное."""
     stages = [nohq, "#(argb,8,8,3)color(0.5,0.5,0.5,1,DT)", "#(argb,8,8,3)color(0,0,0,0,MC)",
-              "#(argb,8,8,3)color(1,1,1,1,AS)", smdi, "#(ai,32,128,1)fresnel(1.26,0.85)",
-              r"dz\data\data\env_land_co.paa"]
+              "#(argb,8,8,3)color(1,1,1,1,AS)", smdi, "#(ai,32,128,1)fresnel(1.376,0.315)",
+              r"dz\data\data\env_land_optic_co.paa"]
     uv = ('\tuvSource="tex";\n\tclass uvTransform\n\t{\n\t\taside[]={1,0,0};\n\t\tup[]={0,1,0};\n'
           '\t\tdir[]={0,0,1};\n\t\tpos[]={0,0,0};\n\t};\n')
     out = ["// Сгенерировано RF_Humvee_Mod/tools/build_mod.py",
@@ -659,7 +659,7 @@ def main():
     co, _, _, _ = ATLAS.paint("desert", wheels, MARKINGS)
     paa.write_paa(os.path.join(DATA, "rf_humvee_desert_co.paa"), co)
     write_rvmat(os.path.join(SRC, BODY_MAT), r"rf_humvee\data\rf_humvee_body_nohq.paa",
-                r"rf_humvee\data\rf_humvee_body_smdi.paa", 0.5, 30)
+                r"rf_humvee\data\rf_humvee_body_smdi.paa", 0.75, 250)    # как у ванильного M1025: блик узкий и слабый
     with open(os.path.join(DATA, "model.cfg"), "w", encoding="utf-8") as f:
         f.write(model_cfg())
 

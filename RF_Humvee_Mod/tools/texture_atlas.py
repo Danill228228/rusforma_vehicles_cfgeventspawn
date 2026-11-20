@@ -275,6 +275,7 @@ class Atlas:
         """Запечённое затенение, заклёпки с подтёками, трафареты и брызги: от окраски не зависят, считаются раз."""
         if self.AO is None:
             self.AO = self._ambient_occlusion(wheels)
+            self.SEAM = self._seams()
             self.RIVET, self.RSTREAK = self._rivets()
             self.MARK = np.zeros(len(self.P), np.float32)
             for text, center, normal, width in markings:
@@ -283,7 +284,26 @@ class Atlas:
                 self.MARK = np.maximum(self.MARK, m)
             self.SPECK = self._speck_tile(seed=21)[self.pix]
 
-    def _ambient_occlusion(self, wheels, h=0.03, sigmas=(0.03, 0.08, 0.20), strength=(0.50, 0.45, 0.35)):
+    def _seams(self, cell=0.012):
+        """Стыки панелей: край куска, вплотную к которому (около 1 см) край другого куска того же материала в той
+        же плоскости — дверь у кузова, крышка у борта. Сгиб листа (сосед под углом) и свободный край — не стык:
+        тёмная обводка по всем рёбрам делала машину рисованной."""
+        b = np.nonzero(self.E < 1)[0]
+        k = self.pid[self.pix][b]
+        mat = np.unique(self.M, return_inverse=True)[1].ravel()[b]
+        nq = np.round(self.N[b] * 10).astype(np.int64)
+        out = np.zeros(len(self.P), bool)
+        for off in (0.0, cell / 2):                                         # две сетки со сдвигом: стык на границе ячеек
+            key = np.column_stack([np.floor((self.P[b] + off) / cell).astype(np.int64), nq, mat])
+            _, g = np.unique(key, axis=0, return_inverse=True)
+            g = g.ravel()
+            pairs = np.unique(np.column_stack([g, k]), axis=0)               # разные куски в ячейке
+            many = np.bincount(pairs[:, 0], minlength=g.max() + 1) >= 2
+            out[b[many[g]]] = True
+        print(f"    стыков {out.sum()} пикс. из {len(b)} краевых")
+        return out
+
+    def _ambient_occlusion(self, wheels, h=0.03, sigmas=(0.03, 0.08, 0.20), strength=(0.50, 0.30, 0.15)):
         """Затенение по объёму: поверхности модели (и колёса-прокси) — в воксели 3 см, размытие гауссом на трёх
         масштабах; чем больше «стенок» перед точкой (в 3σ по нормали — своя стенка и то, что за ней, почти не
         считаются), тем она темнее: щели, арки, углы, салон."""
@@ -340,13 +360,23 @@ class Atlas:
         return ao
 
     def _rivets(self, spacing=0.065, inset=5, radius=2.2):
-        """Ряды заклёпок вдоль кромок больших панелей (кроме стеклопластикового капота с крыльями); под частью
+        """Ряды заклёпок вдоль стыков больших панелей (кроме стеклопластикового капота с крыльями); под частью
         заклёпок на вертикальных панелях — ржавые подтёки вниз. Возвращает (купол 0…1, подтёк 0…1) на пиксель."""
         S, D = self.size, self.density
         rng = np.random.default_rng(31)
         big = np.array([p["mat"] == "paint" and p["span"].min() > 0.20 for p in self.patches])
         k_all = self.pid[self.pix]
         cand = (self.E == inset) & big[k_all] & ~((self.P[:, 2] > 0.75) & (self.P[:, 1] < 1.40))
+        c3 = 0.03                                                           # только у стыков, не по каждому сгибу
+        near = set()
+        for c in np.unique(np.floor(self.P[self.SEAM] / c3).astype(np.int64), axis=0).tolist():
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    for dz in (-1, 0, 1):
+                        near.add((c[0] + dx, c[1] + dy, c[2] + dz))
+        ci = np.nonzero(cand)[0]
+        cc = np.floor(self.P[ci] / c3).astype(np.int64).tolist()
+        cand[ci[[tuple(c) not in near for c in cc]]] = False
         ys, xs, ks = self.pix[0][cand], self.pix[1][cand], k_all[cand]
         sp = spacing * D
         cell = sp
@@ -429,7 +459,7 @@ class Atlas:
         n = len(P)
         y = P[:, 1]
         spec = np.full(n, 0.08, np.float32)
-        gloss = np.full(n, 0.25, np.float32)
+        gloss = np.full(n, 0.55, np.float32)          # матовая армейская краска с узким бликом, как у ванили
         height = np.zeros(n, np.float32)
 
         # мелкие текстуры в пространстве атласа (тайл 1024 повторяется)
@@ -445,23 +475,32 @@ class Atlas:
         seat = M == "seat"
         top = smoothstep(0.5, 0.9, N[:, 1])
 
-        # 1. базовый цвет: палитра ванильного M1025 (лесной камуфляж) на ~15% светлее — запечённое затенение ниже
-        # темнит её в среднем на четверть; пустынный — выгоревший песочный
-        green, brown, black = np.array([72, 80, 58]), np.array([80, 67, 53]), np.array([34, 32, 35])
+        # 1. базовый цвет: палитра ванильного M1025 (лесной камуфляж) чуть светлее — запечённое затенение и налёт
+        # ниже её темнят; пустынный — выгоревший песочный
+        green, brown, black = np.array([66, 73, 53]), np.array([73, 61, 48]), np.array([31, 29, 32])
         if variant == "woodland":
-            wb = smoothstep(0.553, 0.567, fbm(P, 1, 1.1, 3))[:, None]           # края пятен мягкие, 1–2 см
-            wk = smoothstep(0.593, 0.607, fbm(P, 2, 0.9, 3))[:, None]
+            # крупные чёткие пятна, вытянутые вдоль машины; доли как у ванильного M1025: чёрного ~40%, зелёного ~40%,
+            # коричневого ~20% (при 19% чёрного машина читалась однотонной, «игрушечной»)
+            wob = 0.010 * (fbm(P, 41, 0.05, 2) - 0.5) + 0.002 * grain2         # неровные края пятен, как от пульверизатора
+            f_br = fbm(P, 1, 0.9, 3, scale=(0.8, 1.25, 0.7)) + wob
+            f_bk = fbm(P, 2, 0.8, 3, scale=(0.8, 1.25, 0.7)) + wob
+            t_br, t_bk = np.quantile(f_br[paint], 0.67), np.quantile(f_bk[paint], 0.60)
+            wb = smoothstep(t_br - 0.004, t_br + 0.004, f_br)[:, None]
+            wk = smoothstep(t_bk - 0.004, t_bk + 0.004, f_bk)[:, None]
             base = (green * (1 - wb) + brown * wb) * (1 - wk) + black * wk
             under = np.array([84, 80, 66])                                      # под сколом — грунт
+            dust_col, mud_col = np.array([112, 102, 84]), np.array([58, 50, 40])
         else:
-            sand, sand2 = np.array([160, 144, 116]), np.array([148, 133, 108])
+            sand, sand2 = np.array([152, 137, 110]), np.array([141, 126, 103])
             base = sand + (sand2 - sand) * smoothstep(0.45, 0.65, fbm(P, 3, 1.2, 3))[:, None]
             under = green                                                       # под песочной — старая зелёная
-        variation = 1 + 0.06 * (fbm(P, 4, 0.35, 3) - 0.5) + 0.02 * grain2
+            dust_col, mud_col = np.array([166, 150, 122]), np.array([92, 80, 62])
+        variation = 1 + 0.07 * (fbm(P, 4, 0.35, 3) - 0.5) + 0.05 * (fbm(P, 42, 0.07, 2) - 0.5) + 0.025 * grain2
         col = (base * variation[:, None]).astype(np.float32)
         col[interior] = (base[interior] * 0.85) * variation[interior, None]
         col[dark] = np.array([34, 35, 31]) * (1 + 0.08 * grain2[dark, None])
         col[seat] = np.array([46, 46, 41]) * (1 + 0.10 * grain[seat, None] + 0.05 * grain2[seat, None])
+        spec[dark], gloss[dark] = 0.06, 0.35
         spec[seat], gloss[seat] = 0.03, 0.10
 
         # выгорание на солнце: верхние грани светлее и серее
@@ -473,10 +512,11 @@ class Atlas:
         mk = (self.MARK * (0.92 - 0.75 * worn) * (paint | dark))[:, None]
         col = col * (1 - mk) + np.array([30, 30, 28]) * mk
 
-        # 3. швы панелей — тонкая тёмная щель по кромкам кусков
-        seam = (E < 1) & (paint | interior) & (self.MINSPAN > 0.05)
-        col[seam] *= 0.60
+        # 3. стыки панелей — тонкая тёмная щель; остальные рёбра только чуть скруглены в рельефе
+        seam = self.SEAM & (paint | interior)
+        col[seam] *= 0.55
         height[seam] -= 1.0
+        height -= 0.5 * smoothstep(2.5, 0.0, E) * (paint | interior | dark)
 
         # 4. запечённое затенение и копоть в углублениях (в салоне мягче — его ещё затеняет движок)
         ao = np.where(interior | seat, 1 - 0.6 * (1 - self.AO), self.AO)
@@ -484,31 +524,41 @@ class Atlas:
         g = (1 - ao)[:, None]
         col = col * (1 - 0.55 * g) * (0.55 + 0.45 * ao[:, None]) + grime * 0.55 * g * (0.55 + 0.45 * ao[:, None])
         spec *= 0.4 + 0.6 * ao
-        gloss *= 0.5 + 0.5 * ao
+        gloss *= 0.7 + 0.3 * ao
 
-        # 5. подтёки с верхних кромок панелей вниз по вертикальным граням
+        # 4б. налёт: пятна грязи и разводы разного размера — без них краска ровная, как пластик
+        blot = 0.6 * tiled(3.0, 33) + 0.5 * tiled(12.0, 34)
+        stain = smoothstep(0.55, 0.80, fbm(P, 43, 0.30, 3))
+        film = (0.08 + 0.32 * stain) * smoothstep(0.3, 1.8, blot)               # гуще местами, а не губкой везде
+        film *= paint | dark | interior
+        col = col * (1 - film[:, None]) + grime * film[:, None]
+        light = 0.10 * smoothstep(1.0, 2.2, -blot) * (paint | interior)          # светлые разводы высохшей пыли
+        col = col * (1 - light[:, None]) + dust_col * light[:, None]
+        gloss *= 1 - 0.5 * film
+
+        # 5. подтёки с верхних кромок панелей вниз по вертикальным граням: широкие и тонкие струйки
         vert = np.abs(N[:, 1]) < 0.5
         st = fbm(P, 5, 0.5, 2, scale=(6.0, 0.30, 6.0))
-        run = (vert & (paint | dark)) * smoothstep(0.45, 0.80, st) * np.exp(-np.maximum(self.YTOP - y, 0) / 0.35)
+        st2 = fbm(P, 44, 0.5, 2, scale=(22.0, 0.6, 22.0))
+        reach = np.exp(-np.maximum(self.YTOP - y, 0) / (0.20 + 0.45 * fbm(P, 45, 0.3, 1)))
+        run = np.clip(0.7 * smoothstep(0.50, 0.80, st) + 0.6 * smoothstep(0.55, 0.75, st2), 0, 1)
+        run *= (vert & (paint | dark)) * reach
         col = col * (1 - 0.40 * run[:, None]) + grime * 0.40 * run[:, None]
 
         # 6. заклёпки: купол в рельефе, чуть светлее, часть — с ржавым подтёком
         rv = self.RIVET * paint
-        col *= (1 + 0.10 * rv)[:, None]
+        col *= (1 + 0.05 * rv)[:, None]
         height += 1.6 * rv
         rust = np.array([92, 56, 34])
         rs = (self.RSTREAK * (paint | dark))[:, None]
         col = col * (1 - 0.55 * rs) + rust * 0.55 * rs
 
         # 7. пыль и грязь: пыль внизу и на горизонталях, засохшая грязь у днища, брызги из-под колёс
-        if variant == "woodland":
-            dust_col, mud_col = np.array([112, 102, 84]), np.array([58, 50, 40])
-        else:
-            dust_col, mud_col = np.array([166, 150, 122]), np.array([92, 80, 62])
         dn = fbm(P, 6, 0.35, 3)
         low = smoothstep(1.00, 0.35, y)
         dust = 0.50 * low * (0.55 + 0.6 * dn) + 0.40 * top * smoothstep(0.40, 0.70, dn) + 0.45 * (N[:, 1] < -0.5)
         dust += 0.35 * (interior & (N[:, 1] > 0.7))                              # пол салона
+        dust *= 0.7 + 0.6 * smoothstep(-1.5, 1.5, tiled(5.0, 39))               # пыль клочьями, а не ровной заливкой
         dust = np.clip(dust, 0, 0.9) * (~seat)
         col = col * (1 - dust[:, None]) + dust_col * dust[:, None]
         splash = np.zeros(n, np.float32)
@@ -521,32 +571,35 @@ class Atlas:
         mud = np.maximum(caked, drops) * (~seat) * (~interior)
         col = col * (1 - 0.85 * mud[:, None]) + mud_col * 0.85 * mud[:, None]
         spec *= (1 - 0.8 * np.maximum(dust, mud))
-        gloss *= (1 - 0.7 * np.maximum(dust, mud))
+        gloss *= (1 - 0.6 * np.maximum(dust, mud))
         height += 0.8 * mud * (0.5 + 0.5 * grain)
 
-        # 8. сколы на кромках: краска сбита до нижнего слоя, грунта и металла; на тёмных деталях — ржавчина
-        # только на кусках шире 8 см: у труб, рёбер и рамок весь кусок — кромка, они были бы сплошь в сколах
-        hi = fbm(P, 8, 0.08, 3)
-        chip = ((E < 1.5 + 3.5 * hi) & (hi > 0.63)) | ((E < 1.0) & (hi > 0.57))
+        # 8. сколы: пятнами у кромок в потёртых местах (не пунктиром по всем рёбрам) и редкие — посреди панели;
+        # краска сбита до нижнего слоя, грунта и металла; на тёмных деталях — ржавчина.
+        # Только на кусках шире 8 см: у труб, рёбер и рамок весь кусок — кромка, они были бы сплошь в сколах
+        zone = smoothstep(0.48, 0.66, fbm(P, 46, 0.6, 2))
+        hi = fbm(P, 8, 0.08, 3) + 0.015 * grain
+        thr = 0.66 - 0.06 * zone
+        chip = (E < 30 * (hi - thr)) | ((hi > 0.76 - 0.04 * zone) & (zone > 0.3))
         chip &= (paint | dark | interior) & (self.MINSPAN > 0.08)
         metal = np.array([92, 90, 84])
         steel = np.array([62, 60, 56])
         mix = smoothstep(0.55, 0.75, fbm(P, 9, 0.05, 2))
-        deep = smoothstep(0.62, 0.70, hi)                                      # глубже — до грунта и металла
+        deep = smoothstep(thr + 0.04, thr + 0.10, hi)                           # глубже — до грунта и металла
         layer = under * (1 - deep[:, None]) + (np.array([84, 80, 66]) * (1 - mix[:, None]) + metal * mix[:, None]) * deep[:, None]
         chip_col = np.where(dark[:, None], steel * (1 - mix[:, None]) + rust * mix[:, None], layer)
         col[chip] = chip_col[chip] * (0.6 + 0.4 * ao[chip, None])
-        spec[chip], gloss[chip] = 0.30, 0.50
+        spec[chip], gloss[chip] = 0.25, 0.60
         height[chip] -= 0.8
         rf = fbm(P, 10, 0.10, 3)                                               # мелкая ржавчина, гуще у кромок
         rust_dark = dark & (rf > 0.66 - 0.08 * (E < 3))
         col[rust_dark] = col[rust_dark] * 0.72 + rust * 0.28
 
         # 9. царапины: тонкие светлые штрихи (в пространстве атласа, тайл с отрезками)
-        scr = self._scratch_tile(seed=13)[self.pix] & (paint | interior) & (fbm(P, 11, 0.4, 2) > 0.5)
-        col[scr] = col[scr] * 0.6 + metal * 0.4
-        spec[scr], gloss[scr] = 0.4, 0.5
-        height[scr] -= 0.6
+        scr = self._scratch_tile(seed=13)[self.pix] & (paint | interior) & (fbm(P, 11, 0.4, 2) > 0.62)
+        col[scr] = col[scr] * 0.78 + metal * 0.22
+        spec[scr], gloss[scr] = 0.20, 0.60
+        height[scr] -= 0.4
 
         # 10. зерно краски для рельефа
         height += 0.25 * grain

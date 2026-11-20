@@ -1,8 +1,8 @@
 # Доска задач
 
-_Автогенерация `./dzm board` · 2026-11-20T13:39 · не редактировать вручную_
+_Автогенерация `./dzm board` · 2026-11-20T13:47 · не редактировать вручную_
 
-Сводка: NEW 29 · REVIEW 2 · COMPLETED 23
+Сводка: NEW 29 · COMPLETED 25
 
 ## PRJ-0001 — Запуск компании [ACTIVE] — 15/16
 
@@ -64,16 +64,16 @@ _Автогенерация `./dzm board` · 2026-11-20T13:39 · не редак
 |---|---|---|---|---|---|---|
 | T-0040 | COMPLETED | P1 | config-build-engineer | — | — | Аудит и исправление CE-конфига заказчика rusforma_vehicles_cfgeventspawn |
 
-## PRJ-0004 — RF_Humvee — мод Хаммера (M1025) [ACTIVE] — 6/9
+## PRJ-0004 — RF_Humvee — мод Хаммера (M1025) [ACTIVE] — 8/9
 
 | ID | Статус | P | Исполнитель | Срок | Зависит от | Задача |
 |---|---|---|---|---|---|---|
-| T-0052 | REVIEW | P0 | ceo | — | T-0049, T-0050, T-0051, T-0053 | RF_Humvee: пересборка PBO после исправлений |
-| T-0054 | REVIEW | P1 | modeler-3d | — | — | RF_Humvee: ревью текстур и материала — что улучшить для вида в игре |
 | T-0047 | NEW | P1 | client | — | — | RF_Humvee: ручной тест на ПК по сценарию QA и присылка логов |
 | T-0045 | COMPLETED | P0 | qa-lead | — | — | QA-аудит мода RF_Humvee по 10 стадиям |
 | T-0049 | COMPLETED | P0 | config-build-engineer | — | — | RF_Humvee: BUG-0003 (PROVENANCE.md) и BUG-0007 (названия), убрать категорию vehiclesparts |
 | T-0050 | COMPLETED | P0 | lead-engineer | — | — | RF_Humvee: BUG-0005 — версия формата сохранения люка |
 | T-0051 | COMPLETED | P0 | modeler-3d | — | — | RF_Humvee: BUG-0006 — текстуры 2048, корректные форматы, картинки до/после |
+| T-0052 | COMPLETED | P0 | ceo | — | T-0049, T-0050, T-0051, T-0053 | RF_Humvee: пересборка PBO после исправлений |
 | T-0053 | COMPLETED | P0 | lead-engineer | — | — | RF_Humvee: BUG-0008 — действия люка из салона перенести на игрока |
 | T-0046 | COMPLETED | P1 | lead-engineer | — | — | RF_Humvee: ответить на архитектурные вопросы QA и составить план исправлений |
+| T-0054 | COMPLETED | P1 | modeler-3d | — | — | RF_Humvee: ревью текстур и материала — что улучшить для вида в игре |

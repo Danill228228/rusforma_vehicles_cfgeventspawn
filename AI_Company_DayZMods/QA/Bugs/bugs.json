@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "next": 12,
+  "next": 13,
   "bugs": [
     {
       "id": "BUG-0001",
@@ -336,17 +336,24 @@
       "id": "BUG-0009",
       "title": "build_mod.py на Linux пишет rvmat в файл с обратными слэшами в имени",
       "severity": "S4",
-      "status": "RETEST",
+      "status": "CLOSED",
       "repro": "Запустить tools/build_mod.py на Linux: os.path.join(SRC, BODY_MAT) при BODY_MAT='rf_humvee\\data\\rf_humvee_body.rvmat' даёт один файл 'src/rf_humvee\\data\\rf_humvee_body.rvmat', а src/RF_Humvee/data/rf_humvee_body.rvmat не перезаписывается (проверено python: os.path.join). Стороннего файла в копии пока нет",
       "cause": "Путь с обратными слэшами из константы для P3D используется как путь файловой системы",
       "location": "RF_Humvee_Mod/tools/build_mod.py:41,664",
       "fix": "Писать rvmat в os.path.join(DATA, 'rf_humvee_body.rvmat'); BODY_MAT оставить для P3D/rvmat; после сборки проверять, что в src нет файлов с '\\' в имени",
-      "retests": [],
+      "retests": [
+        {
+          "at": "2026-11-20T13:44",
+          "by": "qa-lead",
+          "result": "PASS",
+          "notes": "Запуск build_mod.py --no-pbo на копии (5м35с): файлов с обратными слэшами нет, rvmat идентичен src (cmp), config/model.cfg/PAA идентичны"
+        }
+      ],
       "task": "T-0051",
       "found_by": "qa-lead",
       "assignee": "config-build-engineer",
       "created": "2026-11-20T12:46",
-      "updated": "2026-11-20T12:51",
+      "updated": "2026-11-20T13:44",
       "log": [
         {
           "at": "2026-11-20T12:46",
@@ -359,6 +366,12 @@
           "by": "ceo",
           "kind": "update",
           "text": "status OPEN → RETEST (исправлено CEO (лимит sonnet у исполнителя))"
+        },
+        {
+          "at": "2026-11-20T13:44",
+          "by": "qa-lead",
+          "kind": "retest",
+          "text": "PASS: Запуск build_mod.py --no-pbo на копии (5м35с): файлов с обратными слэшами нет, rvmat идентичен src (cmp), config/model.cfg/PAA идентичны"
         }
       ]
     },
@@ -390,17 +403,24 @@
       "id": "BUG-0011",
       "title": "Опечатка «на крыше на крыше» после правки BUG-0007",
       "severity": "S4",
-      "status": "RETEST",
+      "status": "CLOSED",
       "repro": "grep -rn 'на крыше на крыше' RF_Humvee_Mod",
       "cause": "Замена «люка стрелка на крыше» на «люка на крыше» оставила хвост «на крыше»",
       "location": "RF_Humvee_Mod/src/RF_Humvee/config.cpp:44; RF_Humvee_Mod/README.md:3",
       "fix": "Убрать повтор",
-      "retests": [],
+      "retests": [
+        {
+          "at": "2026-11-20T13:44",
+          "by": "qa-lead",
+          "result": "PASS",
+          "notes": "grep src/README/PBO: «на крыше на крыше» 0 вхождений, «люком на крыше» на месте (config.cpp:1,44, README:3)"
+        }
+      ],
       "task": "T-0049",
       "found_by": "qa-lead",
       "assignee": "config-build-engineer",
       "created": "2026-11-20T12:46",
-      "updated": "2026-11-20T12:51",
+      "updated": "2026-11-20T13:44",
       "log": [
         {
           "at": "2026-11-20T12:46",
@@ -413,6 +433,36 @@
           "by": "ceo",
           "kind": "update",
           "text": "status OPEN → RETEST (исправлено CEO (лимит sonnet у исполнителя))"
+        },
+        {
+          "at": "2026-11-20T13:44",
+          "by": "qa-lead",
+          "kind": "retest",
+          "text": "PASS: grep src/README/PBO: «на крыше на крыше» 0 вхождений, «люком на крыше» на месте (config.cpp:1,44, README:3)"
+        }
+      ]
+    },
+    {
+      "id": "BUG-0012",
+      "title": "Сборка rf_humvee.p3d не воспроизводима побайтово",
+      "severity": "S4",
+      "status": "OPEN",
+      "repro": "Скопировать RF_Humvee_Mod, python3 tools/build_mod.py --no-pbo; cmp src/RF_Humvee/data/rf_humvee.p3d с закоммиченным: тот же размер 8378681, 13768 байт различий (cmp -l), первое на байте 179321",
+      "cause": "НЕИЗВЕСТНА: гипотеза — порядок обхода (set/dict) или плавающая точка в генерации LOD",
+      "location": "RF_Humvee_Mod/tools/build_mod.py:338 (build_car_p3d), tools/p3d_mlod.py",
+      "fix": "Найти источник недетерминизма (сортировка обходов, фиксированный seed), добиться идентичного p3d двух запусков подряд",
+      "retests": [],
+      "task": "T-0052",
+      "found_by": "qa-lead",
+      "assignee": "config-build-engineer",
+      "created": "2026-11-20T13:45",
+      "updated": "2026-11-20T13:45",
+      "log": [
+        {
+          "at": "2026-11-20T13:45",
+          "by": "qa-lead",
+          "kind": "create",
+          "text": "ошибка зарегистрирована"
         }
       ]
     }

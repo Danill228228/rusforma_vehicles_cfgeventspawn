@@ -2423,7 +2423,7 @@
       "type": "build",
       "assignee": "ceo",
       "priority": "P0",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": null,
       "deps": [
         "T-0049",
@@ -2441,7 +2441,14 @@
         "RF_Humvee_Mod/src/RF_Humvee/config.cpp",
         "RF_Humvee_Mod/tools/build_mod.py"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T13:44",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Стадия 5 (сборка): оба PBO: префиксы, 9 и 3 файла, SHA1 OK, размеры 19583738 и 10777, побайтово = src, лишних файлов нет; BUG-0009/0011 PASS. НЕ проверено: загрузка в игре. Замечание S4: p3d не воспроизводим побайтово. Отчёт: AI_Company_DayZMods/QA/Reports/QA-T-0045-RF_Humvee-2026-11-20.md (круг 2)"
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T12:32",
@@ -2479,10 +2486,23 @@
           "by": "ceo",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T13:44",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Стадия 5 (сборка): оба PBO: префиксы, 9 и 3 файла, SHA1 OK, размеры 19583738 и 10777, побайтово = src, лишних файлов нет; BUG-0009/0011 PASS. НЕ проверено: загрузка в игре. Замечание S4: p3d не воспр…"
+        },
+        {
+          "at": "2026-11-20T13:44",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T12:32",
-      "updated": "2026-11-20T12:51"
+      "updated": "2026-11-20T13:44",
+      "completed": "2026-11-20T13:44"
     },
     {
       "id": "T-0053",
@@ -2560,15 +2580,28 @@
       "type": "art",
       "assignee": "modeler-3d",
       "priority": "P1",
-      "status": "REVIEW",
+      "status": "COMPLETED",
       "due": null,
       "deps": [],
       "budget": 60000,
-      "result": "TEXTURE_REVIEW.md: 14 улучшений в 3 группах, проверка света/повреждений по carscript.c, список проверок на ПК, первый пакет ~135k токенов",
+      "result": "Исправлено: убрано неверное утверждение о нестыковке камуфляжа (п.3), переписано обоснование п.12 (плотность, чёткость, швы/mip, второй материал)",
       "files": [
         "AI_Company_DayZMods/Projects/Active/PRJ-0004_rf_humvee_mod_hammera_m1025/TEXTURE_REVIEW.md"
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "at": "2026-11-20T13:45",
+          "by": "qa-lead",
+          "verdict": "FAIL",
+          "report": "а) prep.py перезапущен: 127 px/м (p10=p90), покрытие атласа 45,9%, граней вне 0..1 нет, площадь вне атласа 8,0 м2 (без текстуры) + прочие, smdi G~7,5, LOD3 UV 0..0.563 x 0..0.042 - совпадает с отчётом. б) carscript.c:174-182 (SELECTION_ID 0..8), 229-260 (RegisterSelection, имена MatOn/Off), 1758, 2126-2138 (GetHealthLevel/Value), entityai.c:2881/2884 (3_game/entities, SetObjectTexture/SetObjectMaterial) - соответствуют; hiddenSelections config.cpp:54-55 = порядок 0..8 + camo. HYPOTHESIS для источника On/Off честна. FAIL: в пункте 3 'Камуфляж не стыкуется между соседними панелями (капот-крыло-дверь)' противоречит texture_atlas.py (docstring: окраска по мировым координатам, одним узором через стыки) и рендеру r_woodland_front34.png (пятна идут через капот-крыло-дверь); замеров в пользу утверждения нет, а п.12 'непрерывный рисунок через панели' на нём построен. Требуется: убрать или подкрепить замером (сравнение цвета по обе стороны шва в мировых координатах) и пересмотреть обоснование п.12. Правка QA: в шаге 3 'Без игры не проверить' название пункта меню Object Builder помечено 'уточнить' (источника нет). Не проверено: вид в игре. Файл: AI_Company_DayZMods/Projects/Active/PRJ-0004_rf_humvee_mod_hammera_m1025/TEXTURE_REVIEW.md"
+        },
+        {
+          "at": "2026-11-20T13:47",
+          "by": "qa-lead",
+          "verdict": "PASS",
+          "report": "Повтор: grep 'не стыкуется|непрерывн' = 0 вхождений; №12 теперь про плотность, чёткость, швы/mip-кромки, второй материал (HYPOTHESIS); правка шага 3 (уточнить меню OB) и раздел Замечания CEO на месте. Остальное принято в круге 1 (цифры prep.py, ссылки на код). Не проверено: вид в игре."
+        }
+      ],
       "log": [
         {
           "at": "2026-11-20T13:27",
@@ -2593,10 +2626,47 @@
           "by": "modeler-3d",
           "kind": "status",
           "text": "IN_PROGRESS → REVIEW"
+        },
+        {
+          "at": "2026-11-20T13:45",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "FAIL: а) prep.py перезапущен: 127 px/м (p10=p90), покрытие атласа 45,9%, граней вне 0..1 нет, площадь вне атласа 8,0 м2 (без текстуры) + прочие, smdi G~7,5, LOD3 UV 0..0.563 x 0..0.042 - совпадает с отчёто…"
+        },
+        {
+          "at": "2026-11-20T13:45",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → FIXING: проверка не пройдена"
+        },
+        {
+          "at": "2026-11-20T13:46",
+          "by": "modeler-3d",
+          "kind": "update",
+          "text": "изменено: result"
+        },
+        {
+          "at": "2026-11-20T13:46",
+          "by": "modeler-3d",
+          "kind": "status",
+          "text": "FIXING → REVIEW"
+        },
+        {
+          "at": "2026-11-20T13:47",
+          "by": "qa-lead",
+          "kind": "review",
+          "text": "PASS: Повтор: grep 'не стыкуется|непрерывн' = 0 вхождений; №12 теперь про плотность, чёткость, швы/mip-кромки, второй материал (HYPOTHESIS); правка шага 3 (уточнить меню OB) и раздел Замечания CEO на месте…"
+        },
+        {
+          "at": "2026-11-20T13:47",
+          "by": "qa-lead",
+          "kind": "status",
+          "text": "REVIEW → COMPLETED"
         }
       ],
       "created": "2026-11-20T13:27",
-      "updated": "2026-11-20T13:39"
+      "updated": "2026-11-20T13:47",
+      "completed": "2026-11-20T13:47"
     }
   ]
 }

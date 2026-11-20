@@ -11,3 +11,7 @@
 {"at": "2026-11-20T12:45", "agent": "lead-engineer", "task": "T-0053", "model": "opus", "tokens": 25557, "cost_usd": null, "tool_uses": 16, "duration_ms": 187978, "note": "продолжение через SendMessage (общий счётчик агента 121 613); BUG-0008: действия из салона → PlayerBase"}
 {"at": "2026-11-20T12:47", "agent": "qa-lead", "task": "T-0045", "model": "sonnet", "tokens": 36153, "cost_usd": null, "tool_uses": 15, "duration_ms": 112279, "note": "повторная проверка, круг 1: 6 задач PASS, 6 ошибок закрыто, найдены BUG-0009..0011 (продолжение, общий счётчик 129 323)"}
 {"at": "2026-11-20T13:40", "agent": "modeler-3d", "task": "T-0054", "model": "sonnet", "tokens": 51789, "cost_usd": null, "tool_uses": null, "duration_ms": null, "note": ""}
+{"at": "2026-11-20T13:45", "agent": "qa-lead", "task": "T-0052", "model": "sonnet", "tokens": 36838, "cost_usd": null, "tool_uses": null, "duration_ms": null, "note": ""}
+{"at": "2026-11-20T13:46", "agent": "qa-lead", "task": "T-0054", "model": "sonnet", "tokens": 18555, "cost_usd": null, "tool_uses": null, "duration_ms": null, "note": ""}
+{"at": "2026-11-20T13:47", "agent": "modeler-3d", "task": "T-0054", "model": "sonnet", "tokens": 1750, "cost_usd": null, "tool_uses": null, "duration_ms": null, "note": ""}
+{"at": "2026-11-20T13:48", "agent": "qa-lead", "task": "T-0054", "model": "sonnet", "tokens": 1294, "cost_usd": null, "tool_uses": null, "duration_ms": null, "note": ""}
